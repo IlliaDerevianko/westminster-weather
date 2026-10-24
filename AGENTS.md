@@ -47,3 +47,37 @@ All work must be done on a dedicated branch with a consistent, descriptive name 
 4. Open a Pull Request (PR) targeting `main` (e.g., via `gh pr create`).
 5. Merge into `main` **only** through the Pull Request after review and verification.
 6. Delete the feature branch after the PR is merged.
+
+---
+
+## 3. Commit Frequency (Small Commits by Default)
+
+Agents must commit **small, frequent commits on their own initiative**, even when the user has not asked for a commit.
+
+- Commit as soon as one logical unit of work is complete (one function, one fix, one test file, one doc section). Do not wait until the end of a task or for the user to say "commit".
+- One concern per commit: never bundle unrelated changes. If a diff needs "and" to describe it, split it.
+- Before each commit, run the checks that apply (from `backend/`: `uv run ruff check .` and `uv run pytest`). If a check fails and the commit is still worth keeping, say so in the commit message and in the log entry.
+- Use the commit message format `<type>(<scope>): <summary>`, with the same `<type>` prefixes as branch names, and a short body explaining *why*.
+- Committing is automatic; **pushing and opening Pull Requests are not**. Push or open a PR only when the user asks (or a task plan says so). Never commit to `main` (section 2).
+
+---
+
+## 4. Agent Log (One Entry per Commit)
+
+Every commit made by an agent must include an entry in the branch's log file, so a human can see what was done and why without reading diffs.
+
+- **File:** `docs/agent-logs/<branch-name>.md`, with `/` in the branch name replaced by `--` (e.g. branch `feat/passage-model` → `docs/agent-logs/feat--passage-model.md`). Create it with the first commit on the branch. One file per branch avoids merge conflicts between parallel branches.
+- **When:** add the entry in the **same commit** as the change it describes (stage the log file together with the code).
+- **Order:** newest entry at the top.
+- **Entry format:**
+
+  ```markdown
+  ## YYYY-MM-DD HH:MM — <commit summary, same as the commit message's first line>
+
+  - **What:** what changed, in plain English (1–3 bullets).
+  - **Why:** the reason or the instruction that led to it.
+  - **Checks:** commands run and their results (e.g. `pytest`: 36 passed; `ruff`: clean), or "none (docs only)".
+  - **Notes:** anything surprising, assumptions made, follow-ups or known problems. Omit if none.
+  ```
+
+- Keep entries short and factual. Report failures and skipped checks honestly.
