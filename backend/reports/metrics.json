@@ -1873,5 +1873,74 @@
       }
     },
     "chosen": "average"
+  },
+  "extra_analysis": {
+    "error_pct_of_remaining_by_state": {
+      "commons_1st_reading": {
+        "median_remaining_days": 135.0,
+        "median_error_pct": 46.2,
+        "mean_error_days": 100.1,
+        "n": 185
+      },
+      "commons_2nd_reading": {
+        "median_remaining_days": 147.5,
+        "median_error_pct": 36.9,
+        "mean_error_days": 82.2,
+        "n": 144
+      },
+      "commons_committee": {
+        "median_remaining_days": 174.0,
+        "median_error_pct": 35.0,
+        "mean_error_days": 76.4,
+        "n": 106
+      },
+      "commons_report_stage": {
+        "median_remaining_days": 192.0,
+        "median_error_pct": 27.3,
+        "mean_error_days": 87.6,
+        "n": 15
+      },
+      "commons_3rd_reading": {
+        "median_remaining_days": 67.5,
+        "median_error_pct": 44.6,
+        "mean_error_days": 48.0,
+        "n": 158
+      },
+      "lords_1st_and_2nd_reading": {
+        "median_remaining_days": 114.0,
+        "median_error_pct": 43.6,
+        "mean_error_days": 60.3,
+        "n": 193
+      },
+      "lords_committee": {
+        "median_remaining_days": 126.5,
+        "median_error_pct": 37.9,
+        "mean_error_days": 59.4,
+        "n": 120
+      },
+      "lords_report_and_3rd_reading": {
+        "median_remaining_days": 36.0,
+        "median_error_pct": 61.8,
+        "mean_error_days": 32.1,
+        "n": 182
+      },
+      "ping_pong": {
+        "median_remaining_days": 15.0,
+        "median_error_pct": 69.0,
+        "mean_error_days": 18.8,
+        "n": 104
+      }
+    },
+    "early_stage_breakdown": {
+      "n_bills": 193,
+      "median_total_days": 170.0,
+      "median_between_days": 117.0,
+      "median_within_days": 51.0,
+      "mean_share_between_stages": 0.624,
+      "share_of_variance_between": 0.529,
+      "share_of_variance_within": 0.471,
+      "corr_lateness_with_between": 0.725,
+      "corr_lateness_with_within": 0.843
+    }
   }
 }

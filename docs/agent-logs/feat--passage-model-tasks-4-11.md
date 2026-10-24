@@ -1,5 +1,11 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-25 00:04 — docs(model): error relative to time left and early-forecast breakdown in EVALUATION.md
+
+- **What:** added `error_percent_of_remaining` (median error 35–46% of the time left for early and middle stages, 62–69% for the last stages) and `early_stage_breakdown` (193 bills forecast at their first stage: median 170 days to Royal Assent = 117 waiting between stages + 51 within stages; variance split 53% / 47%; lateness correlates 0.72 with waiting and 0.84 with time within stages) to `evaluate.py`, `metrics.json` (`extra_analysis`) and EVALUATION.md, with a plain-English explanation. Updated EVALUATION.md's method and limitations (scheduled sittings live only, excluded from backtests).
+- **Why:** Aleks's Part 1 report additions.
+- **Checks:** `ruff`: clean; `pytest`: all passed.
+
 ## 2026-10-25 00:01 — feat(model): scheduled sittings force the next stage in live forecasts (Part 1, step 6)
 
 - **What:** live forecasts only: if a later stage of the bill has a future-dated sitting in `get_scheduled_sittings`, the simulator enters that stage on that date on every path (not earlier; paths behind are moved to it, passing skipped states the same day). Never used in backtests (announcement dates unknown). Example: Cyber Security and Resilience Bill (4035) Lords report scheduled 2026-10-26 → median Royal Assent 2027-02-02 → 2027-01-05. Added a test.

@@ -471,6 +471,7 @@ def cmd_quantile(args: argparse.Namespace) -> None:
         metrics.setdefault("backtest_comparison", {})[label] = evaluate.score(result, fitted_b)
         metrics["backtest"] = metrics["backtest_comparison"][label]
         result.to_parquet(PROCESSED_DIR / "backtest_step_5.parquet", index=False)
+        metrics["extra_analysis"] = evaluate.extra_analysis(result, date.today())
         print(_comparison_table(metrics["backtest_comparison"]).to_string())
     metrics_path.write_text(json.dumps(metrics, indent=2, default=str) + "\n")
 
