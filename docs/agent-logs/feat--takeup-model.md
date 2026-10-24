@@ -1,5 +1,17 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 00:50 — feat(journey): stage 3 commencement model (Royal Assent → orders finished)
+
+- **What:** `journey/commencement.py`: P(needs commencement orders) and first-order timing (cure model, all-ones mask), and when orders finish (weekly hazard of a further order, simulated order paths), conditional on `as_of`, CQR 80% windows; backtest on Acts with Royal Assent from 2019 (`backend/reports/journey/stage3_*`). `forecast_act(bill_id, as_of)`. Does not claim "fully in force" (`is_fully_in_force` is always True in the source data).
+- **Why:** Roman asked to extend the model to all stages.
+- **Checks:** `pytest tests/journey/test_commencement.py`: 11 passed. Backtest: needs-orders AUC 0.88 / Brier 0.138 at Royal Assent (baselines 0.50 / 0.249, by department 0.66 / 0.244); first-order timing no better than the median; finished-by-104-weeks Brier 0.218 vs 0.256; CQR coverage 87% (first order), 94% (finish; too wide later).
+
+## 2026-10-25 00:50 — feat(takeup): serve the hazard model with CQR windows
+
+- **What:** take-up API defaults to the hazard model (`?model=cure` still available), CQR-calibrated timing windows per `as_of` quarter (raw with a flag if < 10 calibration bills), `/history` re-predicted week by week with only information known then; evaluation doc notes Government-Bills-only and the served model. Also: earlier `style(takeup)` lint commit on `replay.py` had no separate log entry.
+- **Why:** the hazard model is more realistic than the cure model on real data (mean pi_now for silent promises 4% vs 54%).
+- **Checks:** `pytest tests/takeup/test_takeup_api.py`: passes (offline, both models).
+
 ## 2026-10-25 00:19 — fix(takeup): stop extrapolation on sparse features; add stage 1 replay
 
 - **What:** `hazard.py` switches off a static 0/1 feature seen on fewer than 15 training signals on either side (plan rule) and caps standardised values at ±5. New `takeup/replay.py`: for 9 past promises, a model trained only on earlier promises forecasts at the promise and 1/2/4 years later, next to what really happened (`backend/reports/takeup/stage1_replay.csv`).
