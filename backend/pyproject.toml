@@ -21,6 +21,8 @@ dependencies = [
     "lightgbm>=4.5.0",
     "lifelines>=0.30.0",
     "pypdf>=6.21.2",
+    "matplotlib>=3.11.2",
+    "pyarrow>=26.0.0",
 ]
 
 [dependency-groups]

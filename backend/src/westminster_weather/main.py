@@ -23,6 +23,7 @@ from westminster_weather.domain.stages import (
 )
 from westminster_weather.schemas.bills import (
     ApiEvidenceEventSchema,
+    BillForecastResponse,
     BillSummarySchema,
     GovernmentBillTrackingResponse,
     MilestoneDateSchema,
@@ -174,6 +175,28 @@ async def list_bills(
     """List all UK Government Bills stored in Neon Lakebase Postgres."""
     rows = await list_all_bills_from_db(search=search, outcome=outcome, house=house)
     return [BillSummarySchema(**r) for r in rows]
+
+
+@app.get(
+    "/api/v1/bills/{bill_id}/forecast",
+    response_model=BillForecastResponse,
+    tags=["forecast"],
+)
+def get_bill_forecast(
+    bill_id: int,
+    as_of: Annotated[
+        date | None,
+        Query(description="Forecast date (YYYY-MM-DD); defaults to today"),
+    ] = None,
+) -> BillForecastResponse:
+    """Passage forecast for a UK Government Bill: probability of Royal Assent, its timing,
+    and the risk of failing at each remaining stage (10,000 simulated paths)."""
+    from westminster_weather.model.forecast import ForecastUnavailable, forecast_bill
+
+    try:
+        return forecast_bill(bill_id, as_of or date.today())
+    except ForecastUnavailable as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @app.get(

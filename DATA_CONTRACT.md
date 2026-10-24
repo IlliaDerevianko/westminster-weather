@@ -222,7 +222,7 @@ Build only if time allows. The model must still run if these are empty.
 
 ## 5. Model interface (the protocol)
 
-The model calls **only these four functions**. The database side implements them as SQL views or Python functions with identical signatures and outputs. Every function takes `as_of` and returns nothing dated after it.
+The model calls **only these five functions** (5.1–5.4a). The database side implements them as SQL views or Python functions with identical signatures and outputs. Every function takes `as_of` and returns nothing dated after it.
 
 ### 5.1 `get_bills(as_of) -> table`
 One row per bill introduced on or before `as_of`. Only columns marked "intro", plus:
@@ -258,6 +258,14 @@ Time-varying features in long format, one row per change. The model forward-fill
 | `announced` | Future dates from `announced_dates` with `announced_on ≤ as_of` |
 | `sessions` | All sessions with `start_date ≤ as_of`, `end_date` hidden if after `as_of` |
 | `parliaments` | Same rule |
+
+### 5.4a `get_stage_sittings(as_of) -> table`
+Individual stage sittings, needed where a state has several sittings that matter on their own (ping-pong rounds, MODEL_SPEC §4.4).
+| Column | Notes |
+|---|---|
+| `bill_id`, `sitting_id`, `api_stage_id`, `house`, `session_id` | As in `stage_sittings` |
+| `model_state` | From `stage_map`; `NULL` for stages the model ignores |
+| `event_date` | Only sittings with `event_date ≤ as_of`, for bills introduced by `as_of` |
 
 ### 5.5 Feature registry
 The model requests features by name. Adding a feature = adding a row here and a source in `get_covariates`.
@@ -344,6 +352,22 @@ Per remaining stage, for the timeline and failure chart.
 | `top_drivers` | TEXT | JSON list of `{feature, contribution}` |
 
 **Alert rule:** write an alert if the trigger is `stage_change`, `prorogation_announced` or `dissolution_announced`, or if `|delta_ra_days| > 14`, or if `|delta_p_royal_assent| > 0.05`.
+
+### 6.5 `backtest_forecasts`
+Backtest results of any model, one row per forecast. Each model writes under its own `model_name` (e.g. `passage_v1`), so models can be compared in one table. Forecasts must use only data available on `forecast_date`.
+| Column | Type | Notes |
+|---|---|---|
+| `model_name` | TEXT | Part of PK; e.g. `passage_v1` |
+| `bill_id` | INTEGER FK | Part of PK |
+| `forecast_date` | DATE | Part of PK; the `as_of` the forecast was made on |
+| `state_at_forecast` | TEXT NULL | `model_state` on `forecast_date` |
+| `p_royal_assent` | REAL NULL | Forecast probability of Royal Assent |
+| `ra_date_p10` | DATE NULL | 10th percentile Royal Assent date (among passing paths) |
+| `ra_date_p50` | DATE NULL | Median Royal Assent date |
+| `ra_date_p90` | DATE NULL | 90th percentile Royal Assent date |
+| `actual_outcome` | TEXT | `bills.outcome` as finally known (§3.1 values) |
+| `actual_ra_date` | DATE NULL | Actual Royal Assent date; `NULL` if the bill did not pass |
+| `created_at` | TIMESTAMP | When the row was written |
 
 ---
 

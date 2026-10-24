@@ -145,6 +145,19 @@ def test_every_act_has_royal_assent_sitting_in_neon_db():
     assert bills.loc[bills["is_act"], "outcome_date"].notna().all()
 
 
+def test_no_failed_bill_has_a_royal_assent_date_in_neon_db():
+    """A bill with a Royal Assent sitting became law, so it can never be labelled failed.
+
+    Guards against the API's ``isAct`` flag being wrong (bill 3064, Commercial Rent
+    (Coronavirus) Act 2022)."""
+    bills = fetch_bills_df()
+    sittings = fetch_stage_sittings_df()
+    with_ra = set(sittings.loc[sittings["api_stage_id"] == 11, "bill_id"])
+    not_acts = bills[bills["outcome"] != "royal_assent"]
+    wrongly_failed = not_acts[not_acts["bill_id"].isin(with_ra)]
+    assert wrongly_failed.empty, wrongly_failed[["bill_id", "short_title", "outcome"]]
+
+
 def test_in_progress_bills_are_current_or_carried_over_in_neon_db():
     """DATA_CONTRACT §8: every in-progress bill is in the current session or carried over."""
     bills = fetch_bills_df()
@@ -195,3 +208,17 @@ def test_downloader_requests_government_bills_only():
     payloads, _, counts = bills_api.fetch_all_payloads(downloader=fake)
     assert fake.listed_types == [1]
     assert counts["listed"] == counts["government"] == 1
+
+
+def test_royal_assent_sitting_overrides_wrong_is_act_flag():
+    """The Bills API marks bill 3064 isAct = False although it has Royal Assent."""
+    bills, _ = _label(
+        [
+            _payload(1, [(6, ["2016-06-01"]), (11, ["2016-07-10"])], is_act=False),
+            _payload(6, [(6, ["2018-01-01"])], session=32),
+        ]
+    )
+    assert bills.loc[1, "outcome"] == "royal_assent"
+    assert bills.loc[1, "outcome_date"] == date(2016, 7, 10)
+    assert bool(bills.loc[1, "is_act"])
+    assert pd.isna(bills.loc[1, "stop_reason"])

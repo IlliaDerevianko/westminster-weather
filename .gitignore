@@ -44,3 +44,7 @@ build/
 .vscode/
 *.swp
 .neon
+
+# Passage model local data and fitted models
+backend/data/
+backend/models/

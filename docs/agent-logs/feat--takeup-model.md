@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 00:55 — Merge Aleks's stage 2 (feat/passage-model-tasks-4-11) into feat/takeup-model
+
+- **What:** merged Aleks's passage model (stage 2: states, hazard, failure routes, ping-pong, Monte Carlo simulator, LightGBM quantile blend, backtest, `/api/v1/bills/{bill_id}/forecast`). Only conflict: `backend/pyproject.toml` dependencies; kept all (pypdf, matplotlib, pyarrow) and relocked. Our own unfinished stage-2 attempt (`journey/passage.py` etc., never committed) was moved to a local backup instead of merged.
+- **Why:** Roman: use Aleks's finished stage 2 and combine with stages 1 and 3.
+- **Checks:** `pytest tests/takeup tests/journey tests/test_config.py`: 233 passed; `pytest tests/model tests/test_health_and_stages.py`: 111 passed, 2 skipped; `ruff check`: clean.
+
 ## 2026-10-25 00:50 — feat(journey): stage 3 commencement model (Royal Assent → orders finished)
 
 - **What:** `journey/commencement.py`: P(needs commencement orders) and first-order timing (cure model, all-ones mask), and when orders finish (weekly hazard of a further order, simulated order paths), conditional on `as_of`, CQR 80% windows; backtest on Acts with Royal Assent from 2019 (`backend/reports/journey/stage3_*`). `forecast_act(bill_id, as_of)`. Does not claim "fully in force" (`is_fully_in_force` is always True in the source data).
