@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 
-type StageStatus = "completed" | "current" | "upcoming" | "stopped" | "skipped";
+type StageStatus =
+  | "completed"
+  | "fast_tracked"
+  | "current"
+  | "upcoming"
+  | "stopped"
+  | "skipped";
 type PhaseKey = "before_parliament" | "inside_parliament" | "after_royal_assent";
 
 interface ApiEvidenceEvent {
@@ -427,7 +433,10 @@ function BillTrackerContent() {
             {PHASE_CONFIG.map((phaseCfg) => {
               const phaseStages = stagesByPhase[phaseCfg.key] ?? [];
               const completedCount = phaseStages.filter(
-                (s) => s.status === "completed" || s.status === "skipped"
+                (s) =>
+                  s.status === "completed" ||
+                  s.status === "fast_tracked" ||
+                  s.status === "skipped"
               ).length;
               const isActivePhase = bill.current_phase === phaseCfg.key;
               return (
@@ -541,8 +550,12 @@ function BillTrackerContent() {
               Completed
             </span>
             <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded-full bg-sky-500"></span>
+              Fast-Tracked / Bypassed
+            </span>
+            <span className="flex items-center gap-1.5">
               <span className="inline-block h-3 w-3 rounded-full bg-teal-500"></span>
-              Skipped (0 rounds)
+              Skipped (0 rounds/SIs)
             </span>
             <span className="flex items-center gap-1.5">
               <span className="inline-block h-3 w-3 rounded-full bg-amber-500 ring-4 ring-amber-200"></span>
@@ -579,7 +592,10 @@ function BillTrackerContent() {
           {PHASE_CONFIG.map((phaseCfg) => {
             const phaseStages = stagesByPhase[phaseCfg.key] ?? [];
             const completedCount = phaseStages.filter(
-              (s) => s.status === "completed" || s.status === "skipped"
+              (s) =>
+                s.status === "completed" ||
+                s.status === "fast_tracked" ||
+                s.status === "skipped"
             ).length;
 
             return (
@@ -606,6 +622,7 @@ function BillTrackerContent() {
                 <div className="space-y-3">
                   {phaseStages.map((stage, idx) => {
                     const isCompleted = stage.status === "completed";
+                    const isFastTracked = stage.status === "fast_tracked";
                     const isSkipped = stage.status === "skipped";
                     const isCurrent = stage.status === "current";
                     const isStageStopped = stage.status === "stopped";
@@ -657,6 +674,8 @@ function BillTrackerContent() {
                                 ? "border-2 border-amber-500 bg-amber-50/90 shadow-md ring-2 ring-amber-200"
                                 : isCompleted
                                 ? "border-emerald-300 bg-emerald-50/70"
+                                : isFastTracked
+                                ? "border-sky-300 bg-sky-50/60"
                                 : isSkipped
                                 ? "border-teal-300 bg-teal-50/60"
                                 : "border-slate-200 bg-slate-50/60 opacity-75"
@@ -672,6 +691,8 @@ function BillTrackerContent() {
                                       ? "bg-amber-500 text-white"
                                       : isCompleted
                                       ? "bg-emerald-600 text-white"
+                                      : isFastTracked
+                                      ? "bg-sky-600 text-white"
                                       : isSkipped
                                       ? "bg-teal-600 text-white"
                                       : "bg-slate-200 text-slate-700"
@@ -679,6 +700,8 @@ function BillTrackerContent() {
                                 >
                                   {isCompleted
                                     ? "✓"
+                                    : isFastTracked
+                                    ? "»"
                                     : isSkipped
                                     ? "0"
                                     : isStageStopped
@@ -703,6 +726,8 @@ function BillTrackerContent() {
                                     ? "bg-amber-500 text-white"
                                     : isCompleted
                                     ? "bg-emerald-100 text-emerald-800"
+                                    : isFastTracked
+                                    ? "bg-sky-100 text-sky-800"
                                     : isSkipped
                                     ? "bg-teal-100 text-teal-800"
                                     : "bg-slate-200 text-slate-600"
@@ -710,6 +735,10 @@ function BillTrackerContent() {
                               >
                                 {isStageStopped
                                   ? "Stopped"
+                                  : isFastTracked
+                                  ? stage.phase === "inside_parliament"
+                                    ? "Fast-Tracked (0 sittings)"
+                                    : "Fast-Tracked"
                                   : isSkipped
                                   ? countLabel
                                     ? `Skipped (${countLabel})`
@@ -729,18 +758,30 @@ function BillTrackerContent() {
                             {/* Entered/Completed Dates & Collapsible Sittings */}
                             {(stage.entered_date ||
                               stage.visible_events.length > 0 ||
-                              ((isPingPong || isPostRoyalAssent || isSkipped) &&
+                              ((isPingPong ||
+                                isPostRoyalAssent ||
+                                isSkipped ||
+                                isFastTracked) &&
                                 stage.summary)) && (
                               <div className="mt-2.5 rounded border border-slate-200/80 bg-white p-2 text-[11px] space-y-1.5">
                                 {(isPingPong ||
                                   isPostRoyalAssent ||
-                                  isSkipped) &&
+                                  isSkipped ||
+                                  isFastTracked) &&
                                   stage.summary && (
-                                    <div className="font-medium text-teal-900">
+                                    <div
+                                      className={`font-medium ${
+                                        isFastTracked
+                                          ? "text-sky-900"
+                                          : "text-teal-900"
+                                      }`}
+                                    >
                                       {stage.summary}
                                     </div>
                                   )}
-                                {stage.entered_date && !isSkipped && (
+                                {stage.entered_date &&
+                                  !isSkipped &&
+                                  !isFastTracked && (
                                   <div className="flex flex-wrap items-center justify-between gap-1 text-slate-700 font-medium">
                                     <span>
                                       {stage.entered_date}

@@ -37,6 +37,7 @@ from westminster_weather.models import (
 
 class StageStatus(StrEnum):
     COMPLETED = "completed"
+    FAST_TRACKED = "fast_tracked"
     SKIPPED = "skipped"
     CURRENT = "current"
     UPCOMING = "upcoming"
@@ -740,21 +741,26 @@ async def evaluate_parliament_bill_from_db(
     else:
         for node in GOVERNMENT_BILL_PIPELINE:
             if has_entered_parliament_as_of:
+                is_ready_stage = node.stage == BillStage.READY_FOR_FIRST_READING
                 tracked_nodes.append(
                     TrackedStageNode(
                         node=node,
-                        status=StageStatus.COMPLETED,
-                        entered_date=(
-                            first_reading_dt
-                            if node.stage == BillStage.READY_FOR_FIRST_READING
-                            else None
+                        status=(
+                            StageStatus.COMPLETED
+                            if is_ready_stage
+                            else StageStatus.FAST_TRACKED
                         ),
+                        entered_date=first_reading_dt if is_ready_stage else None,
                         completed_date=first_reading_dt,
                         summary=(
                             f"Pre-legislative preparation completed prior to First Reading "
                             f"on {first_reading_dt.isoformat()}."
-                            if node.stage == BillStage.READY_FOR_FIRST_READING
-                            else None
+                            if is_ready_stage
+                            else (
+                                f"Fast-tracked / bypassed — No separate formal "
+                                f"{node.label.lower()} stage recorded prior to First Reading "
+                                f"on {first_reading_dt.isoformat()}."
+                            )
                         ),
                         source_reference=web_url,
                         source_api_url=api_url,
@@ -773,9 +779,10 @@ async def evaluate_parliament_bill_from_db(
                                     document_type="parliament_introduction",
                                 )
                             ]
-                            if node.stage == BillStage.READY_FOR_FIRST_READING
+                            if is_ready_stage
                             else []
                         ),
+                        sitting_count=1 if is_ready_stage else 0,
                     )
                 )
             else:
@@ -827,9 +834,16 @@ async def evaluate_parliament_bill_from_db(
                 tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
             continue
 
-
+        st_sittings = [
+            s for s in sittings_by_state.get(st, []) if s.event_date <= eval_date
+        ]
         idx_in_entered = entered_parl_as_of.index(st)
-        if idx_in_entered + 1 < len(entered_parl_as_of):
+        if len(st_sittings) == 0:
+            # Stage had 0 formal sittings and was fast-tracked/dispensed with on entry_dt
+            status = StageStatus.FAST_TRACKED
+            completed_dt = entry_dt
+            node_stop = None
+        elif idx_in_entered + 1 < len(entered_parl_as_of):
             next_st = entered_parl_as_of[idx_in_entered + 1]
             status = StageStatus.COMPLETED
             completed_dt = full_entry_dates[next_st]
@@ -853,9 +867,6 @@ async def evaluate_parliament_bill_from_db(
             current_order = order
             node_stop = None
 
-        st_sittings = [
-            s for s in sittings_by_state.get(st, []) if s.event_date <= eval_date
-        ]
         visible_events = [
             ApiEvidenceEvent(
                 event_date=s.event_date,
@@ -874,7 +885,13 @@ async def evaluate_parliament_bill_from_db(
             for s in st_sittings
         ]
         plural = "s" if len(st_sittings) != 1 else ""
-        if st == BillStage.PING_PONG:
+        if status == StageStatus.FAST_TRACKED:
+            summary_text = (
+                f"Fast-tracked / bypassed on {entry_dt.isoformat()} "
+                f"(0 sittings — {label} did not formally occur as the Bill "
+                "advanced directly to the next stage)."
+            )
+        elif st == BillStage.PING_PONG:
             summary_text = (
                 f"{len(st_sittings)} ping-pong round{plural} recorded "
                 f"(entered {entry_dt.isoformat()}, ≤ {eval_date.isoformat()})."
