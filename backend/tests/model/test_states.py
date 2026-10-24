@@ -119,6 +119,17 @@ def test_checks_catch_an_act_without_royal_assent():
     assert failed  # an Act with no Royal Assent date is not a consistent record
 
 
+def test_checks_catch_royal_assent_on_a_bill_not_labelled_an_act():
+    # The Bills API marks Commercial Rent (Coronavirus) Bill (3064) isAct = False although it
+    # received Royal Assent on 2022-03-24.
+    stages = [(6, "Commons", "2016-06-01"), (11, "Unassigned", "2016-07-10")]
+    source = _source(
+        [_payload(1, stages, is_act=False), _payload(3, [(6, "Commons", "2016-11-01")], session=31)]
+    )
+    failed = {r.name for r in states.check_transitions(AS_OF, source) if not r.ok}
+    assert "Bills that reached royal_assent but are not labelled Acts" in failed
+
+
 def test_sanity_report(synthetic):
     report = states.sanity_report(AS_OF, synthetic)
     assert report["bills"] == 4

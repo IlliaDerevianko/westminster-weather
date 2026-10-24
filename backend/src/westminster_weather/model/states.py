@@ -104,7 +104,8 @@ class CheckResult:
 def check_transitions(as_of: date, data: DataSource | None = None) -> list[CheckResult]:
     """BUILD_PLAN task 3 'done when' checks.
 
-    1. Every Act ends in ``ROYAL_ASSENT``.
+    1. Every Act ends in ``ROYAL_ASSENT``, and every bill that reached ``ROYAL_ASSENT`` is
+       labelled an Act (outcome ``royal_assent``).
     2. Every bill that is not an Act is either in progress (in the current session, or carried
        over into it) with an open current state, or has a ``StopReason``.
     3. No negative durations (exit before entry, or negative sitting days).
@@ -118,6 +119,8 @@ def check_transitions(as_of: date, data: DataSource | None = None) -> list[Check
 
     acts = finals[finals["outcome"] == "royal_assent"]
     not_ra = acts[acts["final_state"] != BillStage.ROYAL_ASSENT.value]
+    reached_ra = finals[finals["final_state"] == BillStage.ROYAL_ASSENT.value]
+    ra_not_act = reached_ra[reached_ra["outcome"] != "royal_assent"]
 
     in_progress = finals[finals["outcome"] == "in_progress"]
     bad_progress = in_progress[
@@ -140,6 +143,7 @@ def check_transitions(as_of: date, data: DataSource | None = None) -> list[Check
 
     return [
         CheckResult("Acts that do not end in royal_assent", not_ra),
+        CheckResult("Bills that reached royal_assent but are not labelled Acts", ra_not_act),
         CheckResult("In-progress bills not in the current session or carried over", bad_progress),
         CheckResult("Failed bills without a StopReason", no_reason),
         CheckResult("Negative durations", negative),
@@ -190,8 +194,11 @@ def plot_durations(transitions: pd.DataFrame, path: Path) -> Path:
     ax.boxplot(data, vert=False, showfliers=True, flierprops={"markersize": 2, "alpha": 0.4})
     ax.set_yticks(range(1, len(order) + 1), [s.replace("_", " ") for s in order])
     ax.invert_yaxis()
-    ax.set_xscale("symlog", linthresh=5)
-    ax.set_xlabel("Sitting days in state before advancing (log scale above 5)")
+    ax.set_xscale("symlog", linthresh=1)
+    ticks = [0, 1, 2, 5, 10, 20, 50, 100, 200]
+    ax.set_xticks(ticks, [str(t) for t in ticks])
+    ax.set_xlim(0, 220)
+    ax.set_xlabel("Sitting days spent in the stage before moving on (stretched scale)")
     ax.set_title("How long bills spend in each stage (completed stages, all sessions ≥ 2006-07)")
     ax.grid(axis="x", alpha=0.3)
     fig.tight_layout()
