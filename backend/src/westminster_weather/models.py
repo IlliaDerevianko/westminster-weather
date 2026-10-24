@@ -67,3 +67,27 @@ class ApiEvidenceEventRow(Base):
     document_type: Mapped[str] = mapped_column(String(100), nullable=False)
 
     bill: Mapped["TrackedBillRow"] = relationship(back_populates="evidence_events")
+
+
+class ParliamentRow(Base):
+    """UK Parliament reference table (first meeting, dissolution, and election dates)."""
+
+    __tablename__ = "parliaments"
+
+    parliament_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    first_meeting_date: Mapped[date] = mapped_column(Date, nullable=False)
+    dissolution_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    election_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+
+class SessionOverrideRow(Base):
+    """Manual overrides for UK Parliamentary session boundaries and end types."""
+
+    __tablename__ = "session_overrides"
+
+    session_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    end_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+
