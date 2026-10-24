@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 22:27 — feat(takeup): port the cure model with a sitting-week mask
+
+- **What:** `takeup/model.py`: the prototype's mixture cure model (pi, weekly hazard with 6 baseline bins, censored log-likelihood, L-BFGS + ridge, delta-method CI, verdicts, bootstrap) plus the sitting-week mask (lambda = 0 in weeks with no sitting day; expected mask from historical sitting probability for future weeks), per-row `data_end`, timing in calendar and sitting weeks, calendar coverage bounds, and a smoothing penalty between neighbouring baseline bins.
+- **Why:** plan task 6 (Tier A, required change 1).
+- **Checks:** `pytest tests/takeup/test_takeup_model.py`: 25 passed (incl. parameter recovery within 3 SE with a masked calendar, an all-ones mask reproducing the prototype to ~1e-3, non-sitting weeks leaving the likelihood and pi_now unchanged); `ruff`: clean.
+- **Notes:** 2 reviewers found 7 issues (1 critical: a bill first read up to 7 days before its signal was treated as never taken up; it now counts as a week-1 event); all fixed with regression tests. Still to do: conditional timing quantiles t_q(s) from the task spec (the port still measures from week 0) — next commit.
+
 ## 2026-10-24 22:27 — feat(takeup): King's Speech items and links to bills
 
 - **What:** `kings_speech.py` discovers the 13 King's/Queen's Speech briefing notes on GOV.UK (2012–2026), parses their contents pages (incl. one-word-per-line PDFs and bracketed bill tags), flags draft / carried-over / hybrid items and departments, and links items to Government Bills (exact normalised title, then TF-IDF over title + long title; `auto` / `rule` / `none`). `bill_text.py` caches bill long titles and computes first readings. Exports `backend/data/takeup/review/kings_speech_links.csv` for the checkpoint 3 hand-check.
