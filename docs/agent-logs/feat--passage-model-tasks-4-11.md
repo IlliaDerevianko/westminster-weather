@@ -1,5 +1,11 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 23:42 — docs(model): record reverted recent-era weighting (Part 1, step 3)
+
+- **What:** tried double weight for bills from the two most recent Parliaments in each hazard refit. Rolling backtest: MAE 66.1 → 65.9, coverage 62.5% → 63.0%, too early 52.3% → 52.8%, Brier 0.0495 → 0.0502, pass chance 88.1% → 87.9%. Mixed and within noise, so the code change was reverted; the result is kept as a "(reverted)" column in `metrics.json` and `EVALUATION.md`.
+- **Why:** Aleks's rule: keep a step only if it improves results.
+- **Checks:** none beyond the backtest (code unchanged from step 2).
+
 ## 2026-10-24 23:40 — feat(model): pace feature (Part 1, step 2)
 
 - **What:** added `log_pace` = log((sitting days from first reading to entering the current state + 1) / (median for finished bills reaching that state, by originating House + 1)), capped at ±2, to the training rows and hazard; medians are fitted at each refit and stored in the hazard model; the simulator uses the bill's pace on `as_of`, frozen.

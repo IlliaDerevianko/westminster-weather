@@ -66,15 +66,15 @@ The end of a session speeds bills up; carried-over and Lords-first bills are slo
 
 ## Improvement steps (rolling backtest)
 
-| | Before (frozen 2019, old session end) | New session end, frozen 2019 | After (new + rolling) | Step 1: clock fix | Step 2: pace |
-|---|---|---|---|---|---|
-| Average error (days) | 73 | 71 | 71 | 68 | 66 |
-| Median error (days) | 38 | 40 | 39 | 41 | 41 |
-| 80% window coverage | 52% | 54% | 57% | 59% | 62% |
-| Median forecast too early | 67% | 65% | 63% | 57% | 52% |
-| Forecast pass chance vs actual | 80% vs 94% | 92% vs 94% | 90% vs 94% | 90% vs 94% | 88% vs 94% |
-| Brier vs always-the-pass-rate | 0.104 vs 0.054 | 0.047 vs 0.054 | 0.049 vs 0.054 | 0.049 vs 0.054 | 0.050 vs 0.054 |
-| Error for carried-over bills (days) | 251 | 251 | 254 | 220 | 189 |
+| | Before (frozen 2019, old session end) | New session end, frozen 2019 | After (new + rolling) | Step 1: clock fix | Step 2: pace | Step 3: recent-era weights (reverted) |
+|---|---|---|---|---|---|---|
+| Average error (days) | 73 | 71 | 71 | 68 | 66 | 66 |
+| Median error (days) | 38 | 40 | 39 | 41 | 41 | 41 |
+| 80% window coverage | 52% | 54% | 57% | 59% | 62% | 63% |
+| Median forecast too early | 67% | 65% | 63% | 57% | 52% | 53% |
+| Forecast pass chance vs actual | 80% vs 94% | 92% vs 94% | 90% vs 94% | 90% vs 94% | 88% vs 94% | 88% vs 94% |
+| Brier vs always-the-pass-rate | 0.104 vs 0.054 | 0.047 vs 0.054 | 0.049 vs 0.054 | 0.049 vs 0.054 | 0.050 vs 0.054 | 0.050 vs 0.054 |
+| Error for carried-over bills (days) | 251 | 251 | 254 | 220 | 189 | 188 |
 
 ## Limitations
 
