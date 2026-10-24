@@ -376,3 +376,141 @@ Per remaining stage, for the timeline and failure chart.
 | Section 5 (interface implementation) | Data, reviewed by Models |
 | Section 5.5 (feature registry), section 6 (outputs) | Models |
 | Reads section 6 tables | Front end |
+
+---
+
+## 10. Take-up model tables (Phase 1 → 2)
+
+Status: **draft for approval** (checkpoint 2 of `docs/model/TAKEUP_PLAN.md`). Owner: Roman.
+
+The take-up model asks whether a government commitment to legislate becomes a bill, and when. These tables are separate from the passage model's: they are defined on their own SQLAlchemy `MetaData` (`takeup/tables.py`), are **not** created by the app's start-up `create_all`, and are migrated first on the Neon branch `takeup-dev` (`TAKEUP_DATABASE_URL`), then on `production` only after review.
+
+An **idea** is one commitment to legislate on one topic. Tier A ideas come from King's/Queen's Speech briefing notes (one idea per announced bill). Tier B ideas come from ministers' words (written ministerial statements, Hansard), grouped by topic.
+
+### 10.1 `kings_speech_items`
+One row per bill announced in a King's/Queen's Speech briefing note (2012 onwards).
+| Column | Type | Notes |
+|---|---|---|
+| `item_id` | TEXT PK | `ks-<speech_date>-<nn>`, `nn` = order in the contents list |
+| `speech_date` | DATE | Date of the speech |
+| `announced_name` | TEXT | Bill name as announced, e.g. `Renters' Rights Bill` |
+| `is_draft` | BOOLEAN | Announced as a draft bill |
+| `is_carried_over` | BOOLEAN | Carried over from the previous session |
+| `department` | TEXT NULL | Lead department if stated |
+| `source_url` | TEXT | GOV.UK publication page |
+| `ingested_at` | TIMESTAMP | |
+
+The link to a bill is stored in `idea_bill_links` (the item's idea is `A-<item_id>`), not here, so there is one source of truth for links.
+
+### 10.2 `signal_mentions`
+One row per sentence in which the government commits (or seems to commit) to legislate.
+| Column | Type | Notes |
+|---|---|---|
+| `mention_id` | TEXT PK | `<source>-<source_id>-<sentence index>` |
+| `source` | TEXT | `'wms'`, `'hansard_spoken'` or `'hansard_written'` |
+| `source_id` | TEXT | Statement ID or Hansard `ContributionExtId` |
+| `event_date` | DATE | Date made / sitting date |
+| `member_id` | INTEGER NULL | Members API ID of the speaker |
+| `is_minister` | BOOLEAN NULL | Speaker held a government post on `event_date`; `NULL` = unknown |
+| `department` | TEXT NULL | Answering body (written statements) |
+| `title` | TEXT | Statement title or debate section |
+| `sentence` | TEXT | The matched sentence |
+| `snippet` | TEXT | Sentence plus one either side |
+| `phrase` | TEXT | Trigger phrase matched |
+| `firmness` | INTEGER | 0 vague, 1 medium, 2 firm |
+| `is_commitment` | BOOLEAN | Kept as a government commitment |
+| `topic` | TEXT | Short topic phrase |
+| `labelled_by` | TEXT | `'rules'`, `'gemini'` or `'hand'` |
+| `ingested_at` | TIMESTAMP | |
+
+### 10.3 `ideas`
+| Column | Type | Notes |
+|---|---|---|
+| `idea_id` | TEXT PK | `A-<item_id>` (Tier A) or `B-<nnnnn>` (Tier B) |
+| `tier` | TEXT | `'A'` or `'B'` |
+| `topic` | TEXT | |
+| `trigger_date` | DATE | Earliest mention (all data); `get_takeup_signals` recomputes it as of a date |
+| `department` | TEXT NULL | |
+| `first_source` | TEXT | `'kings_speech'`, `'wms'`, `'hansard_spoken'`, `'hansard_written'` |
+| `initial_firmness` | INTEGER | Firmness of the first mention (Tier A = 2) |
+| `n_mentions` | INTEGER | |
+| `ingested_at` | TIMESTAMP | |
+
+### 10.4 `idea_mentions`
+| Column | Type | Notes |
+|---|---|---|
+| `idea_id` | TEXT FK → `ideas` | |
+| `mention_id` | TEXT | `signal_mentions.mention_id`, or `kings_speech_items.item_id` for Tier A |
+| `group_id` | TEXT | Topic group before ideas linked to the same bill were merged |
+| PK | (`idea_id`, `mention_id`) | |
+
+`group_id` exists for leakage control: merging two groups because they link to the same bill uses knowledge of that bill, so `get_takeup_signals(as_of)` applies the merge only if the bill's first reading is ≤ `as_of`.
+
+### 10.5 `idea_events`
+Time-varying events for an idea (the model's `x` features).
+| Column | Type | Notes |
+|---|---|---|
+| `idea_id` | TEXT FK → `ideas` | |
+| `event_type` | TEXT | `'kings_speech'`, `'consultation'`, `'consultation_response'`, `'green_paper'`, `'white_paper'`, `'draft_bill'` |
+| `event_date` | DATE | |
+| `title` | TEXT | |
+| `source_url` | TEXT | |
+| `ingested_at` | TIMESTAMP | |
+| PK | (`idea_id`, `event_type`, `event_date`) | |
+
+### 10.6 `idea_bill_links`
+| Column | Type | Notes |
+|---|---|---|
+| `idea_id` | TEXT PK, FK → `ideas` | One link per idea |
+| `bill_id` | INTEGER NULL FK → `bills` | `NULL` = checked, no matching bill |
+| `similarity` | REAL NULL | Text similarity of idea vs bill title + long title |
+| `decided_by` | TEXT | `'auto'`, `'gemini'`, `'rule'` or `'hand'` |
+| `checked` | BOOLEAN | Hand-checked |
+| `ingested_at` | TIMESTAMP | |
+
+The bill's first reading date is not copied here; it is read from `stage_sittings` (stage 6 or 1), so it can never disagree with the bills data.
+
+### 10.7 `takeup_runs`
+| Column | Type | Notes |
+|---|---|---|
+| `run_id` | INTEGER PK | |
+| `created_at` | TIMESTAMP | |
+| `code_version` | TEXT | Git commit |
+| `train_cut` | DATE | Ideas with trigger before this date were used for fitting |
+| `features` | TEXT | Comma-separated `z_*` and `x_*` names |
+| `parameters` | TEXT | JSON: estimates and standard errors |
+| `metrics` | TEXT | JSON: evaluation results |
+
+### 10.8 `takeup_forecasts`
+| Column | Type | Notes |
+|---|---|---|
+| `run_id` | INTEGER FK → `takeup_runs` | |
+| `idea_id` | TEXT FK → `ideas` | |
+| `as_of` | DATE | |
+| PK | (`run_id`, `idea_id`, `as_of`) | |
+| `pi`, `pi_lo`, `pi_hi` | REAL | Chance ever taken up and its 95% CI |
+| `verdict` | TEXT | `'likely'`, `'unlikely'` or `'uncertain'` |
+| `weeks_elapsed` | INTEGER | Weeks since trigger with no bill |
+| `pi_now` | REAL | Updated chance after `weeks_elapsed` silent weeks |
+| `p_bill_26w`, `p_bill_52w` | REAL | Chance of a first reading within the next 26 / 52 weeks |
+| `t_p10`, `t_p50`, `t_p90` | INTEGER NULL | Weeks from trigger, if taken up |
+| `created_at` | TIMESTAMP | |
+
+### 10.9 Interface: `get_takeup_signals(as_of) -> table`
+The take-up model reads data only through this function. One row per idea with at least one mention dated ≤ `as_of` (Tier A: `speech_date ≤ as_of`).
+| Column | Notes |
+|---|---|
+| `signal_id`, `title` | `idea_id`, topic |
+| `signal_date` | Earliest mention ≤ `as_of` |
+| `bill_date` | First reading of the linked bill if ≤ `as_of`, else `NULL` |
+| `data_end` | `as_of`, or the dissolution date if the governing party later changed before a bill appeared (censored, not failed) |
+| `z_*` | Features known at `signal_date` |
+| `x_*` | Dates time-varying events happened, only if ≤ `as_of` |
+
+Rules: mentions, events and links dated after `as_of` are invisible; merges of groups follow `idea_mentions.group_id` (10.4); first reading = earliest sitting of Bills API stage 6 or 1.
+
+### 10.10 Validation checks
+- Every `idea_mentions.mention_id` exists in `signal_mentions` or `kings_speech_items`.
+- Every `idea_bill_links.bill_id` (non-null) exists in `bills` and has a first-reading sitting on or after the idea's `trigger_date` minus 7 days.
+- Every Tier A idea has a hand-checked link row (`checked = TRUE`), with `bill_id` or `NULL`.
+- No `signal_mentions.event_date` or `idea_events.event_date` after `ingested_at`.

@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 22:00 — docs(contract): draft take-up model tables (section 10)
+
+- **What:** added `DATA_CONTRACT.md` section 10: `kings_speech_items`, `signal_mentions`, `ideas`, `idea_mentions`, `idea_events`, `idea_bill_links`, `takeup_runs`, `takeup_forecasts`, the `get_takeup_signals(as_of)` interface and validation checks. Marked as a draft.
+- **Why:** task 2 of the take-up plan (checkpoint 2). Tables are migrated only after approval, on the `takeup-dev` Neon branch first.
+- **Checks:** none (docs only).
+- **Notes:** `idea_mentions.group_id` keeps the pre-merge topic group, because merging ideas that link to the same bill uses future knowledge of that bill; the interface applies a merge only once the bill's first reading is ≤ `as_of`. Bill links live only in `idea_bill_links` (not also on `kings_speech_items`) so there is one source of truth.
+
 ## 2026-10-24 21:50 — feat(takeup): add Tier B fetcher with local cache
 
 - **What:** new package `westminster_weather.takeup` with `tier_b.py` (written ministerial statements with full text, Hansard spoken / written trigger-phrase searches, Members API government posts) and `cli.py` (`fetch-tier-b`). Ported `triggers.py` from the prototype unchanged except a lint fix.
