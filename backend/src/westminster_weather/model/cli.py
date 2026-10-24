@@ -334,6 +334,50 @@ def _comparison_table(columns: dict[str, dict]) -> pd.DataFrame:
     return pd.DataFrame(rows).T
 
 
+SPEED_SD_GRID = (0.0, 0.3, 0.5, 0.7, 0.9, 1.2)
+
+
+def cmd_tune_speed(args: argparse.Namespace) -> None:
+    """Choose the per-path speed spread so 80% windows cover ~80% on training-era sessions."""
+    import json
+
+    from westminster_weather.model import baseline, evaluate, hazard
+    from westminster_weather.model.splits import TRAIN_CUTOFF, TUNING_SESSIONS
+
+    points = evaluate.backtest_points(TRAIN_CUTOFF, sessions=TUNING_SESSIONS)
+    C = hazard.HazardModel.load(MODELS_DIR / "hazard_train.joblib").C
+    print(
+        f"Tuning on {len(points):,} forecasts for {points['bill_id'].nunique()} bills from "
+        f"sessions {TUNING_SESSIONS} (data as of {TRAIN_CUTOFF}); test sessions not used"
+    )
+    fitted_b = baseline.fit()
+    results = {}
+    for sd in SPEED_SD_GRID:
+        res = evaluate.run_backtest(
+            points, workers=args.workers, mode="rolling", evaluated_as_of=TRAIN_CUTOFF, C=C,
+            speed_sd=sd,
+        )  # fmt: skip
+        m = evaluate.score(res, fitted_b)
+        results[sd] = {k: m[k] for k in ("coverage_p10_p90", "share_median_too_early")}
+        results[sd]["mae_days"] = m["mae_days"]["model"]
+        results[sd]["brier"] = m["brier_passage_probability"]
+        print(
+            f"  s = {sd:<4} coverage {100 * m['coverage_p10_p90']:.0f}%  MAE "
+            f"{m['mae_days']['model']:.0f}  too early {100 * m['share_median_too_early']:.0f}%"
+            f"  Brier {m['brier_passage_probability']:.3f}"
+        )
+    best = min(results, key=lambda sd: abs(results[sd]["coverage_p10_p90"] - 0.80))
+    print(f"Chosen speed spread s = {best}")
+    path = REPORTS_DIR / "metrics.json"
+    metrics = json.loads(path.read_text()) if path.exists() else {}
+    metrics["speed_sd_tuning"] = {
+        "sessions": list(TUNING_SESSIONS),
+        "grid": {str(k): v for k, v in results.items()},
+        "chosen": best,
+    }
+    path.write_text(json.dumps(metrics, indent=2, default=str) + "\n")
+
+
 def cmd_evaluate(args: argparse.Namespace) -> None:
     import json
     import time
@@ -351,6 +395,8 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
     metrics_path = REPORTS_DIR / "metrics.json"
     saved = json.loads(metrics_path.read_text()) if metrics_path.exists() else {}
     columns: dict[str, dict] = dict(saved.get("backtest_comparison", {}))
+    speed_sd = saved.get("speed_sd_tuning", {}).get("chosen", 0.0)
+    print(f"Per-path speed spread s = {speed_sd}")
     before = PROCESSED_DIR / "backtest_before.parquet"
     if not columns and before.exists():
         columns["Before (frozen 2019, old session end)"] = evaluate.score(
@@ -359,7 +405,12 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
     modes = ["frozen", "rolling"] if args.also_frozen else ["rolling"]
     for mode in modes:
         results = evaluate.run_backtest(
-            points, workers=args.workers, mode=mode, evaluated_as_of=args.as_of, C=C
+            points,
+            workers=args.workers,
+            mode=mode,
+            evaluated_as_of=args.as_of,
+            C=C,
+            speed_sd=speed_sd,
         )
         slug = "".join(c if c.isalnum() else "_" for c in args.label.lower()).strip("_")
         name = f"backtest_{mode}" if mode == "frozen" else f"backtest_{slug}"
@@ -431,6 +482,10 @@ def main(argv: list[str] | None = None) -> None:
         "--also-frozen", action="store_true", help="Also run the frozen-2019 models for comparison"
     )
     ev.set_defaults(func=cmd_evaluate)
+
+    tune = sub.add_parser("tune-speed", help="Tune the per-path speed spread (training era)")
+    tune.add_argument("--workers", type=int, default=6)
+    tune.set_defaults(func=cmd_tune_speed)
 
     args = parser.parse_args(argv)
     args.func(args)

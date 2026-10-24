@@ -1,5 +1,11 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 23:51 — feat(model): per-path speed spread (Part 1, step 4)
+
+- **What:** each simulated path multiplies its daily advance odds by exp(u), u ~ Normal(0, s), drawn once per path (`HazardModel.speed_sd`). Added `cli tune-speed`: grid search over s on a rolling backtest of training-era sessions 27–30 only (data as of 2019-10-14, 815 forecasts): s = 0 → 72% coverage, 0.3 → 76%, **0.5 → 80%**, 0.7 → 82%, 0.9 → 84%, 1.2 → 87%; chosen s = 0.5. `cli evaluate` uses the tuned s. Added a test.
+- **Why:** Aleks's Part 1 step 4; never tuned on test sessions.
+- **Checks:** `ruff`: clean; `pytest`: all passed. Test backtest: coverage 62% → 71%, MAE 66 → 66, too early 52% → 54%, Brier 0.050 → 0.052 (still below base rate 0.054), pass chance 88% → 87%. Kept.
+
 ## 2026-10-24 23:42 — docs(model): record reverted recent-era weighting (Part 1, step 3)
 
 - **What:** tried double weight for bills from the two most recent Parliaments in each hazard refit. Rolling backtest: MAE 66.1 → 65.9, coverage 62.5% → 63.0%, too early 52.3% → 52.8%, Brier 0.0495 → 0.0502, pass chance 88.1% → 87.9%. Mixed and within noise, so the code change was reverted; the result is kept as a "(reverted)" column in `metrics.json` and `EVALUATION.md`.

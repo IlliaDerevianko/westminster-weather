@@ -14,8 +14,10 @@ sitting day at a time. Each day, in this order (MODEL_SPEC §5):
 3. Withdrawal: constant daily hazard.
 4. Ping-pong: a path in ping-pong reaches Royal Assent on its drawn day.
 5. Advance: the logistic hazard gives P(move on today) from the state, time in state and
-   sitting days left in the path's session. A bill can move through several states on the
-   same day (each new state gets a τ = 0 chance, as in the training rows). Leaving a Commons
+   sitting days left in the path's session; each path's odds are multiplied by its own
+   speed factor exp(u), u ~ Normal(0, ``speed_sd``), drawn once per path. A bill can move
+   through several states on the same day (each new state gets a τ = 0 chance, as in the
+   training rows). Leaving a Commons
    vote stage risks defeat. Leaving the second House's last state leads to ping-pong with
    probability π_pp, otherwise straight to Royal Assent.
 
@@ -194,6 +196,9 @@ def simulate(
     p_defeat = models.failure.defeat_probability
     h_w = models.failure.withdrawal.rate
     pi_pp = models.pingpong.probability
+    # Per-path speed: daily advance odds × exp(u), u ~ Normal(0, speed_sd), fixed per path.
+    speed_sd = getattr(models.hazard, "speed_sd", 0.0)
+    speed = np.exp(rng.normal(0.0, speed_sd, n)) if speed_sd > 0 else np.ones(n)
 
     state = np.full(n, start.k0)
     tau = np.full(n, start.tau0)
@@ -273,6 +278,9 @@ def simulate(
             p = np.zeros(n)
             idx = np.flatnonzero(active)
             p[idx] = table[state[idx], np.digitize(tau[idx], TAU_EDGES), end_bucket[idx]]
+            if speed_sd > 0:
+                odds = p[idx] / (1 - p[idx]) * speed[idx]
+                p[idx] = odds / (1 + odds)
             moves = active & (rng.random(n) < p)
             defeated = moves & vote[state] & (rng.random(n) < p_defeat)
             finish(defeated, DEFEATED, j)

@@ -213,64 +213,64 @@
     "n_forecasts_for_acts": 1207,
     "n_act_forecasts_without_ra_paths": 0,
     "mae_days": {
-      "model": 66.1,
+      "model": 65.6,
       "B0": 106.8,
       "B1": 82.8
     },
     "mae_days_carried_over_bills": {
-      "model": 188.6,
+      "model": 193.2,
       "B1": 274.3,
       "n": 32
     },
     "median_abs_error_days": {
-      "model": 41.0,
+      "model": 40.0,
       "B1": 51.0
     },
     "mae_days_by_start_state": {
       "commons_1st_reading": {
-        "p50_err": 104.2,
+        "p50_err": 103.5,
         "b0_err": 126.0,
         "b1_err": 117.0,
         "n": 185
       },
       "commons_2nd_reading": {
-        "p50_err": 93.9,
+        "p50_err": 91.4,
         "b0_err": 123.2,
         "b1_err": 106.9,
         "n": 144
       },
       "commons_committee": {
-        "p50_err": 81.1,
+        "p50_err": 82.0,
         "b0_err": 137.6,
         "b1_err": 119.9,
         "n": 106
       },
       "commons_report_stage": {
-        "p50_err": 95.9,
+        "p50_err": 96.3,
         "b0_err": 208.9,
         "b1_err": 170.9,
         "n": 15
       },
       "commons_3rd_reading": {
-        "p50_err": 51.7,
+        "p50_err": 53.2,
         "b0_err": 110.6,
         "b1_err": 75.7,
         "n": 158
       },
       "lords_1st_and_2nd_reading": {
-        "p50_err": 63.9,
+        "p50_err": 63.8,
         "b0_err": 119.1,
         "b1_err": 87.4,
         "n": 193
       },
       "lords_committee": {
-        "p50_err": 64.5,
+        "p50_err": 62.9,
         "b0_err": 98.6,
         "b1_err": 83.5,
         "n": 120
       },
       "lords_report_and_3rd_reading": {
-        "p50_err": 36.4,
+        "p50_err": 35.2,
         "b0_err": 80.6,
         "b1_err": 36.8,
         "n": 182
@@ -282,76 +282,76 @@
         "n": 104
       }
     },
-    "coverage_p10_p90": 0.625,
-    "share_median_too_early": 0.523,
-    "brier_passage_probability": 0.0495,
+    "coverage_p10_p90": 0.713,
+    "share_median_too_early": 0.536,
+    "brier_passage_probability": 0.0517,
     "brier_passage_base_rate": 0.0544,
-    "brier_ra_before_session_end": 0.0602,
+    "brier_ra_before_session_end": 0.0625,
     "concordance_index": 0.775,
     "calibration": [
       {
         "bin": 0,
-        "predicted": 0.038,
+        "predicted": 0.062,
         "actual": 0.0,
-        "n": 2
+        "n": 1
       },
       {
         "bin": 1,
-        "predicted": 0.156,
+        "predicted": 0.168,
         "actual": 0.0,
         "n": 4
       },
       {
         "bin": 2,
-        "predicted": 0.233,
+        "predicted": 0.249,
         "actual": 0.0,
-        "n": 4
+        "n": 5
       },
       {
         "bin": 3,
-        "predicted": 0.361,
+        "predicted": 0.371,
         "actual": 0.5,
         "n": 4
       },
       {
         "bin": 4,
-        "predicted": 0.457,
-        "actual": 0.562,
-        "n": 16
+        "predicted": 0.455,
+        "actual": 0.636,
+        "n": 22
       },
       {
         "bin": 5,
-        "predicted": 0.54,
-        "actual": 0.75,
-        "n": 20
+        "predicted": 0.558,
+        "actual": 0.769,
+        "n": 26
       },
       {
         "bin": 6,
-        "predicted": 0.655,
-        "actual": 0.795,
-        "n": 44
+        "predicted": 0.646,
+        "actual": 0.766,
+        "n": 47
       },
       {
         "bin": 7,
-        "predicted": 0.759,
-        "actual": 0.917,
-        "n": 72
+        "predicted": 0.765,
+        "actual": 0.972,
+        "n": 108
       },
       {
         "bin": 8,
-        "predicted": 0.859,
-        "actual": 0.952,
-        "n": 421
+        "predicted": 0.857,
+        "actual": 0.94,
+        "n": 420
       },
       {
         "bin": 9,
-        "predicted": 0.955,
-        "actual": 0.978,
-        "n": 694
+        "predicted": 0.956,
+        "actual": 0.986,
+        "n": 644
       }
     ],
     "actual_passage_rate": 0.942,
-    "mean_predicted_passage": 0.881
+    "mean_predicted_passage": 0.871
   },
   "backtest_before": {
     "train_sessions": [
@@ -1469,6 +1469,221 @@
       ],
       "actual_passage_rate": 0.942,
       "mean_predicted_passage": 0.879
+    },
+    "Step 4: speed spread s=0.5": {
+      "train_sessions": [
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "test_sessions": [
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "train_cutoff": "2019-10-14",
+      "n_forecasts": 1281,
+      "n_bills": 222,
+      "n_forecasts_for_acts": 1207,
+      "n_act_forecasts_without_ra_paths": 0,
+      "mae_days": {
+        "model": 65.6,
+        "B0": 106.8,
+        "B1": 82.8
+      },
+      "mae_days_carried_over_bills": {
+        "model": 193.2,
+        "B1": 274.3,
+        "n": 32
+      },
+      "median_abs_error_days": {
+        "model": 40.0,
+        "B1": 51.0
+      },
+      "mae_days_by_start_state": {
+        "commons_1st_reading": {
+          "p50_err": 103.5,
+          "b0_err": 126.0,
+          "b1_err": 117.0,
+          "n": 185
+        },
+        "commons_2nd_reading": {
+          "p50_err": 91.4,
+          "b0_err": 123.2,
+          "b1_err": 106.9,
+          "n": 144
+        },
+        "commons_committee": {
+          "p50_err": 82.0,
+          "b0_err": 137.6,
+          "b1_err": 119.9,
+          "n": 106
+        },
+        "commons_report_stage": {
+          "p50_err": 96.3,
+          "b0_err": 208.9,
+          "b1_err": 170.9,
+          "n": 15
+        },
+        "commons_3rd_reading": {
+          "p50_err": 53.2,
+          "b0_err": 110.6,
+          "b1_err": 75.7,
+          "n": 158
+        },
+        "lords_1st_and_2nd_reading": {
+          "p50_err": 63.8,
+          "b0_err": 119.1,
+          "b1_err": 87.4,
+          "n": 193
+        },
+        "lords_committee": {
+          "p50_err": 62.9,
+          "b0_err": 98.6,
+          "b1_err": 83.5,
+          "n": 120
+        },
+        "lords_report_and_3rd_reading": {
+          "p50_err": 35.2,
+          "b0_err": 80.6,
+          "b1_err": 36.8,
+          "n": 182
+        },
+        "ping_pong": {
+          "p50_err": 19.5,
+          "b0_err": 30.9,
+          "b1_err": 19.6,
+          "n": 104
+        }
+      },
+      "coverage_p10_p90": 0.713,
+      "share_median_too_early": 0.536,
+      "brier_passage_probability": 0.0517,
+      "brier_passage_base_rate": 0.0544,
+      "brier_ra_before_session_end": 0.0625,
+      "concordance_index": 0.775,
+      "calibration": [
+        {
+          "bin": 0,
+          "predicted": 0.062,
+          "actual": 0.0,
+          "n": 1
+        },
+        {
+          "bin": 1,
+          "predicted": 0.168,
+          "actual": 0.0,
+          "n": 4
+        },
+        {
+          "bin": 2,
+          "predicted": 0.249,
+          "actual": 0.0,
+          "n": 5
+        },
+        {
+          "bin": 3,
+          "predicted": 0.371,
+          "actual": 0.5,
+          "n": 4
+        },
+        {
+          "bin": 4,
+          "predicted": 0.455,
+          "actual": 0.636,
+          "n": 22
+        },
+        {
+          "bin": 5,
+          "predicted": 0.558,
+          "actual": 0.769,
+          "n": 26
+        },
+        {
+          "bin": 6,
+          "predicted": 0.646,
+          "actual": 0.766,
+          "n": 47
+        },
+        {
+          "bin": 7,
+          "predicted": 0.765,
+          "actual": 0.972,
+          "n": 108
+        },
+        {
+          "bin": 8,
+          "predicted": 0.857,
+          "actual": 0.94,
+          "n": 420
+        },
+        {
+          "bin": 9,
+          "predicted": 0.956,
+          "actual": 0.986,
+          "n": 644
+        }
+      ],
+      "actual_passage_rate": 0.942,
+      "mean_predicted_passage": 0.871
     }
+  },
+  "speed_sd_tuning": {
+    "sessions": [
+      27,
+      28,
+      29,
+      30
+    ],
+    "grid": {
+      "0.0": {
+        "coverage_p10_p90": 0.715,
+        "share_median_too_early": 0.554,
+        "mae_days": 39.9,
+        "brier": 0.097
+      },
+      "0.3": {
+        "coverage_p10_p90": 0.761,
+        "share_median_too_early": 0.563,
+        "mae_days": 40.2,
+        "brier": 0.0969
+      },
+      "0.5": {
+        "coverage_p10_p90": 0.803,
+        "share_median_too_early": 0.574,
+        "mae_days": 40.5,
+        "brier": 0.0964
+      },
+      "0.7": {
+        "coverage_p10_p90": 0.825,
+        "share_median_too_early": 0.59,
+        "mae_days": 41.2,
+        "brier": 0.0958
+      },
+      "0.9": {
+        "coverage_p10_p90": 0.845,
+        "share_median_too_early": 0.595,
+        "mae_days": 42.0,
+        "brier": 0.0952
+      },
+      "1.2": {
+        "coverage_p10_p90": 0.868,
+        "share_median_too_early": 0.616,
+        "mae_days": 43.1,
+        "brier": 0.0946
+      }
+    },
+    "chosen": 0.5
   }
 }

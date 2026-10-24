@@ -40,11 +40,14 @@ RA = BillStage.ROYAL_ASSENT.value
 STATE_ORDER = [s.value for s in states.chain("Commons") if s.value != RA]
 
 
-def backtest_points(evaluated_as_of: date, data: Any = None) -> pd.DataFrame:
-    """One forecast point per (test bill, date it entered a state), with what happened."""
+def backtest_points(
+    evaluated_as_of: date, data: Any = None, sessions: tuple[int, ...] = TEST_SESSIONS
+) -> pd.DataFrame:
+    """One forecast point per (bill introduced in ``sessions``, date it entered a state), with
+    what happened by ``evaluated_as_of``."""
     src = states._source(data)
     trans = states.build_transitions(evaluated_as_of, src)
-    trans = trans[trans["introduced_session_id"].isin(TEST_SESSIONS)]
+    trans = trans[trans["introduced_session_id"].isin(sessions)]
     bills = src.get_bills(evaluated_as_of).set_index("bill_id")
     finished = bills[bills["outcome"] != "in_progress"].index
     trans = trans[trans["bill_id"].isin(finished)]
@@ -72,7 +75,7 @@ def backtest_points(evaluated_as_of: date, data: Any = None) -> pd.DataFrame:
     return points.reset_index(drop=True)
 
 
-def fit_models_as_of(cutoff: date, C: float, data: Any = None) -> Any:
+def fit_models_as_of(cutoff: date, C: float, data: Any = None, speed_sd: float = 0.0) -> Any:
     """All model components fitted on data available on ``cutoff``; the hazard only on bills
     that had finished by then."""
     from westminster_weather.model import failure, features, hazard, pingpong
@@ -82,8 +85,10 @@ def fit_models_as_of(cutoff: date, C: float, data: Any = None) -> Any:
     built = features.build_training_rows(cutoff, src)
     finished = src.get_bills(cutoff).query("outcome != 'in_progress'")["bill_id"]
     built.rows = built.rows[built.rows["bill_id"].isin(finished)]
+    fitted = hazard.fit_hazard_with_c(built, C, {"refit_as_of": cutoff.isoformat()})
+    fitted.speed_sd = speed_sd
     return Models(
-        hazard=hazard.fit_hazard_with_c(built, C, {"refit_as_of": cutoff.isoformat()}),
+        hazard=fitted,
         failure=failure.fit_failure(cutoff, src),
         pingpong=pingpong.fit_pingpong(cutoff, src),
     )
@@ -122,6 +127,7 @@ def run_backtest(
     mode: str = "frozen",
     evaluated_as_of: date | None = None,
     C: float | None = None,
+    speed_sd: float = 0.0,
 ) -> pd.DataFrame:
     """Forecast every point in parallel processes, with ``frozen`` or ``rolling`` models."""
     jobs = list(zip(points["bill_id"].astype(int), points["as_of"], strict=True))
@@ -139,7 +145,7 @@ def run_backtest(
         refit_dates = [start - timedelta(days=1) for start in starts[idx]]
         tasks = []
         for refit in sorted(set(refit_dates)):
-            models = fit_models_as_of(refit, C)
+            models = fit_models_as_of(refit, C, speed_sd=speed_sd)
             mine = [job for job, r in zip(jobs, refit_dates, strict=True) if r == refit]
             tasks += [(models, mine[i : i + 20]) for i in range(0, len(mine), 20)]
         with ProcessPoolExecutor(max_workers=workers) as pool:

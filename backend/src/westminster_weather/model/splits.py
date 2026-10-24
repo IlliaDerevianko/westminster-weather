@@ -13,3 +13,7 @@ TEST_SESSIONS: tuple[int, ...] = (34, 35, 36, 37, 38, 39)
 # Training data is read as of the day before the first test session began (2019-10-15), so
 # nothing the model learns from was known only after test forecasts start.
 TRAIN_CUTOFF = date(2019, 10, 14)
+
+# Training-era sessions used to tune simulator settings (e.g. the per-path speed spread):
+# 2014-15 to 2017-19. Never tune on TEST_SESSIONS.
+TUNING_SESSIONS: tuple[int, ...] = (27, 28, 29, 30)

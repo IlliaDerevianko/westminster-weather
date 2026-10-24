@@ -188,3 +188,12 @@ def test_resolved_bills_and_dates_before_training_cutoff():
     assert fell.primary_stop_risks[StopReason.ELECTION_CALLED] == 1.0
     with pytest.raises(forecast.ForecastUnavailable):
         forecast.forecast_bill(3064, TRAIN_CUTOFF.replace(year=2018))
+
+
+def test_per_path_speed_spread_widens_timing():
+    narrow = _models(lambda r: 0.05, session_length=10_000)
+    wide = _models(lambda r: 0.05, session_length=10_000)
+    wide.hazard.speed_sd = 1.0
+    a, b = _run(narrow, n=4000), _run(wide, n=4000)
+    spread = lambda r: np.subtract(*np.percentile(r.end_day, [90, 10]))  # noqa: E731
+    assert spread(b) > spread(a)

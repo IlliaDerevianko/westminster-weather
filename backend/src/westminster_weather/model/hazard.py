@@ -84,6 +84,9 @@ class HazardModel:
     departments: list[str]
     validation: dict[str, Any]
     pace_medians: dict[tuple[str, str], float] = field(default_factory=dict)
+    # Spread of the per-path speed multiplier exp(u), u ~ Normal(0, speed_sd), used by the
+    # simulator (tuned on training-era sessions only).
+    speed_sd: float = 0.0
 
     def predict(self, rows: pd.DataFrame) -> np.ndarray:
         """P(advance on that sitting day) for each row."""
