@@ -34,6 +34,12 @@ class BillStage(StrEnum):
 
     # 3. After Royal Assent
     ROYAL_ASSENT = "royal_assent"
+    SOME_SECTIONS_START = "some_sections_start"
+    COMMENCEMENT_ORDERS = "commencement_orders"
+    REGULATIONS_DRAFTED = "regulations_drafted"
+    REGULATIONS_LAID = "regulations_laid"
+    LAW_FULLY_IN_FORCE = "law_fully_in_force"
+    AMENDED_OR_REPEALED = "amended_or_repealed"
 
 
 class StopReason(StrEnum):
@@ -49,6 +55,11 @@ class StopReason(StrEnum):
     PAUSED_OR_WITHDRAWN = "paused_or_withdrawn"
     ELECTION_CALLED = "election_called"
     DEADLOCK = "deadlock"
+
+    # 3. After Royal Assent stops
+    NEVER_COMMENCED = "never_commenced"
+    ANNULLED = "annulled"
+
 
 
 
@@ -194,4 +205,47 @@ PARLIAMENTARY_STAGE_INFO: dict[
         (),
     ),
 }
+
+POST_ROYAL_ASSENT_STAGE_INFO: tuple[
+    tuple[BillStage, str, str, tuple[StopReason, ...]], ...
+] = (
+    (
+        BillStage.SOME_SECTIONS_START,
+        "Some sections start",
+        "Extent, citation, and initial sections commence on Royal Assent or a fixed date",
+        (),
+    ),
+    (
+        BillStage.COMMENCEMENT_ORDERS,
+        "Commencement orders",
+        "Secretary of State brings remaining substantive sections into force by SI",
+        (StopReason.NEVER_COMMENCED,),
+    ),
+    (
+        BillStage.REGULATIONS_DRAFTED,
+        "Regulations drafted",
+        "Department drafts secondary legislation (Statutory Instruments) to fill detail",
+        (),
+    ),
+
+    (
+        BillStage.REGULATIONS_LAID,
+        "Regulations laid",
+        "Statutory Instruments laid before Parliament (~40 days negative/affirmative scrutiny)",
+        (StopReason.ANNULLED,),
+    ),
+    (
+        BillStage.LAW_FULLY_IN_FORCE,
+        "Law fully in force",
+        "All commenced provisions and secondary regulations apply across the UK",
+        (),
+    ),
+    (
+        BillStage.AMENDED_OR_REPEALED,
+        "Amended or repealed",
+        "Post-legislative review or amendment by subsequent Acts of Parliament",
+        (),
+    ),
+)
+
 
