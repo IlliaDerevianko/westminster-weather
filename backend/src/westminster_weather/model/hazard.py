@@ -154,6 +154,14 @@ def fit_hazard(built: features.TrainingRows) -> HazardModel:
     return HazardModel(spec, model, validation["best_C"], built.departments, validation)
 
 
+def fit_hazard_with_c(
+    built: features.TrainingRows, C: float, validation: dict[str, Any]
+) -> HazardModel:
+    """Refit with a C already chosen by validation (used for the live model on all data)."""
+    spec = DesignSpec.fit(built.rows, built.feature_columns)
+    return HazardModel(spec, _fit(built.rows, spec, C), C, built.departments, validation)
+
+
 def lightgbm_validation(built: features.TrainingRows) -> dict[str, Any]:
     """Optional upgrade (MODEL_SPEC §4.1): the same rows and split with LightGBM."""
     import lightgbm as lgb

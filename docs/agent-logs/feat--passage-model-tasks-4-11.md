@@ -1,5 +1,12 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 22:49 — feat(model): Monte Carlo simulator and forecast_bill (task 9)
+
+- **What:** added `model/simulate.py` (10,000 vectorised paths per bill, fixed seed per (bill, as_of); session end, carry-over, dissolution, withdrawal, defeat, same-day multi-state advances, ping-pong rounds; days to session end recomputed from each path's simulated end) and `model/forecast.py` (`forecast_bill`, start state via the interface, summaries, leak-free choice of `train`/`live` models, example chart). `cli train` now saves `hazard_train` and `hazard_live`; added `cli forecast` (`--bill-id`, `--examples`). Added `tests/model/test_simulate.py` and `reports/historical_forecasts.png`.
+- **Why:** BUILD_PLAN task 9, MODEL_SPEC §5.
+- **Checks:** `ruff`: clean; `pytest`: 98 passed. Forecasts take 0.7–3 s; outcome probabilities sum to 1 (tested).
+- **Notes:** examples (train models): Online Safety Bill at Commons 1R 29% (became law 2023-10-26 after carry-over); Commercial Rent at Lords committee 66%, median 2022-03-30 (actual 2022-03-24); Renters (Reform) at Lords 1R/2R 46%, election risk 45% (fell at the 2024 dissolution). The simulator cannot anticipate a carry-over motion that has not happened yet.
+
 ## 2026-10-24 22:49 — feat(api): forecast response schemas
 
 - **What:** added `TimelineQuantiles`, `StageForecastSchema` (DATA_CONTRACT §6.3 fields) and `BillForecastResponse` (MODEL_SPEC §5.1, original field names from the first backend commit plus `as_of`, `p_ra_before_session_end`, `stages`, `model_variant`, `n_paths`) to `schemas/bills.py`. Existing schemas unchanged.

@@ -4,6 +4,8 @@ uv run python -m westminster_weather.model.cli fetch
 uv run python -m westminster_weather.model.cli states [--as-of YYYY-MM-DD]
 uv run python -m westminster_weather.model.cli build [--as-of YYYY-MM-DD]
 uv run python -m westminster_weather.model.cli train [--as-of YYYY-MM-DD]
+uv run python -m westminster_weather.model.cli forecast --bill-id <BILL_ID> [--as-of YYYY-MM-DD]
+uv run python -m westminster_weather.model.cli forecast --examples
 """
 
 from __future__ import annotations
@@ -145,16 +147,16 @@ def cmd_train(args: argparse.Namespace) -> None:
     chart = baseline.plot_mae_by_state(metrics, REPORTS_DIR / "baselines_mae_by_state.png")
     print(f"\nMetrics saved: {out}\nChart saved: {chart}")
 
-    _train_hazard()
+    _train_hazard(args.as_of)
     _train_failure_and_pingpong(args.as_of)
 
 
-def _train_hazard() -> None:
+def _train_hazard(as_of: date) -> None:
     import json
 
     import numpy as np
 
-    from westminster_weather.model import hazard
+    from westminster_weather.model import features, hazard
 
     built = hazard.training_rows()
     fitted = hazard.fit_hazard(built)
@@ -181,7 +183,14 @@ def _train_hazard() -> None:
     for col, value in shared.items():
         print(f"  {hazard.label(col, fitted.departments):<62}{np.exp(value):6.2f}")
 
-    model_path = fitted.save(MODELS_DIR / "hazard.joblib")
+    model_path = fitted.save(MODELS_DIR / "hazard_train.joblib")
+    live_rows = features.build_training_rows(as_of)
+    live = hazard.fit_hazard_with_c(live_rows, fitted.C, val)
+    live_path = live.save(MODELS_DIR / "hazard_live.joblib")
+    print(
+        f"Live hazard refit on all {live_rows.rows['bill_id'].nunique()} bills "
+        f"({len(live_rows.rows):,} rows, data as of {as_of}): {live_path}"
+    )
     chart = hazard.plot_coefficients(fitted, REPORTS_DIR / "hazard_coefficients.png")
     metrics_path = REPORTS_DIR / "metrics.json"
     metrics = json.loads(metrics_path.read_text()) if metrics_path.exists() else {}
@@ -235,6 +244,65 @@ def _train_failure_and_pingpong(as_of: date) -> None:
     print(f"\nModels saved in {MODELS_DIR}; metrics saved: {metrics_path}")
 
 
+# Historical bills at different stages, forecast with the training models (BUILD_PLAN task 9).
+EXAMPLES: tuple[tuple[int, date], ...] = (
+    (3137, date(2022, 3, 17)),  # Online Safety Bill at Commons 1st reading
+    (3064, date(2022, 2, 10)),  # Commercial Rent (Coronavirus) Bill at Lords committee
+    (3462, date(2024, 5, 1)),  # Renters (Reform) Bill at Lords 1st/2nd reading
+)
+
+
+def _print_forecast(response) -> None:
+    print(
+        f"\n{response.short_title} (bill {response.bill_id}) as of {response.as_of} "
+        f"[{response.model_variant} models]"
+    )
+    stage = response.current_stage.value if response.current_stage else "-"
+    print(f"  Current stage: {stage.replace('_', ' ')}")
+    print(
+        f"  Chance of Royal Assent: {100 * response.passage_probability:.0f}% "
+        f"(before this session ends: {100 * response.p_ra_before_session_end:.0f}%)"
+    )
+    t = response.time_to_royal_assent
+    if t:
+        print(
+            f"  Royal Assent if it passes: median {t.estimated_median_date} "
+            f"(80% between {t.p10_date} and {t.p90_date})"
+        )
+    risks = ", ".join(
+        f"{reason.value.replace('_', ' ')} {100 * p:.1f}%"
+        for reason, p in response.primary_stop_risks.items()
+    )
+    print(f"  Risks of failing: {risks}")
+    if response.stages:
+        print("  Remaining stages (chance of reaching, median date reached):")
+        for s in response.stages:
+            when = s.entry_date_p50 or "-"
+            print(f"    {s.model_state.value.replace('_', ' '):<32}{100 * s.p_reach:5.0f}%  {when}")
+
+
+def cmd_forecast(args: argparse.Namespace) -> None:
+    from westminster_weather.data import interface
+    from westminster_weather.model import forecast
+
+    if not args.examples:
+        if args.bill_id is None:
+            raise SystemExit("--bill-id is required (or use --examples)")
+        _print_forecast(forecast.forecast_bill(args.bill_id, args.as_of))
+        return
+
+    rows = []
+    today_bills = interface.get_bills(date.today()).set_index("bill_id")
+    for bill_id, as_of in EXAMPLES:
+        response = forecast.forecast_bill(bill_id, as_of, variant="train")
+        _print_forecast(response)
+        actual = today_bills.loc[bill_id]
+        print(f"  WHAT HAPPENED: {actual['outcome'].replace('_', ' ')} on {actual['outcome_date']}")
+        rows.append((response, actual))
+    chart = forecast.plot_examples(rows, REPORTS_DIR / "historical_forecasts.png")
+    print(f"\nChart saved: {chart}")
+
+
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -261,6 +329,12 @@ def main(argv: list[str] | None = None) -> None:
     )
     train.add_argument("--as-of", type=date.fromisoformat, default=date.today())
     train.set_defaults(func=cmd_train)
+
+    fc = sub.add_parser("forecast", help="Forecast one bill, or the historical examples")
+    fc.add_argument("--bill-id", type=int)
+    fc.add_argument("--as-of", type=date.fromisoformat, default=date.today())
+    fc.add_argument("--examples", action="store_true", help="Three historical test bills")
+    fc.set_defaults(func=cmd_forecast)
 
     args = parser.parse_args(argv)
     args.func(args)
