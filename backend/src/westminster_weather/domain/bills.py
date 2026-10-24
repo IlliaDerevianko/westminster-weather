@@ -35,9 +35,11 @@ from westminster_weather.models import (
 
 class StageStatus(StrEnum):
     COMPLETED = "completed"
+    SKIPPED = "skipped"
     CURRENT = "current"
     UPCOMING = "upcoming"
     STOPPED = "stopped"
+
 
 
 @dataclass(frozen=True)
@@ -78,6 +80,8 @@ class TrackedStageNode:
     web_url: str | None = None
     visible_events: list[ApiEvidenceEvent] = field(default_factory=list)
     active_stop_reason: StopReason | None = None
+    sitting_count: int = 0
+
 
 
 @dataclass
@@ -771,8 +775,33 @@ async def evaluate_parliament_bill_from_db(
         )
         entry_dt = full_entry_dates.get(st)
         if entry_dt is None or entry_dt > eval_date:
-            tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
+            if (
+                st == BillStage.PING_PONG
+                and entry_dt is None
+                and BillStage.ROYAL_ASSENT in entered_parl_as_of
+            ):
+                ra_dt = full_entry_dates.get(BillStage.ROYAL_ASSENT)
+                tracked_nodes.append(
+                    TrackedStageNode(
+                        node=node,
+                        status=StageStatus.SKIPPED,
+                        entered_date=ra_dt,
+                        completed_date=ra_dt,
+                        summary=(
+                            "0 ping-pong rounds — Second House agreed to the Bill "
+                            "without exchanging amendments."
+                        ),
+                        source_reference=web_url,
+                        source_api_url=api_url,
+                        web_url=web_url,
+                        visible_events=[],
+                        sitting_count=0,
+                    )
+                )
+            else:
+                tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
             continue
+
 
         idx_in_entered = entered_parl_as_of.index(st)
         if idx_in_entered + 1 < len(entered_parl_as_of):
@@ -820,10 +849,16 @@ async def evaluate_parliament_bill_from_db(
             for s in st_sittings
         ]
         plural = "s" if len(st_sittings) != 1 else ""
-        summary_text = (
-            f"Entered {label} on {entry_dt.isoformat()} "
-            f"({len(st_sittings)} sitting{plural} recorded ≤ {eval_date.isoformat()})."
-        )
+        if st == BillStage.PING_PONG:
+            summary_text = (
+                f"{len(st_sittings)} ping-pong round{plural} recorded "
+                f"(entered {entry_dt.isoformat()}, ≤ {eval_date.isoformat()})."
+            )
+        else:
+            summary_text = (
+                f"Entered {label} on {entry_dt.isoformat()} "
+                f"({len(st_sittings)} sitting{plural} recorded ≤ {eval_date.isoformat()})."
+            )
         tracked_nodes.append(
             TrackedStageNode(
                 node=node,
@@ -836,8 +871,10 @@ async def evaluate_parliament_bill_from_db(
                 web_url=web_url,
                 visible_events=visible_events,
                 active_stop_reason=node_stop,
+                sitting_count=len(st_sittings),
             )
         )
+
 
     # ------------------------------------------------------------------
     # PHASE 3: AFTER ROYAL ASSENT (Orders 17..22)
