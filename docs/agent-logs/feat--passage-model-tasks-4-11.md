@@ -1,5 +1,11 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 22:49 — feat(api): GET /api/v1/bills/{bill_id}/forecast
+
+- **What:** added the forecast endpoint to `main.py` (`as_of` query, defaults to today; 404 for unknown bills or dates before the training cutoff).
+- **Why:** BUILD_PLAN task 9 step 4.
+- **Checks:** `ruff`: clean; `pytest`: 98 passed; manual TestClient calls: 200 for bill 3064 as of 2021-12-01, 404 before 2019-10-14, existing `/api/v1/bills/{bill_id}` still 200.
+
 ## 2026-10-24 22:49 — feat(model): Monte Carlo simulator and forecast_bill (task 9)
 
 - **What:** added `model/simulate.py` (10,000 vectorised paths per bill, fixed seed per (bill, as_of); session end, carry-over, dissolution, withdrawal, defeat, same-day multi-state advances, ping-pong rounds; days to session end recomputed from each path's simulated end) and `model/forecast.py` (`forecast_bill`, start state via the interface, summaries, leak-free choice of `train`/`live` models, example chart). `cli train` now saves `hazard_train` and `hazard_live`; added `cli forecast` (`--bill-id`, `--examples`). Added `tests/model/test_simulate.py` and `reports/historical_forecasts.png`.
