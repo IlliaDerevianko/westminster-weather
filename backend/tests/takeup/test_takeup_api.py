@@ -1,4 +1,5 @@
-"""Offline tests for the take-up API (``takeup/api.py``) with a fake TakeupData and fixed model."""
+"""Offline tests for the take-up API (``takeup/api.py``) with a fake TakeupData and fixed
+models: the hazard model (default, CQR windows) and the cure model (``?model=cure``)."""
 
 import json
 from datetime import UTC, date, datetime
@@ -11,7 +12,9 @@ from httpx import ASGITransport, AsyncClient
 from westminster_weather import db as app_db
 from westminster_weather.main import app
 from westminster_weather.takeup import api
+from westminster_weather.takeup import evaluate as ev
 from westminster_weather.takeup import model as tm
+from westminster_weather.takeup.conformal import CQRCalibrator
 from westminster_weather.takeup.signals import TakeupData
 
 NOW = datetime(2026, 10, 24, tzinfo=UTC)
@@ -141,11 +144,45 @@ def make_model() -> tm.TakeUpModel:
     return tm.TakeUpModel.from_params(theta, ZCOLS, XCOLS, Sigma=np.eye(11) * 0.01)
 
 
-@pytest.fixture
-def service():
-    svc = api.TakeupService(TakeupData(tables()), make_model(), run_id=7)
+def make_hazard() -> api.HazardModel:
+    """A hazard model fitted on the fake data, then given fixed coefficients: hazard falls as
+    the last mention ages (gap bins), rises with x events; everything else 0."""
+    td = TakeupData(tables())
+    cut = pd.Timestamp("2026-10-20")
+    train = td.get_takeup_signals(cut, features=ZCOLS + XCOLS)
+    hz = ev.fit_hazard(td, train, cut)
+    coef = np.zeros(len(hz.feature_names) + 1)
+    coef[0] = -3.5
+    for j, name in enumerate(hz.feature_names, start=1):
+        if name.startswith("gap_"):
+            coef[j] = -0.6
+        elif name.startswith("x_"):
+            coef[j] = 0.4
+    hz.coef = coef
+    hz.Sigma = np.eye(len(coef)) * 0.01
+    return hz
+
+
+HAZARD = make_hazard()
+
+
+def _install(svc):
     app.dependency_overrides[api.get_takeup_service] = lambda: svc
-    yield svc
+    return svc
+
+
+@pytest.fixture(params=["hazard", "cure"])
+def service(request):
+    """Both served models; the cure one by leaving out the hazard model (the fallback)."""
+    hz = HAZARD if request.param == "hazard" else None
+    yield _install(api.TakeupService(TakeupData(tables()), make_model(), run_id=7, hazard=hz))
+    app.dependency_overrides.pop(api.get_takeup_service, None)
+
+
+@pytest.fixture
+def both():
+    """One service with both models (hazard default, ?model=cure)."""
+    yield _install(api.TakeupService(TakeupData(tables()), make_model(), run_id=7, hazard=HAZARD))
     app.dependency_overrides.pop(api.get_takeup_service, None)
 
 
@@ -173,7 +210,9 @@ def _dates_in(obj) -> list[date]:
 async def test_ideas_after_merge(service):
     code, data = await _get("/api/v1/takeup/ideas", as_of="2016-06-01")
     assert code == 200
-    assert data["run_id"] == 7 and data["as_of"] == "2016-06-01"
+    assert data["as_of"] == "2016-06-01"
+    assert data["run_id"] == (7 if data["model"] == "cure" else None)
+    assert data["model"] == ("hazard" if service.hazard is not None else "cure")
     by_id = {i["signal_id"]: i for i in data["ideas"]}
     assert set(by_id) == {"nlp-00001", "nlp-00002:g3"}  # nlp-00003 not yet mentioned
     a, b = by_id["nlp-00001"], by_id["nlp-00002:g3"]
@@ -310,16 +349,24 @@ async def test_history_stops_before_the_bill(service):
     assert h["points"][-1]["week"] < bill[0]["week"]
 
 
-async def test_stored_forecast_preferred(service):
+async def test_stored_forecast_preferred(both):
+    service = both
+
     def lookup(signal_ids, as_of):
         assert as_of == D("2016-06-01")
         return {"nlp-00002:g3": {"pi_now": 0.123, "verdict": "unlikely"}}
 
     service.stored_lookup = lookup
-    code, f = await _get("/api/v1/takeup/forecast", idea_id="nlp-00002", as_of="2016-06-01")
+    code, f = await _get(
+        "/api/v1/takeup/forecast", idea_id="nlp-00002", as_of="2016-06-01", model="cure"
+    )
     assert code == 200
-    assert f["forecast_source"] == "stored"
+    assert f["forecast_source"] == "stored" and f["model"] == "cure" and f["run_id"] == 7
     assert f["pi_now"] == 0.123 and f["verdict"] == "unlikely"
+    # stored rows belong to the cure run: the hazard model ignores them
+    code, h = await _get("/api/v1/takeup/forecast", idea_id="nlp-00002", as_of="2016-06-01")
+    assert code == 200 and h["model"] == "hazard" and h["forecast_source"] == "computed"
+    assert h["run_id"] is None and h["pi_now"] != 0.123
 
 
 def test_model_from_run_round_trip():
@@ -338,3 +385,98 @@ def test_model_from_run_round_trip():
     z, x = np.array([0.0, 1.0]), np.array([10.0, tm.T_MAX + 1])
     a, b = model.predict(z, x, weeks_elapsed=5), rebuilt.predict(z, x, weeks_elapsed=5)
     assert a["pi_now"] == pytest.approx(b["pi_now"]) and a["t_50"] == b["t_50"]
+
+
+# --------------------------------------------------------------------- hazard model
+
+
+async def test_default_is_hazard_and_cure_on_request(both):
+    code, h = await _get("/api/v1/takeup/forecast", idea_id="nlp-00002", as_of="2016-06-01")
+    assert code == 200 and h["model"] == api.DEFAULT_MODEL == "hazard"
+    code, c = await _get(
+        "/api/v1/takeup/forecast", idea_id="nlp-00002", as_of="2016-06-01", model="cure"
+    )
+    assert code == 200 and c["model"] == "cure"
+    assert h["pi_now"] != pytest.approx(c["pi_now"])
+    code, _ = await _get("/api/v1/takeup/ideas", as_of="2016-06-01", model="nonsense")
+    assert code == 422
+
+
+async def test_hazard_windows_raw_without_calibration(both):
+    code, f = await _get("/api/v1/takeup/forecast", idea_id="nlp-00002", as_of="2016-06-01")
+    assert code == 200
+    assert f["timing_calibrated"] is False and f["n_calibration"] is None
+    assert (f["t_10"], f["t_90"]) == (f["t_10_raw"], f["t_90_raw"])
+
+
+async def test_hazard_windows_too_few_calibration_bills_stay_raw(both):
+    both.calibrator = lambda as_of: CQRCalibrator().fit([5.0] * 4, [3] * 4, [8] * 4)  # n = 4
+    code, f = await _get("/api/v1/takeup/forecast", idea_id="nlp-00002", as_of="2016-06-01")
+    assert code == 200
+    assert f["timing_calibrated"] is False and f["n_calibration"] == 4
+    assert (f["t_10"], f["t_90"]) == (f["t_10_raw"], f["t_90_raw"])
+
+
+async def test_hazard_windows_cqr_widened(both):
+    calls = []
+
+    def calibrator(as_of):
+        calls.append(as_of)
+        return CQRCalibrator(q=0.5, n=20)
+
+    both.calibrator = calibrator
+    code, f = await _get("/api/v1/takeup/forecast", idea_id="nlp-00002", as_of="2016-06-01")
+    assert code == 200 and calls == [D("2016-06-01")]
+    assert f["timing_calibrated"] is True and f["n_calibration"] == 20
+    assert f["weeks_elapsed"] < f["t_10"] <= f["t_10_raw"] <= f["t_50"]
+    assert f["t_90"] is None or f["t_90"] >= f["t_90_raw"]
+    assert f["t_10_sitting"] <= f["t_10"]
+
+
+def test_hazard_calibrator_uses_quarter_start_capped_at_fit_end(monkeypatch):
+    seen = []
+    monkeypatch.setattr(api, "hazard_calibrator", lambda data, cut: seen.append(cut) or None)
+    get = api.cached_calibrator(object(), fit_end=D("2020-02-01"))
+    assert get(D("2019-08-17")) is None
+    get(D("2019-09-30"))  # same quarter: cached
+    get(D("2024-05-05"))  # after the fit end: the fit end
+    assert seen == [D("2019-07-01"), D("2020-02-01")]
+
+
+def test_hazard_calibrator_too_little_data_is_none():
+    assert api.hazard_calibrator(TakeupData(tables()), D("2016-06-01")) is None
+
+
+def test_calibrated_window_keeps_t50_inside():
+    pred = {"weeks_elapsed": 3, "t_10": 10, "t_50": 12, "t_90": 20}
+    out = api.calibrated_window(pred, CQRCalibrator(q=-0.45, n=50), lambda: np.ones(tm.T_MAX))
+    assert out["t_10"] <= 12 <= out["t_90"] and out["t_10"] > 3
+    assert out["t_10_raw"] == 10 and out["t_90_raw"] == 20 and out["t_10_sitting"] == out["t_10"]
+
+
+async def test_hazard_history_uses_only_what_was_known_each_week(both):
+    """A point for week w is the same whatever the later as_of: a later mention (2017-01-01)
+    and event (2016-09-01) never change earlier points."""
+    _, early = await _get("/api/v1/takeup/history", idea_id="nlp-00002", as_of="2016-06-01")
+    _, late = await _get("/api/v1/takeup/history", idea_id="nlp-00002", as_of="2017-06-01")
+    assert early["model"] == late["model"] == "hazard"
+    n = len(early["points"]) - 1  # the last early point is at as_of itself
+    for a, b in zip(early["points"][:n], late["points"][:n], strict=True):
+        assert a["week"] == b["week"]
+        assert a["pi_now"] == pytest.approx(b["pi_now"]) and a["p52"] == pytest.approx(b["p52"])
+    # the new mention lifts the hazard (gap resets): the week after it is above the week before
+    pts = {p["date"]: p for p in late["points"]}
+    wk = [p for p in late["points"] if D(p["date"]) > D("2017-01-01")][0]["week"]
+    assert late["points"][wk]["pi_now"] > late["points"][wk - 2]["pi_now"]
+    assert pts  # dates are unique
+
+
+async def test_hazard_history_of_merged_idea_uses_anchor_group(both):
+    """Before the merge nlp-00001's history follows its anchor group g1 only: identical to the
+    history of 'nlp-00001:g1' seen before the bill."""
+    _, merged = await _get("/api/v1/takeup/history", idea_id="nlp-00001", as_of="2016-06-01")
+    _, split = await _get("/api/v1/takeup/history", idea_id="nlp-00001:g1", as_of="2016-02-01")
+    assert merged["taken_up"] and not split["taken_up"]
+    n = len(split["points"]) - 1
+    for a, b in zip(merged["points"][:n], split["points"][:n], strict=True):
+        assert a["pi_now"] == pytest.approx(b["pi_now"])

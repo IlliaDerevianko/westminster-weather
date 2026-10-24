@@ -181,3 +181,5 @@ Log-odds of a first reading in a sitting week, per unit of the feature (bins: re
 - An idea with no linked bill is treated as not (yet) taken up, so a missed link is counted as a failure of the idea.
 - Merged ideas take the earliest trigger of their groups, which uses knowledge of the shared bill; test ideas that later merged may look slightly earlier than they were.
 - Outcomes after a change of government are censored at the dissolution, so the test sets after 2024 are short.
+- Government Bills only (DATA_SCOPE.md): a promise delivered through a government-backed Private Member's Bill (or any other non-Government bill) counts as not taken up, so take-up is understated for such ideas.
+- Served model: the API (`/api/v1/takeup/*`) serves the hazard model by default (fitted in memory on all ideas; 80% timing windows CQR-calibrated per as_of quarter on bills in a held-out 2-4 year window before it, raw with `timing_calibrated = false` when fewer than 10 calibration bills); the cure model is available with `?model=cure`.
