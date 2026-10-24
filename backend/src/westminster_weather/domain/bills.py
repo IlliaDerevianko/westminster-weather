@@ -155,7 +155,6 @@ def _parse_iso_date(iso_str: str) -> date:
 async def fetch_online_safety_bill_from_uk_apis() -> GovernmentBill:
     """Fetch the Online Safety Bill's Phase 1 history directly from GOV.UK & Parliament APIs."""
     govuk = GovUkContentClient()
-    parliament = ParliamentBillsClient()
 
     green_paper_path = "/government/consultations/internet-safety-strategy-green-paper"
     white_paper_path = "/government/consultations/online-harms-white-paper"
@@ -168,23 +167,24 @@ async def fetch_online_safety_bill_from_uk_apis() -> GovernmentBill:
         "joint-committee-report-on-the-draft-online-safety-bill-government-response"
     )
 
-    (
-        green_paper,
-        white_paper,
-        draft_bill,
-        queens_speech,
-        joint_comm_resp,
-        parl_bill,
-        parl_stages,
-    ) = await asyncio.gather(
-        govuk.get_content(green_paper_path),
-        govuk.get_content(white_paper_path),
-        govuk.get_content(draft_bill_path),
-        govuk.get_content(queens_speech_path),
-        govuk.get_content(joint_comm_resp_path),
-        parliament.get_bill(3137),
-        parliament.get_bill_stages(3137),
-    )
+    async with ParliamentBillsClient() as parliament:
+        (
+            green_paper,
+            white_paper,
+            draft_bill,
+            queens_speech,
+            joint_comm_resp,
+            parl_bill,
+            parl_stages,
+        ) = await asyncio.gather(
+            govuk.get_content(green_paper_path),
+            govuk.get_content(white_paper_path),
+            govuk.get_content(draft_bill_path),
+            govuk.get_content(queens_speech_path),
+            govuk.get_content(joint_comm_resp_path),
+            parliament.get_bill(3137),
+            parliament.get_bill_stages(3137),
+        )
 
     # Stage 1: Signal appears
     s1_date = _parse_iso_date(green_paper["first_published_at"])
