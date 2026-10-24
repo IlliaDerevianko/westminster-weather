@@ -1,5 +1,12 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 21:45 — feat(model): Tier 1 feature registry and hazard training rows (task 4)
+
+- **What:** added `model/features.py`: a registry of Tier 1 features (`(bill_id, as_of, data) -> value`) and `build_training_rows(as_of_cutoff)` producing bill × sitting-day rows with `state, tau_bucket, days_to_session_end_bucket`, features and `y`. Added `tests/model/test_features.py`, `pyarrow`, and restored `backend/data/` and `backend/models/` in `.gitignore`.
+- **Why:** BUILD_PLAN task 4 / MODEL_SPEC §4.1, §6.
+- **Checks:** `ruff`: clean; `pytest`: 61 passed, including the no-leakage tests (rows match registry values computed the day before; rows unchanged by a later cutoff).
+- **Notes:** a τ = 0 row is added on every state's entry day (y = 1 if it moved on the same day), not only for same-day transitions, otherwise bucket 0 would be all positives. Time-varying features use information up to the previous day. Ping-pong and Royal Assent have no hazard rows (MODEL_SPEC §4.4). Department names are used as published, so renamed departments count separately.
+
 ## 2026-10-24 21:41 — Merge main into feat/passage-model-tasks-4-11
 
 - **What:** merged latest `main` (government-bills-only rule and ingestion fix #14/#15, three-phase lifecycle view #13). Resolved one conflict in the `model/cli.py` docstring (kept `fetch` without `--gov-only` plus `states`).
