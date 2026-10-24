@@ -553,8 +553,12 @@ async def list_all_bills_from_db(
     """Return all UK Government Bills from the `bills` table in Neon Lakebase Postgres."""
     await init_db()
     async with SessionLocal() as session:
-        tracked_res = await session.execute(select(TrackedBillRow.parliament_bill_id))
-        pre_parl_ids = set(tracked_res.scalars().all())
+        tracked_res = await session.execute(
+            select(TrackedBillRow.parliament_bill_id, TrackedBillRow.earliest_signal_date)
+        )
+        pre_parl_dates = {
+            pid: sig_dt for pid, sig_dt in tracked_res.all() if pid is not None
+        }
 
         stmt = select(BillRow)
         if search and search.strip():
@@ -579,6 +583,7 @@ async def list_all_bills_from_db(
                 "short_title": r.short_title,
                 "originating_house": r.originating_house,
                 "introduced_session_id": r.introduced_session_id,
+                "earliest_signal_date": pre_parl_dates.get(r.bill_id),
                 "introduced_date": r.introduced_date,
                 "department": r.department,
                 "outcome": r.outcome,
@@ -587,7 +592,7 @@ async def list_all_bills_from_db(
                 "is_act": r.is_act,
                 "is_defeated": r.is_defeated,
                 "withdrawn_date": r.withdrawn_date,
-                "has_pre_parliament_data": r.bill_id in pre_parl_ids,
+                "has_pre_parliament_data": r.bill_id in pre_parl_dates,
             }
             for r in rows
         ]

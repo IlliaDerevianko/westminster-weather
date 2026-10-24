@@ -379,6 +379,28 @@ function BillTrackerContent() {
                   </span>{" "}
                   {bill.sponsoring_department}
                 </p>
+                <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                  {bill.earliest_signal_date !== bill.first_reading_date && (
+                    <span>
+                      <strong className="text-slate-700">
+                        Pre-Parliament Signal:
+                      </strong>{" "}
+                      {bill.earliest_signal_date}
+                    </span>
+                  )}
+                  <span>
+                    <strong className="text-slate-700">
+                      1st Reading (Parliament):
+                    </strong>{" "}
+                    {bill.first_reading_date}
+                  </span>
+                  {bill.outcome_date && (
+                    <span>
+                      <strong className="text-slate-700">Outcome Date:</strong>{" "}
+                      {bill.outcome_date}
+                    </span>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -762,13 +784,15 @@ function BillTrackerContent() {
                             {/* Entered/Completed Dates & Collapsible Sittings */}
                             {(stage.entered_date ||
                               stage.visible_events.length > 0 ||
-                              ((isPingPong ||
+                              ((stage.phase === "before_parliament" ||
+                                isPingPong ||
                                 isPostRoyalAssent ||
                                 isSkipped ||
                                 isFastTracked) &&
                                 stage.summary)) && (
                               <div className="mt-2.5 rounded border border-slate-200/80 bg-white p-2 text-[11px] space-y-1.5">
-                                {(isPingPong ||
+                                {(stage.phase === "before_parliament" ||
+                                  isPingPong ||
                                   isPostRoyalAssent ||
                                   isSkipped ||
                                   isFastTracked) &&
@@ -777,6 +801,8 @@ function BillTrackerContent() {
                                       className={`font-medium ${
                                         isFastTracked
                                           ? "text-sky-900"
+                                          : stage.phase === "before_parliament"
+                                          ? "text-slate-800"
                                           : "text-teal-900"
                                       }`}
                                     >

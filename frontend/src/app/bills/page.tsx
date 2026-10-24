@@ -8,6 +8,7 @@ interface BillSummary {
   short_title: string;
   originating_house: string;
   introduced_session_id: number;
+  earliest_signal_date?: string | null;
   introduced_date: string | null;
   department: string | null;
   outcome: string;
@@ -286,9 +287,16 @@ export default function BillsDirectoryPage() {
                       <strong>Department:</strong>{" "}
                       {b.department ?? "HM Government"}
                     </span>
+                    {b.earliest_signal_date && (
+                      <span>
+                        <strong>Pre-Parliament Signal:</strong>{" "}
+                        {b.earliest_signal_date}
+                      </span>
+                    )}
                     {b.introduced_date && (
                       <span>
-                        <strong>Introduced:</strong> {b.introduced_date}
+                        <strong>1st Reading (Parliament):</strong>{" "}
+                        {b.introduced_date}
                       </span>
                     )}
                     {b.outcome_date && (

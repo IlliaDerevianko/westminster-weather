@@ -51,6 +51,7 @@ class BillSummarySchema(BaseModel):
     short_title: str
     originating_house: str
     introduced_session_id: int
+    earliest_signal_date: date | None = None
     introduced_date: date | None = None
     department: str | None = None
     outcome: str
