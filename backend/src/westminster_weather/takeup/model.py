@@ -22,6 +22,10 @@ Log-likelihood:
   bill seen in week t_i : log pi_i + log f_u(t_i)
   no bill after c_i     : log(1 - pi_i + pi_i S_u(c_i))
 
+Forecast after s silent weeks (``predict``, names as in DATA_CONTRACT §10.8):
+  pi_now = pi S_u(s) / (1 - pi + pi S_u(s));  pH = pi_now (1 - S_u(s+H) / S_u(s))
+  t_q(s) = min{t > s : 1 - S_u(t) / S_u(s) >= q}   timing if taken up, given no bill by s
+
 Input table, one row per idea (``get_takeup_signals(as_of)``, DATA_CONTRACT §10.9):
   signal_id, title, signal_date, bill_date (NaN if none), data_end (optional, per row)
   z_*  numeric features known at the signal
@@ -49,11 +53,17 @@ RIDGE = 0.05  # small penalty on gamma and beta keeps fits stable with little da
 # bills finite (its MLE is -inf) by pulling it towards the bin before it.
 ALPHA_SMOOTH = 0.05
 ALPHA_START = -3.0  # starting value of the baseline hazard logits
-HORIZONS = (13, 26, 52)
-QUANTILES = (0.1, 0.5, 0.9)
+HORIZONS = (13, 26, 52)  # predict() keys p13, p26, p52
+QUANTILES = (0.1, 0.5, 0.9)  # predict() keys t_10, t_50, t_90 (and *_sitting)
+BOOTSTRAP_B = 200  # default number of bootstrap refits
 HESSIAN_EPS = 1e-4
 
 _EPOCH = pd.Timestamp("1970-01-01")
+
+
+def quantile_key(q: float) -> str:
+    """Output name of timing quantile q: ``t_10``, ``t_50``, ``t_90`` (DATA_CONTRACT §10.8)."""
+    return f"t_{round(100 * q)}"
 
 
 # ---------------------------------------------------------------------------- dates
@@ -512,11 +522,15 @@ class TakeUpModel:
 
     # ------------------------------------------------------------------ predictions
 
+    def _eta(self, z: np.ndarray) -> float:
+        """Take-up logit eta = gamma_0 + z'gamma, so pi = expit(eta)."""
+        g0, g, _, _ = self._unpack(self.theta)
+        return float(g0 + np.asarray(z, dtype=float) @ g)
+
     def pi_with_ci(self, z: np.ndarray) -> tuple[float, float, float, str]:
         """pi, its 95% CI by the delta method, and the verdict."""
-        g0, g, _, _ = self._unpack(self.theta)
         z = np.asarray(z, dtype=float)
-        eta = g0 + z @ g
+        eta = self._eta(z)
         zf = np.concatenate([[1.0], z])
         if self.Sigma is None:  # bootstrap refits skip the Hessian
             se = 0.0
@@ -527,14 +541,20 @@ class TakeUpModel:
         verdict = "likely" if lo > 0.5 else "unlikely" if hi < 0.5 else "uncertain"
         return float(expit(eta)), float(lo), float(hi), verdict
 
+    def log_survival_u(
+        self, xweek_row: np.ndarray, mask: np.ndarray | None = None, W: int = T_MAX
+    ) -> np.ndarray:
+        """log S_u(1..W) for one idea; ``mask`` is its sitting mask (all ones if None)."""
+        _, _, a, b = self._unpack(self.theta)
+        h = self._hazard_logits(np.asarray(xweek_row, dtype=float)[None, :], W, a, b)[0]
+        m = np.ones(W) if mask is None else np.asarray(mask, dtype=float)[:W]
+        return np.cumsum(self._log_one_minus_hazard(h, m))
+
     def survival_u(
         self, xweek_row: np.ndarray, mask: np.ndarray | None = None, W: int = T_MAX
     ) -> np.ndarray:
         """S_u(1..W) for one idea; ``mask`` is its sitting mask (all ones if None)."""
-        _, _, a, b = self._unpack(self.theta)
-        h = self._hazard_logits(np.asarray(xweek_row, dtype=float)[None, :], W, a, b)[0]
-        m = np.ones(W) if mask is None else np.asarray(mask, dtype=float)[:W]
-        return np.exp(np.cumsum(self._log_one_minus_hazard(h, m)))
+        return np.exp(self.log_survival_u(xweek_row, mask, W))
 
     def predict(
         self,
@@ -544,19 +564,28 @@ class TakeUpModel:
         horizons: Iterable[int] = HORIZONS,
         mask: np.ndarray | None = None,
     ) -> dict[str, Any]:
-        """Forecast for one idea after ``weeks_elapsed`` silent calendar weeks.
+        """Forecast for one idea after s = ``weeks_elapsed`` silent calendar weeks.
 
         ``mask`` is the idea's sitting mask from ``prepare`` (observed weeks 0/1, later weeks
-        the sitting probability); all ones if None. Timing quantiles ``t_q`` are calendar
-        weeks from the signal, if taken up; ``t_q_sitting`` is the (expected) number of
-        sitting weeks up to and including week ``t_q``.
+        the sitting probability); all ones if None. Keys (DATA_CONTRACT §10.8):
+
+        - ``pi``, ``pi_lo``, ``pi_hi``, ``verdict``: chance ever taken up, 95% CI, verdict.
+        - ``pi_now`` = pi S_u(s) / (1 - pi + pi S_u(s)): that chance after s silent weeks.
+        - ``p{H}`` = pi_now (1 - S_u(s+H) / S_u(s)): chance of a bill in the next H weeks
+          (``p13``, ``p26``, ``p52``; the window is cut at week ``T_MAX``).
+        - ``t_10``, ``t_50``, ``t_90``: timing quantiles if taken up, conditional on no bill
+          in weeks 1..s: t_q(s) = min{t > s : 1 - S_u(t) / S_u(s) >= q}, in calendar weeks
+          from the signal, so always > s; ``None`` if not reached by week ``T_MAX``.
+        - ``t_10_sitting`` etc.: the (expected) number of sitting weeks from the signal up to
+          and including week t_q(s).
         """
         pi, lo, hi, verdict = self.pi_with_ci(z)
         m = np.ones(T_MAX) if mask is None else np.asarray(mask, dtype=float)[:T_MAX]
-        Su = self.survival_u(xweek_row, m)
-        Su0 = np.concatenate([[1.0], Su])  # Su0[t] = S_u(t)
+        logS = np.concatenate([[0.0], self.log_survival_u(xweek_row, m)])  # log S_u(t)
         s = int(min(max(weeks_elapsed, 0), T_MAX))
-        pi_now = pi * Su0[s] / (1 - pi + pi * Su0[s])
+        # pi S / (1 - pi + pi S) = expit(eta + log S): exact in log space, and no 0/0 when pi
+        # rounds to 1 and S_u(s) underflows to 0
+        pi_now = expit(self._eta(z) + logS[s])
         out: dict[str, Any] = {
             "pi": pi,
             "pi_lo": lo,
@@ -565,16 +594,19 @@ class TakeUpModel:
             "weeks_elapsed": s,
             "pi_now": float(pi_now),
         }
+        alive = np.isfinite(logS[s])  # S_u(s) > 0, so conditioning on it is defined
+        # P(bill in weeks s+1..t | taken up, no bill in weeks 1..s) for t = s+1..T_MAX
+        cond = -np.expm1(logS[s + 1 :] - logS[s]) if alive else np.zeros(T_MAX - s)
         for H in horizons:  # chance of a bill by week s+H, from now
             Hs = min(s + H, T_MAX)
-            p = pi_now * (1 - Su0[Hs] / Su0[s]) if Su0[s] > 0 else 0.0
-            out[f"p_bill_next_{H}w"] = float(p)
+            out[f"p{H}"] = float(pi_now * cond[Hs - s - 1]) if Hs > s else 0.0
         sitting_weeks = np.cumsum(m)
-        for q in QUANTILES:  # t_q = first week with 1 - S_u(t) >= q
-            hit = np.nonzero(1 - Su >= q)[0]
-            tq = int(hit[0] + 1) if len(hit) else None
-            out[f"t_{q}"] = tq
-            out[f"t_{q}_sitting"] = int(round(sitting_weeks[tq - 1])) if tq else None
+        for q in QUANTILES:
+            hit = np.nonzero(cond >= q)[0] if alive else []
+            tq = s + 1 + int(hit[0]) if len(hit) else None
+            key = quantile_key(q)
+            out[key] = tq
+            out[f"{key}_sitting"] = int(round(sitting_weeks[tq - 1])) if tq else None
         return out
 
 
@@ -582,9 +614,10 @@ class TakeUpModel:
 
 
 def bootstrap(
-    d: dict[str, Any], B: int, seed: int = 0, base: TakeUpModel | None = None
+    d: dict[str, Any], B: int = BOOTSTRAP_B, seed: int = 0, base: TakeUpModel | None = None
 ) -> list[TakeUpModel]:
-    """Refit on ideas resampled with replacement (no Hessian, for speed).
+    """Refit on ideas resampled with replacement (no Hessian, for speed); B >= 200 for
+    reported intervals.
 
     If ``base`` is given, each refit starts from its estimates.
     """
@@ -605,8 +638,12 @@ def bootstrap_intervals(
     mask: np.ndarray | None = None,
     level: float = 0.90,
 ) -> dict[str, tuple[float, float]]:
-    """Percentile intervals of ``pi_now`` and the 26 / 52-week probabilities."""
-    keys = ("pi_now", "p_bill_next_26w", "p_bill_next_52w")
+    """Percentile intervals of ``pi_now``, ``p26`` and ``p52`` over bootstrap refits.
+
+    Every refit predicts with the same ``weeks_elapsed`` and ``mask``, so the intervals are
+    conditional on the same s silent weeks as the point forecast.
+    """
+    keys = ("pi_now", "p26", "p52")
     preds = [m.predict(z, xweek_row, weeks_elapsed, horizons=(26, 52), mask=mask) for m in models]
     tail = 100 * (1 - level) / 2
     out = {}
@@ -635,12 +672,14 @@ def describe(
             f"  After {p['weeks_elapsed']} weeks with no bill, chance now: "
             f"{p['pi_now']:.0%}{interval}"
         )
+    horizons = [h for h in HORIZONS if f"p{h}" in p]
     lines.append(
-        "  Chance of a bill in the next 13 / 26 / 52 weeks: "
-        f"{p['p_bill_next_13w']:.0%} / {p['p_bill_next_26w']:.0%} / {p['p_bill_next_52w']:.0%}"
+        f"  Chance of a bill in the next {' / '.join(map(str, horizons))} weeks: "
+        + " / ".join(f"{p[f'p{h}']:.0%}" for h in horizons)
     )
     lines.append(
-        f"  If taken up: median {when(p['t_0.5'], p['t_0.5_sitting'])}, 80% window "
-        f"{when(p['t_0.1'], p['t_0.1_sitting'])} to {when(p['t_0.9'], p['t_0.9_sitting'])}"
+        f"  If taken up: median {when(p['t_50'], p['t_50_sitting'])}, 80% window "
+        f"{when(p['t_10'], p['t_10_sitting'])} to {when(p['t_90'], p['t_90_sitting'])}"
+        " (weeks from the signal)"
     )
     return "\n".join(lines)

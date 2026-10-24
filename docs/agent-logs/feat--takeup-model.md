@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 22:48 — fix(takeup): conditional timing quantiles and contract output names
+
+- **What:** `predict()` now gives timing quantiles conditional on the s silent weeks already passed, t_q(s) = min{t > s : 1 − S_u(t)/S_u(s) ≥ q} (calendar and sitting weeks); outputs renamed to the contract names (`pi`, `pi_lo`, `pi_hi`, `verdict`, `weeks_elapsed`, `pi_now`, `p26`, `p52`, `t_10`, `t_50`, `t_90`); bootstrap defaults to B = 200 and conditions on the same s; `pi_now` computed in log space.
+- **Why:** the task spec names this prototype bug (quantiles were measured from week 0, so they could fall before "now").
+- **Checks:** `pytest tests/takeup/test_takeup_model.py`: 36 passed (quantiles > s for s up to 258, s = 0 equals the unconditional result, exact geometric case, non-sitting weeks skipped, p13 ≤ p26 ≤ p52 ≤ pi_now); a reviewer's slow reference matched on 400 random models; `ruff`: clean.
+- **Notes:** the reviewer found a divide-by-zero when pi rounds to 1 and S_u underflows; fixed by the log-space formula, with a regression test.
+
 ## 2026-10-24 22:35 — docs(contract): key take-up forecasts by signal_id
 
 - **What:** `takeup_forecasts` gets a `signal_id` column and primary key (`run_id`, `signal_id`, `as_of`); 10.9 documents `signal_id` = `idea_id`, or `<idea_id>:<group_id>` for a group whose merge is not yet visible at `as_of`.

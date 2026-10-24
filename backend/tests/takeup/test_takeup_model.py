@@ -1,5 +1,6 @@
 """Take-up cure model with the sitting calendar (TAKEUP_PLAN §2.2 change 1). Offline."""
 
+import inspect
 from datetime import date, timedelta
 
 import numpy as np
@@ -303,19 +304,164 @@ def test_predict_outputs_are_coherent():
     p = m.predict(**tm.row_inputs(d, 0))
     assert p["weeks_elapsed"] == d["t"][0] > 0
     for out in (p0, p):
-        for key in ("pi", "pi_lo", "pi_hi", "pi_now", *(f"p_bill_next_{h}w" for h in tm.HORIZONS)):
+        for key in ("pi", "pi_lo", "pi_hi", "pi_now", *(f"p{h}" for h in tm.HORIZONS)):
             assert 0.0 <= out[key] <= 1.0
-        assert out["p_bill_next_13w"] <= out["p_bill_next_26w"] <= out["p_bill_next_52w"]
-        assert out["p_bill_next_52w"] <= out["pi_now"]
+        assert out["p13"] <= out["p26"] <= out["p52"]
+        assert out["p52"] <= out["pi_now"]
     assert p0["pi_now"] == pytest.approx(p0["pi"])
     assert p["pi_now"] < p["pi"]
     # sitting-week timing never exceeds calendar timing; equal with an all-ones mask
-    for q in tm.QUANTILES:
-        assert p[f"t_{q}_sitting"] <= p[f"t_{q}"]
+    for key in ("t_10", "t_50", "t_90"):
+        assert p[f"{key}_sitting"] <= p[key]
     ones = m.predict(d["Z"][0], d["xweek"][0], weeks_elapsed=10)
-    for q in tm.QUANTILES:
-        assert ones[f"t_{q}_sitting"] == ones[f"t_{q}"]
+    for key in ("t_10", "t_50", "t_90"):
+        assert ones[f"{key}_sitting"] == ones[key]
     assert "sitting weeks" in tm.describe("I1", "Idea", p)
+
+
+# ------------------------------------------- conditional timing quantiles (g)
+
+T_KEYS = ("t_10", "t_50", "t_90")
+CONST_LOGIT = -2.0  # lambda = 0.1192 per sitting week
+# ceil(log(1 - q) / log(1 - lambda)) = ceil(0.83), ceil(5.46), ceil(18.14): no ties at q
+GEOMETRIC_K = {"t_10": 1, "t_50": 6, "t_90": 19}
+
+
+def constant_hazard_model(g0: float = 0.5) -> tm.TakeUpModel:
+    return tm.TakeUpModel.from_params([g0, *([CONST_LOGIT] * len(tm.BIN_EDGES))], [], [])
+
+
+def predict_const(m: tm.TakeUpModel, s: int, mask: np.ndarray | None = None) -> dict:
+    return m.predict(np.array([]), np.array([]), weeks_elapsed=s, mask=mask)
+
+
+def test_pi_now_is_finite_when_pi_rounds_to_one_and_survival_underflows():
+    # eta = 40 makes pi == 1.0 in floats; hazard logit 8 makes log S_u(100) < -745, so
+    # S_u(100) == 0.0 and the direct formula pi S / (1 - pi + pi S) would be 0 / 0
+    m = tm.TakeUpModel.from_params([40.0, *([8.0] * len(tm.BIN_EDGES))], [], [])
+    assert m.pi_with_ci(np.array([]))[0] == 1.0
+    assert np.exp(m.log_survival_u(np.array([]))[99]) == 0.0
+    out = predict_const(m, 100)
+    assert out["pi_now"] == pytest.approx(expit(40.0 + m.log_survival_u(np.array([]))[99]))
+    for key in ("pi_now", *(f"p{h}" for h in tm.HORIZONS)):
+        assert np.isfinite(out[key]) and 0.0 <= out[key] <= 1.0
+
+
+@pytest.mark.parametrize("s", [0, 1, 7, 40, tm.T_MAX])
+def test_pi_now_equals_direct_formula_in_ordinary_range(s):
+    m = constant_hazard_model(g0=0.5)
+    pi = expit(0.5)
+    Su_s = 1.0 if s == 0 else m.survival_u(np.array([]))[s - 1]
+    expected = pi * Su_s / (1 - pi + pi * Su_s)
+    assert predict_const(m, s)["pi_now"] == pytest.approx(expected, rel=1e-12)
+
+
+def brute_force_quantile(Su: np.ndarray, s: int, q: float) -> int | None:
+    """min{t > s : 1 - S_u(t) / S_u(s) >= q}, by a plain loop over weeks."""
+    S = [1.0, *Su]
+    for t in range(s + 1, tm.T_MAX + 1):
+        if 1 - S[t] / S[s] >= q - 1e-12:
+            return t
+    return None
+
+
+@pytest.fixture(scope="module")
+def recess_forecast():
+    """A model with a varying baseline and a time-varying feature, on a recess calendar."""
+    prob = pd.Series(0.6, index=pd.RangeIndex(1, 54))
+    df = one_idea(signal_date="2021-01-15", z_a=1.0, x_b="2021-09-01", data_end="2026-10-24")
+    d = tm.prepare(df, recess_calendar(), week_probability=prob)
+    return model_for(d, alpha=(-2.0, -2.6, -3.0, -3.3, -3.6, -4.0)), tm.row_inputs(d, 0)
+
+
+def test_conditional_quantiles_are_after_s_for_every_s(recess_forecast):
+    m, row = recess_forecast
+    Su = m.survival_u(row["xweek_row"], row["mask"])
+    t50_unconditional = m.predict(**{**row, "weeks_elapsed": 0})["t_50"]
+    seen_late = 0
+    for s in range(0, tm.T_MAX + 1, 3):
+        p = m.predict(**{**row, "weeks_elapsed": s})
+        reached = [p[k] for k in T_KEYS if p[k] is not None]
+        assert all(t > s for t in reached), (s, reached)
+        assert reached == sorted(reached)
+        for k, q in zip(T_KEYS, tm.QUANTILES, strict=True):
+            assert p[k] == brute_force_quantile(Su, s, q), (s, k)
+            if p[k] is not None:
+                assert p[f"{k}_sitting"] <= p[k]
+        # (5) probabilities are ordered and below pi_now
+        assert 0.0 <= p["p13"] <= p["p26"] <= p["p52"] <= p["pi_now"] <= 1.0
+        seen_late += s > t50_unconditional and p["t_50"] is not None
+    assert seen_late > 10  # many s beyond the unconditional median still have a t_50 > s
+
+
+def test_conditional_quantiles_at_s0_equal_unconditional(recess_forecast):
+    m, row = recess_forecast
+    Su = m.survival_u(row["xweek_row"], row["mask"])
+    p = m.predict(**{**row, "weeks_elapsed": 0})
+    for k, q in zip(T_KEYS, tm.QUANTILES, strict=True):
+        assert p[k] == int(np.nonzero(1 - Su >= q)[0][0] + 1)
+    assert p["pi_now"] == pytest.approx(p["pi"])
+
+
+def test_geometric_waiting_time_quantiles_shift_by_s():
+    m = constant_hazard_model(g0=0.5)
+    lam, pi = expit(CONST_LOGIT), expit(0.5)
+    for k, q in zip(T_KEYS, tm.QUANTILES, strict=True):  # the hand values above
+        assert GEOMETRIC_K[k] == int(np.ceil(np.log(1 - q) / np.log(1 - lam)))
+    for s in (0, 1, 5, 30, 100, 200):
+        p = predict_const(m, s)
+        for k in T_KEYS:
+            assert p[k] == s + GEOMETRIC_K[k]
+            assert p[f"{k}_sitting"] == p[k]  # every week sits
+        S_s = (1 - lam) ** s
+        pi_now = pi * S_s / (1 - pi + pi * S_s)
+        assert p["pi_now"] == pytest.approx(pi_now, rel=1e-12)
+        for H in tm.HORIZONS:  # memoryless: S_u(s+H) / S_u(s) = (1 - lambda)^H
+            assert p[f"p{H}"] == pytest.approx(pi_now * (1 - (1 - lam) ** H), rel=1e-10)
+    # near the end of follow-up: quantiles not reached by T_MAX are None
+    late = predict_const(m, tm.T_MAX - 3)
+    assert late["t_10"] == tm.T_MAX - 2 and late["t_50"] is None and late["t_90"] is None
+    assert late["t_50_sitting"] is None
+    end = predict_const(m, tm.T_MAX)
+    assert all(end[k] is None for k in T_KEYS) and end["p52"] == 0.0
+
+
+def test_conditional_quantiles_skip_non_sitting_weeks_after_s():
+    m = constant_hazard_model()
+    lam = expit(CONST_LOGIT)
+    s = 20
+    mask = np.ones(tm.T_MAX)
+    mask[[s, s + 1, s + 2, s + 5, s + 6, s + 7, s + 8]] = 0  # weeks s+1..s+3, s+6..s+9
+    p = predict_const(m, s, mask)
+    sitting_after = [t for t in range(s + 1, tm.T_MAX + 1) if mask[t - 1] == 1]
+    # by hand: sitting weeks after s are s+4, s+5, s+10, s+11, ...
+    assert (p["t_10"], p["t_50"], p["t_90"]) == (s + 4, s + 13, s + 26)
+    for k in T_KEYS:
+        assert p[k] == sitting_after[GEOMETRIC_K[k] - 1]
+        assert mask[p[k] - 1] == 1  # never a week with no sitting
+        assert p[f"{k}_sitting"] == s + GEOMETRIC_K[k]  # all s weeks before sat
+    # masked weeks carry no probability: p26 counts only the 19 sitting weeks in s+1..s+26
+    n_sit = int(mask[s : s + 26].sum())
+    assert n_sit == 19
+    assert p["p26"] == pytest.approx(p["pi_now"] * (1 - (1 - lam) ** n_sit), rel=1e-10)
+    # and masked weeks before s do not lower pi_now
+    shifted = np.concatenate([np.zeros(5), np.ones(tm.T_MAX - 5)])
+    assert predict_const(m, s + 5, shifted)["pi_now"] == pytest.approx(
+        predict_const(m, s)["pi_now"]
+    )
+
+
+def test_bootstrap_intervals_condition_on_the_same_s():
+    models = [constant_hazard_model(g0) for g0 in np.linspace(-1.0, 1.0, 21)]
+    mask = np.ones(tm.T_MAX)
+    ci = tm.bootstrap_intervals(models, np.array([]), np.array([]), 40, mask, level=0.9)
+    preds = [predict_const(b, 40, mask) for b in models]
+    for key in ("pi_now", "p26", "p52"):
+        expected = np.percentile([p[key] for p in preds], [5, 95])
+        np.testing.assert_allclose(ci[key], expected)
+    at_signal = tm.bootstrap_intervals(models, np.array([]), np.array([]), 0, mask)
+    assert ci["pi_now"][1] < at_signal["pi_now"][0]  # 40 silent weeks lower pi_now
+    assert inspect.signature(tm.bootstrap).parameters["B"].default >= 200
 
 
 # ----------------------------------------------------------- gradient check
@@ -427,7 +573,7 @@ def test_bootstrap_intervals(recovered):
     boots = tm.bootstrap(tm.resample(d, np.arange(400)), B=3, seed=1, base=m)
     assert len(boots) == 3 and all(b.Sigma is None for b in boots)
     ci = tm.bootstrap_intervals(boots, **tm.row_inputs(d, k))
-    assert set(ci) == {"pi_now", "p_bill_next_26w", "p_bill_next_52w"}
+    assert set(ci) == {"pi_now", "p26", "p52"}
     for lo, hi in ci.values():
         assert 0.0 <= lo <= hi <= 1.0
 
@@ -554,4 +700,4 @@ def test_empty_bin_on_short_history_stays_finite_and_predicts(caplog):
     assert m.theta.min() > -30
     assert not (se == 0).any()  # never shown as exactly determined
     p = m.predict(np.array([1, 1, 0, 2.0]), np.array([tm.T_MAX + 1] * 2), weeks_elapsed=60)
-    assert p["p_bill_next_52w"] > 0
+    assert p["p52"] > 0
