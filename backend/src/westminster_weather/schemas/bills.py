@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from westminster_weather.domain.bills import StageStatus
 from westminster_weather.domain.stages import BillStage, LifecyclePhase, StopReason
@@ -81,3 +81,52 @@ class GovernmentBillTrackingResponse(BaseModel):
     stages: list[TrackedStageNodeSchema]
     milestone_dates: list[MilestoneDateSchema] = []
 
+
+
+class TimelineQuantiles(BaseModel):
+    p10_days: int = Field(..., description="10th percentile (optimistic) days from as_of")
+    p50_days: int = Field(..., description="50th percentile (median) days from as_of")
+    p90_days: int = Field(..., description="90th percentile (conservative) days from as_of")
+    estimated_median_date: date | None = None
+    p10_date: date | None = None
+    p90_date: date | None = None
+
+
+class StageForecastSchema(BaseModel):
+    """Per remaining state (DATA_CONTRACT §6.3)."""
+
+    model_state: BillStage
+    p_reach: float = Field(..., ge=0.0, le=1.0, description="Probability the bill reaches it")
+    p_fail_defeated: float = Field(..., ge=0.0, le=1.0)
+    p_fail_withdrawn: float = Field(..., ge=0.0, le=1.0)
+    p_fail_session_end: float = Field(..., ge=0.0, le=1.0)
+    p_fail_dissolution: float = Field(..., ge=0.0, le=1.0)
+    entry_date_p50: date | None = Field(
+        None, description="Median date of reaching the state, among paths that reach it"
+    )
+
+
+class BillForecastResponse(BaseModel):
+    """Passage forecast for one bill on ``as_of`` (MODEL_SPEC §5.1)."""
+
+    bill_id: int
+    short_title: str
+    as_of: date
+    current_phase: LifecyclePhase
+    current_stage: BillStage | None = None
+    passage_probability: float = Field(
+        ..., ge=0.0, le=1.0, description="Probability that the Government Bill reaches Royal Assent"
+    )
+    p_ra_before_session_end: float = Field(..., ge=0.0, le=1.0)
+    commencement_probability: float | None = Field(
+        None, description="Not modelled yet (no commencement model); always null"
+    )
+    time_to_royal_assent: TimelineQuantiles | None = None
+    time_to_commencement: TimelineQuantiles | None = None
+    primary_stop_risks: dict[StopReason, float] = Field(
+        default_factory=dict,
+        description="Probability distribution over potential stop states",
+    )
+    stages: list[StageForecastSchema] | None = None
+    model_variant: str = Field(..., description="'train' (backtest) or 'live' model set")
+    n_paths: int

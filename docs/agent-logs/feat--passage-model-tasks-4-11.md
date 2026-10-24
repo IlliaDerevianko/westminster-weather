@@ -1,5 +1,11 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 22:49 — feat(api): forecast response schemas
+
+- **What:** added `TimelineQuantiles`, `StageForecastSchema` (DATA_CONTRACT §6.3 fields) and `BillForecastResponse` (MODEL_SPEC §5.1, original field names from the first backend commit plus `as_of`, `p_ra_before_session_end`, `stages`, `model_variant`, `n_paths`) to `schemas/bills.py`. Existing schemas unchanged.
+- **Why:** BUILD_PLAN task 9 step 3; `BillForecastResponse` had been removed from `main` in an earlier refactor.
+- **Checks:** `ruff`: clean; `pytest`: 98 passed.
+
 ## 2026-10-24 22:41 — feat(model): ping-pong as rounds (MODEL_SPEC §4.4)
 
 - **What:** `model/pingpong.py` now fits rounds (`N − 1 ~ Poisson(λ)`, one round per stage 12/13/42 sitting), empirical gaps between rounds and from the last round to Royal Assent, using `get_stage_sittings`; `sample_duration` combines them. Tests updated; `cli train` re-run.
