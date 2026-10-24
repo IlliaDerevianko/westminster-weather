@@ -56,6 +56,15 @@ TRANSITION_COLUMNS = [
     "fail_cause",
 ]
 COVARIATE_COLUMNS = ["bill_id", "feature", "valid_from", "value"]
+STAGE_SITTING_COLUMNS = [
+    "bill_id",
+    "sitting_id",
+    "api_stage_id",
+    "model_state",
+    "house",
+    "session_id",
+    "event_date",
+]
 ANNOUNCED_COLUMNS = ["id", "date_type", "house", "target_date", "announced_on"]
 
 FAIL_CAUSE = {
@@ -277,6 +286,21 @@ class DatabaseInterface:
             "parliaments": parls.reset_index(drop=True),
         }
 
+    # ------------------------------------------------------------------ §5.4a
+
+    def get_stage_sittings(self, as_of: date) -> pd.DataFrame:
+        """Every stage sitting of a bill introduced by ``as_of``, dated on or before ``as_of``,
+        with its ``model_state`` (NULL for stages the model ignores). Needed to count
+        ping-pong rounds (MODEL_SPEC §4.4)."""
+        bills = self.bills[self.bills["introduced_date"] <= as_of]["bill_id"]
+        st = self.stage_sittings
+        st = st[(st["event_date"] <= as_of) & st["bill_id"].isin(bills)].copy()
+        st["model_state"] = st["api_stage_id"].map(
+            {k: v.value for k, v in STAGE_ID_TO_STATE.items()}
+        )
+        st = st.sort_values(["bill_id", "event_date", "sort_order"])
+        return st[STAGE_SITTING_COLUMNS].reset_index(drop=True)
+
     # ------------------------------------------------------------------ live only
 
     def get_scheduled_sittings(self, as_of: date) -> pd.DataFrame:
@@ -313,6 +337,10 @@ def get_covariates(as_of: date) -> pd.DataFrame:
 
 def get_calendar(as_of: date) -> dict[str, pd.DataFrame]:
     return _default().get_calendar(as_of)
+
+
+def get_stage_sittings(as_of: date) -> pd.DataFrame:
+    return _default().get_stage_sittings(as_of)
 
 
 def get_scheduled_sittings(as_of: date) -> pd.DataFrame:

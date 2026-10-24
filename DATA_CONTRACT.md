@@ -222,7 +222,7 @@ Build only if time allows. The model must still run if these are empty.
 
 ## 5. Model interface (the protocol)
 
-The model calls **only these four functions**. The database side implements them as SQL views or Python functions with identical signatures and outputs. Every function takes `as_of` and returns nothing dated after it.
+The model calls **only these five functions** (5.1–5.4a). The database side implements them as SQL views or Python functions with identical signatures and outputs. Every function takes `as_of` and returns nothing dated after it.
 
 ### 5.1 `get_bills(as_of) -> table`
 One row per bill introduced on or before `as_of`. Only columns marked "intro", plus:
@@ -258,6 +258,14 @@ Time-varying features in long format, one row per change. The model forward-fill
 | `announced` | Future dates from `announced_dates` with `announced_on ≤ as_of` |
 | `sessions` | All sessions with `start_date ≤ as_of`, `end_date` hidden if after `as_of` |
 | `parliaments` | Same rule |
+
+### 5.4a `get_stage_sittings(as_of) -> table`
+Individual stage sittings, needed where a state has several sittings that matter on their own (ping-pong rounds, MODEL_SPEC §4.4).
+| Column | Notes |
+|---|---|
+| `bill_id`, `sitting_id`, `api_stage_id`, `house`, `session_id` | As in `stage_sittings` |
+| `model_state` | From `stage_map`; `NULL` for stages the model ignores |
+| `event_date` | Only sittings with `event_date ≤ as_of`, for bills introduced by `as_of` |
 
 ### 5.5 Feature registry
 The model requests features by name. Adding a feature = adding a row here and a source in `get_covariates`.

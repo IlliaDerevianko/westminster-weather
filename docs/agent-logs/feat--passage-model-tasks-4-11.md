@@ -1,5 +1,11 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 22:39 — feat(data): add get_stage_sittings(as_of) to the model interface
+
+- **What:** added `get_stage_sittings(as_of)` to `data/interface.py` (method on `DatabaseInterface` plus module function): stage sittings dated ≤ `as_of` for bills introduced by `as_of`, with `model_state` from the stage map. Documented as DATA_CONTRACT §5.4a; added leakage and synthetic tests.
+- **Why:** Aleks asked to fix the interface gap: MODEL_SPEC §4.4 counts ping-pong rounds, which need individual sittings; the four existing functions only give ping-pong entry and Royal Assent dates. Changing the teammate's interface code was approved by Aleks.
+- **Checks:** `ruff`: clean; `pytest tests/model/test_interface.py`: 21 passed.
+
 ## 2026-10-24 22:37 — feat(model): failure routes and ping-pong (task 8)
 
 - **What:** added `model/failure.py` (session-length distribution from prorogued sessions, conditional draws; dissolution hazard by years since election with a 5-year cap; carry-over rule; constant defeat fallback 0.002 per Commons vote stage; constant withdrawal hazard) and `model/pingpong.py` (ping-pong probability; total ping-pong → Royal Assent duration). `cli train` fits a training version (as of 2019-10-14, sessions 20–30) and a live version, saves them in `backend/models/`, writes `metrics.json` (`failure`) and `reports/failure_and_pingpong.png`. Added `tests/model/test_failure.py`.
