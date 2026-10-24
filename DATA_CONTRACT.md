@@ -353,6 +353,22 @@ Per remaining stage, for the timeline and failure chart.
 
 **Alert rule:** write an alert if the trigger is `stage_change`, `prorogation_announced` or `dissolution_announced`, or if `|delta_ra_days| > 14`, or if `|delta_p_royal_assent| > 0.05`.
 
+### 6.5 `backtest_forecasts`
+Backtest results of any model, one row per forecast. Each model writes under its own `model_name` (e.g. `passage_v1`), so models can be compared in one table. Forecasts must use only data available on `forecast_date`.
+| Column | Type | Notes |
+|---|---|---|
+| `model_name` | TEXT | Part of PK; e.g. `passage_v1` |
+| `bill_id` | INTEGER FK | Part of PK |
+| `forecast_date` | DATE | Part of PK; the `as_of` the forecast was made on |
+| `state_at_forecast` | TEXT NULL | `model_state` on `forecast_date` |
+| `p_royal_assent` | REAL NULL | Forecast probability of Royal Assent |
+| `ra_date_p10` | DATE NULL | 10th percentile Royal Assent date (among passing paths) |
+| `ra_date_p50` | DATE NULL | Median Royal Assent date |
+| `ra_date_p90` | DATE NULL | 90th percentile Royal Assent date |
+| `actual_outcome` | TEXT | `bills.outcome` as finally known (§3.1 values) |
+| `actual_ra_date` | DATE NULL | Actual Royal Assent date; `NULL` if the bill did not pass |
+| `created_at` | TIMESTAMP | When the row was written |
+
 ---
 
 ## 7. Update cycle

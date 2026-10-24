@@ -476,6 +476,32 @@ def cmd_quantile(args: argparse.Namespace) -> None:
     metrics_path.write_text(json.dumps(metrics, indent=2, default=str) + "\n")
 
 
+MODEL_NAME = "passage_v1"
+
+
+def cmd_save_backtest(args: argparse.Namespace) -> None:
+    """Write saved backtest results to the backtest_forecasts table (no re-run)."""
+    from westminster_weather.db import save_backtest_forecasts_to_db
+
+    res = pd.read_parquet(PROCESSED_DIR / args.file)
+    out = pd.DataFrame(
+        {
+            "model_name": MODEL_NAME,
+            "bill_id": res["bill_id"].astype(int),
+            "forecast_date": res["as_of"],
+            "state_at_forecast": res["start_state"],
+            "p_royal_assent": res["passage_probability"].astype(float),
+            "ra_date_p10": res["p10"],
+            "ra_date_p50": res["p50"],
+            "ra_date_p90": res["p90"],
+            "actual_outcome": res["outcome"],
+            "actual_ra_date": res["outcome_date"].where(res["ra"], None),
+        }
+    )
+    n = save_backtest_forecasts_to_db(out)
+    print(f"Saved {n:,} forecasts as model_name='{MODEL_NAME}' to backtest_forecasts")
+
+
 def cmd_evaluate(args: argparse.Namespace) -> None:
     import json
     import time
@@ -580,6 +606,10 @@ def main(argv: list[str] | None = None) -> None:
         "--also-frozen", action="store_true", help="Also run the frozen-2019 models for comparison"
     )
     ev.set_defaults(func=cmd_evaluate)
+
+    sb = sub.add_parser("save-backtest", help="Write saved backtest results to the database")
+    sb.add_argument("--file", default="backtest_step_5.parquet")
+    sb.set_defaults(func=cmd_save_backtest)
 
     qt = sub.add_parser("quantile", help="Step 5: quantile model vs simulator (training era)")
     qt.add_argument("--workers", type=int, default=6)

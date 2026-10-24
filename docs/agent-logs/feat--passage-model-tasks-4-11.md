@@ -1,5 +1,11 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-25 00:17 — feat(data): backtest_forecasts table with passage_v1 results
+
+- **What:** added `backtest_forecasts` (DATA_CONTRACT §6.5; `BacktestForecastRow` in `models.py`, `save_backtest_forecasts_to_db` in `db.py`, upsert by model_name + bill_id + forecast_date) and `cli save-backtest`; wrote the final (step 5) backtest, 1,281 forecasts, as `model_name = 'passage_v1'` without re-running anything.
+- **Why:** Aleks asked to store results so other models can write theirs to the same table. Part 2 and calibration skipped on Aleks's instruction.
+- **Checks:** `ruff`: clean; `pytest`: 113 passed.
+
 ## 2026-10-25 00:04 — docs(model): error relative to time left and early-forecast breakdown in EVALUATION.md
 
 - **What:** added `error_percent_of_remaining` (median error 35–46% of the time left for early and middle stages, 62–69% for the last stages) and `early_stage_breakdown` (193 bills forecast at their first stage: median 170 days to Royal Assent = 117 waiting between stages + 51 within stages; variance split 53% / 47%; lateness correlates 0.72 with waiting and 0.84 with time within stages) to `evaluate.py`, `metrics.json` (`extra_analysis`) and EVALUATION.md, with a plain-English explanation. Updated EVALUATION.md's method and limitations (scheduled sittings live only, excluded from backtests).
