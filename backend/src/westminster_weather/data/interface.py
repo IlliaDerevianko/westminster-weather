@@ -23,8 +23,10 @@ from westminster_weather.data.stage_map import (
     state_house,
 )
 from westminster_weather.db import (
+    fetch_act_commencements_df,
     fetch_bills_df,
     fetch_parliaments_df,
+    fetch_post_royal_assent_events_df,
     fetch_scheduled_sittings_df,
     fetch_sessions_df,
     fetch_sitting_days_df,
@@ -118,6 +120,18 @@ class DatabaseInterface:
         if self._tables is not None:
             return self._tables["scheduled_sittings"]
         return fetch_scheduled_sittings_df()
+
+    @cached_property
+    def act_commencements(self) -> pd.DataFrame:
+        if self._tables is not None and "act_commencements" in self._tables:
+            return self._tables["act_commencements"]
+        return fetch_act_commencements_df()
+
+    @cached_property
+    def post_royal_assent_events(self) -> pd.DataFrame:
+        if self._tables is not None and "post_royal_assent_events" in self._tables:
+            return self._tables["post_royal_assent_events"]
+        return fetch_post_royal_assent_events_df()
 
     @cached_property
     def _house_dates(self) -> dict[str | None, np.ndarray]:
@@ -293,6 +307,36 @@ class DatabaseInterface:
             return scheduled.iloc[0:0]
         return scheduled[scheduled["event_date"] > as_of].reset_index(drop=True)
 
+    # ------------------------------------------------------------------ §5.5 Phase 3
+
+    def get_act_commencements(self, as_of: date) -> pd.DataFrame:
+        """Acts that received Royal Assent on or before ``as_of``, with post-Royal-Assent dates
+        censored at ``as_of`` so no future commencement or regulation dates leak."""
+        df = self.act_commencements[self.act_commencements["royal_assent_date"] <= as_of].copy()
+        for col in (
+            "some_sections_start_date",
+            "first_commencement_order_date",
+            "latest_commencement_order_date",
+            "first_draft_regulation_date",
+            "latest_draft_regulation_date",
+            "first_laid_regulation_date",
+            "latest_laid_regulation_date",
+            "law_fully_in_force_date",
+            "first_amendment_or_repeal_date",
+            "latest_amendment_or_repeal_date",
+        ):
+            if col in df.columns:
+                s = df[col]
+                df[col] = s.where(s.notna() & (s <= as_of), None)
+        return df.reset_index(drop=True)
+
+    def get_post_royal_assent_events(self, as_of: date) -> pd.DataFrame:
+        """Phase 3 (After Royal Assent) events dated on or before ``as_of``."""
+        events = self.post_royal_assent_events
+        if events.empty:
+            return events
+        return events[events["event_date"] <= as_of].reset_index(drop=True)
+
 
 @cache
 def _default() -> DatabaseInterface:
@@ -317,3 +361,12 @@ def get_calendar(as_of: date) -> dict[str, pd.DataFrame]:
 
 def get_scheduled_sittings(as_of: date) -> pd.DataFrame:
     return _default().get_scheduled_sittings(as_of)
+
+
+def get_act_commencements(as_of: date) -> pd.DataFrame:
+    return _default().get_act_commencements(as_of)
+
+
+def get_post_royal_assent_events(as_of: date) -> pd.DataFrame:
+    return _default().get_post_royal_assent_events(as_of)
+

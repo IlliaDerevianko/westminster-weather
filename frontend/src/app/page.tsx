@@ -610,9 +610,33 @@ function BillTrackerContent() {
                     const isCurrent = stage.status === "current";
                     const isStageStopped = stage.status === "stopped";
                     const isPingPong = stage.stage === "ping_pong";
-                    const roundLabel = `${stage.sitting_count} ${
-                      stage.sitting_count === 1 ? "round" : "rounds"
-                    }`;
+                    const isPostRoyalAssent =
+                      stage.phase === "after_royal_assent";
+                    const countUnit =
+                      stage.stage === "ping_pong"
+                        ? stage.sitting_count === 1
+                          ? "round"
+                          : "rounds"
+                        : stage.stage === "commencement_orders"
+                        ? stage.sitting_count === 1
+                          ? "order"
+                          : "orders"
+                        : stage.stage === "regulations_drafted"
+                        ? stage.sitting_count === 1
+                          ? "draft SI"
+                          : "draft SIs"
+                        : stage.stage === "regulations_laid"
+                        ? stage.sitting_count === 1
+                          ? "SI"
+                          : "SIs"
+                        : stage.stage === "amended_or_repealed"
+                        ? stage.sitting_count === 1
+                          ? "instrument"
+                          : "instruments"
+                        : null;
+                    const countLabel = countUnit
+                      ? `${stage.sitting_count} ${countUnit}`
+                      : null;
                     const stopRiskKey =
                       stage.active_stop_reason ?? stage.stop_risks[0];
                     const stopMeta = stopRiskKey
@@ -687,14 +711,16 @@ function BillTrackerContent() {
                                 {isStageStopped
                                   ? "Stopped"
                                   : isSkipped
-                                  ? "Skipped (0 rounds)"
+                                  ? countLabel
+                                    ? `Skipped (${countLabel})`
+                                    : "Skipped (0)"
                                   : isCurrent
-                                  ? isPingPong
-                                    ? `Current (${roundLabel})`
+                                  ? countLabel
+                                    ? `Current (${countLabel})`
                                     : "Current"
                                   : isCompleted
-                                  ? isPingPong
-                                    ? `Done (${roundLabel})`
+                                  ? countLabel
+                                    ? `Done (${countLabel})`
                                     : "Done"
                                   : "Upcoming"}
                               </span>
@@ -703,13 +729,17 @@ function BillTrackerContent() {
                             {/* Entered/Completed Dates & Collapsible Sittings */}
                             {(stage.entered_date ||
                               stage.visible_events.length > 0 ||
-                              (isPingPong && stage.summary)) && (
+                              ((isPingPong || isPostRoyalAssent || isSkipped) &&
+                                stage.summary)) && (
                               <div className="mt-2.5 rounded border border-slate-200/80 bg-white p-2 text-[11px] space-y-1.5">
-                                {isPingPong && stage.summary && (
-                                  <div className="font-medium text-teal-900">
-                                    {stage.summary}
-                                  </div>
-                                )}
+                                {(isPingPong ||
+                                  isPostRoyalAssent ||
+                                  isSkipped) &&
+                                  stage.summary && (
+                                    <div className="font-medium text-teal-900">
+                                      {stage.summary}
+                                    </div>
+                                  )}
                                 {stage.entered_date && !isSkipped && (
                                   <div className="flex flex-wrap items-center justify-between gap-1 text-slate-700 font-medium">
                                     <span>
