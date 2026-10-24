@@ -12,13 +12,18 @@ production through the existing ``westminster_weather.db`` adapters and never wr
 from typing import Any
 
 import pandas as pd
-from sqlalchemy import Connection, Engine, Table, create_engine, select
+from sqlalchemy import Connection, Engine, Table, create_engine, delete, select
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.pool import NullPool
 
 from westminster_weather import db as app_db
 from westminster_weather.config import settings
-from westminster_weather.takeup.tables import DATA_TABLES, TABLES, takeup_metadata
+from westminster_weather.takeup.tables import (
+    DATA_TABLES,
+    SOURCE_TABLES,
+    TABLES,
+    takeup_metadata,
+)
 
 
 class TakeupDatabaseNotConfigured(RuntimeError):
@@ -138,13 +143,28 @@ def upsert(
         engine.dispose()
 
 
-def load_takeup_tables() -> dict[str, pd.DataFrame]:
-    """The five take-up data tables (§10.2–10.6) from the take-up database, by table name."""
+def clear_derived_tables(conn: Connection, tables: list[Table | str]) -> dict[str, int]:
+    """Delete every row of the given derived take-up tables on ``conn`` (inside the caller's
+    transaction); returns rows deleted per table. Refuses the raw source tables
+    (``source_documents``, ``member_government_posts``), non-take-up tables and production."""
+    _refuse_production(conn)
+    out = {}
+    for t in tables:
+        table = _table(t)
+        if table.name not in takeup_metadata.tables:
+            raise ValueError(f"{table.name} is not a take-up table")
+        if table in SOURCE_TABLES:
+            raise ValueError(f"refusing to clear raw source table {table.name}")
+        out[table.name] = conn.execute(delete(table)).rowcount
+    return out
+
+
+def _read_tables(tables: tuple[Table, ...]) -> dict[str, pd.DataFrame]:
     engine = get_takeup_engine()
     try:
         with engine.connect() as conn:
             out = {}
-            for table in DATA_TABLES:
+            for table in tables:
                 rows = conn.execute(select(table)).mappings().all()
                 out[table.name] = pd.DataFrame(
                     [dict(r) for r in rows], columns=[c.name for c in table.columns]
@@ -152,6 +172,17 @@ def load_takeup_tables() -> dict[str, pd.DataFrame]:
             return out
     finally:
         engine.dispose()
+
+
+def load_source_tables() -> dict[str, pd.DataFrame]:
+    """The raw source tables (§10.0a ``source_documents``, §10.0b ``member_government_posts``)
+    from the take-up database, by table name (read only)."""
+    return _read_tables(SOURCE_TABLES)
+
+
+def load_takeup_tables() -> dict[str, pd.DataFrame]:
+    """The five take-up data tables (§10.2–10.6) from the take-up database, by table name."""
+    return _read_tables(DATA_TABLES)
 
 
 PARLIAMENT_COLUMNS = ["parliament_id", "first_meeting_date", "dissolution_date", "election_date"]

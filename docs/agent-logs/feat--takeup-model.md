@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 23:37 — feat(takeup): NLP pipeline (label, group, link) and review/score
+
+- **What:** `takeup/nlp.py`: trigger sentences from `source_documents` (rules + an extra commitment check), Hansard minister check by date, TF-IDF topic grouping with 2-year gap splits, linking to Government Bills first read in [trigger − 7 d, trigger + 5 y] (title / long title, bill named in the text → auto), merging groups that link to the same bill with `group_id` kept for leakage control; writes `signal_mentions`, `ideas`, `idea_mentions`, `idea_bill_links` in one transaction; `review` / `score` with an overwrite guard. CLI `nlp`, `review`, `score`; `db.clear_derived_tables` (refuses production and raw tables).
+- **Why:** task 7 (Tier B2–B4, B6).
+- **Checks:** take-up tests 157 passed (synthetic self-test: commitment precision/recall 100%, grouping ARI ≥ 0.85 after merging, linking ≥ 85%); `ruff`: clean. Real run on takeup-dev (45 s): 25,242 documents → 12,518 trigger sentences → 1,939 commitments → 1,113 groups → 985 ideas; 192 linked (169 auto, 23 rule), 793 never taken up. Review files: `backend/data/takeup/review/review_mentions.csv` (100), `review_links.csv` (50).
+- **Notes:** ~80% of raw trigger hits were not commitments (e.g. "draft Bill" mentions), hence the extra check. Estimated precision before hand-labels: commitments ~75–85%, auto links ~70–75%. Re-running `nlp` renumbers ideas, so `idea_events` must be re-matched after each run.
+
 ## 2026-10-24 23:22 — feat(frontend): promises pages with take-up forecasts
 
 - **What:** new `/promises` page (search, verdict filter, sort, as-of picker, verdict badges, chance now / within 52 weeks, expected bill month, bill once introduced) and `/promises/[ideaId]` detail page (plain-English headline, inline-SVG chart of pi_now with the 80% window and event / mention / first-reading markers, minister quotes, events); shared types and fetch helper in `src/lib/takeup.ts`; nav links from home and `/bills`.
