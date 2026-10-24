@@ -390,6 +390,37 @@ An **idea** is one commitment to legislate on one topic. Tier B ideas come from 
 - **King's Speech as an event of an earlier idea.** Each speech item is matched by text (announced name and briefing-note text vs the idea's topic, no bill information) to Tier B ideas whose trigger is before the speech. A match is stored as an `idea_events` row (`event_type = 'kings_speech'`, `event_date` = speech date), so the forecast for that idea updates from the speech day onward (`x_kings_speech`), even before any bill is introduced. The matched item does not become a separate idea.
 - **King's Speech as a trigger.** An item with no earlier matching Tier B idea becomes its own Tier A idea (`A-<item_id>`), triggered on the speech date.
 
+**Raw sources are stored too** (10.0a, 10.0b), so the database is the source of truth: the NLP pipeline reads from them, every commitment sentence points back to its source document, and changing the trigger lexicon never needs a re-fetch. About 40–45 MB stored for 2015 onwards. The fetcher's local cache (`backend/data/cache/takeup/`) is only a download speed-up.
+
+### 10.0a `source_documents`
+One row per written ministerial statement (all, Nov 2014 onwards) or Hansard contribution that contains a trigger phrase.
+| Column | Type | Notes |
+|---|---|---|
+| `doc_id` | TEXT PK | `wms-<statement id>`, `han-<ContributionExtId>` (spoken) or `hanw-<ContributionExtId>` (written, pre-2015) |
+| `source` | TEXT | `'wms'`, `'hansard_spoken'` or `'hansard_written'` |
+| `source_id` | TEXT | API ID as published |
+| `event_date` | DATE | Date made / sitting date |
+| `member_id` | INTEGER NULL | Members API ID of the minister or speaker |
+| `house` | TEXT NULL | `'Commons'` or `'Lords'` |
+| `title` | TEXT | Statement title or debate section |
+| `department` | TEXT NULL | Answering body (written statements) |
+| `text` | TEXT | Full text, HTML stripped |
+| `matched_phrases` | TEXT NULL | Hansard only: the search phrases that returned it, comma-separated |
+| `fetched_at` | TIMESTAMP | |
+
+### 10.0b `member_government_posts`
+Government posts per member, for the "was the speaker a minister on that date" check.
+| Column | Type | Notes |
+|---|---|---|
+| `member_id` | INTEGER | Members API ID |
+| `post_name` | TEXT | e.g. `Secretary of State for Transport` |
+| `start_date` | DATE | |
+| `end_date` | DATE NULL | `NULL` = still in post |
+| `fetched_at` | TIMESTAMP | |
+| PK | (`member_id`, `post_name`, `start_date`) | |
+
+A member with no rows has held no government post. Members whose posts were fetched are listed in the fetch log, so "no rows" is distinguishable from "not fetched".
+
 ### 10.1 `kings_speech_items`
 One row per bill announced in a King's/Queen's Speech briefing note (2012 onwards).
 | Column | Type | Notes |
@@ -409,9 +440,9 @@ The link to a bill is stored in `idea_bill_links` (for an item that is its own i
 One row per sentence in which the government commits (or seems to commit) to legislate.
 | Column | Type | Notes |
 |---|---|---|
-| `mention_id` | TEXT PK | `<source>-<source_id>-<sentence index>` |
+| `mention_id` | TEXT PK | `<doc_id>-<sentence index>` |
 | `source` | TEXT | `'wms'`, `'hansard_spoken'` or `'hansard_written'` |
-| `source_id` | TEXT | Statement ID or Hansard `ContributionExtId` |
+| `doc_id` | TEXT FK → `source_documents` | Document the sentence comes from |
 | `event_date` | DATE | Date made / sitting date |
 | `member_id` | INTEGER NULL | Members API ID of the speaker |
 | `is_minister` | BOOLEAN NULL | Speaker held a government post on `event_date`; `NULL` = unknown |
@@ -514,6 +545,7 @@ Rules: mentions, events and links dated after `as_of` are invisible; merges of g
 
 ### 10.10 Validation checks
 - Every `idea_mentions.mention_id` exists in `signal_mentions` or `kings_speech_items`.
+- Every `signal_mentions.doc_id` exists in `source_documents`; every `source_documents.member_id` of a Hansard row has been checked against `member_government_posts`.
 - Every `idea_bill_links.bill_id` (non-null) exists in `bills` and has a first-reading sitting on or after the idea's `trigger_date` minus 7 days.
 - Every Tier A idea has a hand-checked link row (`checked = TRUE`), with `bill_id` or `NULL`.
 - No `signal_mentions.event_date` or `idea_events.event_date` after `ingested_at`.

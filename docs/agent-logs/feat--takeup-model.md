@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 22:01 — docs(contract): store raw Tier B sources in the database
+
+- **What:** added draft tables `source_documents` (all written ministerial statements, Hansard contributions with a trigger phrase; full text) and `member_government_posts` to `DATA_CONTRACT.md` section 10; `signal_mentions` now points to its document via `doc_id`.
+- **Why:** Roman wants the database to be the source of truth rather than a local cache; he chose to store everything (~40–45 MB of 1 GB) over a keyword-filtered subset.
+- **Checks:** sizes measured from the cache: statements 17,844 (59 MB text), Hansard 3,895 unique contributions (16 MB text); gzip of all text 24 MB.
+- **Notes:** follow-ups: add both tables to `takeup/tables.py`, a loader from cache to database, and make the NLP read from the database.
+
 ## 2026-10-24 21:58 — docs(contract): connect King's Speech items to earlier commitments
 
 - **What:** amended the draft `DATA_CONTRACT.md` section 10: a King's Speech item is matched by text to earlier Tier B ideas and stored as their `kings_speech` event (dated on the speech), so `x_kings_speech` updates a forecast from the speech day; only unmatched items become their own Tier A ideas. Bill-based merging is kept only for de-duplication.
