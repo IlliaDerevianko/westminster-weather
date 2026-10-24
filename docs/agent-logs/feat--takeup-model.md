@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 22:48 — feat(takeup): align data layer with contract section 10; hide DB URLs
+
+- **What:** settings renamed to `DATABASE_URL_TAKEUP` / `DATABASE_URL_TAKEUP_UNPOOLED` (still never falling back to `DATABASE_URL`); new tables `source_documents`, `member_government_posts`; `signal_mentions.doc_id`; `ideas.origin`; `kings_speech_items.bill_id`; `takeup_forecasts` keyed by `signal_id` with the spec column names. `get_takeup_signals`: `x_kings_speech` from dated `idea_events`, carried-over King's Speech items excluded and counted, one `x_white_paper` for white or green papers. All database URL settings are now hidden from `repr()`.
+- **Why:** Roman's task spec and the approved contract (checkpoint 2); a reviewer saw a failing test print the settings object, including the production URL with its password, in its terminal.
+- **Checks:** full `pytest`: 183 passed (signals 55; new `tests/test_config.py` checks no password in `repr`/`str`); `ruff check`: clean.
+- **Notes:** reviewer found a leak (which split group got an idea's events depended on groups dated after `as_of`); fixed with regression tests. Remaining limit: `idea_events` has no `group_id`, so for an idea whose groups are merged through a shared bill, an event matched to a later group shows on the earliest group until the merge; the Tier B producer should match events to groups (follow-up in task 7).
+
 ## 2026-10-24 22:48 — fix(takeup): conditional timing quantiles and contract output names
 
 - **What:** `predict()` now gives timing quantiles conditional on the s silent weeks already passed, t_q(s) = min{t > s : 1 − S_u(t)/S_u(s) ≥ q} (calendar and sitting weeks); outputs renamed to the contract names (`pi`, `pi_lo`, `pi_hi`, `verdict`, `weeks_elapsed`, `pi_now`, `p26`, `p52`, `t_10`, `t_50`, `t_90`); bootstrap defaults to B = 200 and conditions on the same s; `pi_now` computed in log space.

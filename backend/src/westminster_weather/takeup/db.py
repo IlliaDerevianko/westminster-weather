@@ -1,9 +1,9 @@
 """Take-up database access: engines, migration, upserts and loaders (DATA_CONTRACT §10).
 
-All take-up reads and writes go to ``TAKEUP_DATABASE_URL`` (pooled) and
-``TAKEUP_DATABASE_URL_UNPOOLED`` (direct, for DDL), i.e. the Neon branch ``takeup-dev``.
-If ``TAKEUP_DATABASE_URL`` is not set the engines raise; they never fall back to the
-production ``DATABASE_URL``.
+All take-up reads and writes go to ``DATABASE_URL_TAKEUP`` (pooled) and, optionally,
+``DATABASE_URL_TAKEUP_UNPOOLED`` (direct, for DDL), i.e. the Neon branch ``takeup-dev``.
+If ``DATABASE_URL_TAKEUP`` is not set the engines raise, even if the unpooled take-up URL is
+set; they never fall back to the production ``DATABASE_URL``.
 
 Reference tables (bills, stage sittings, sessions, parliaments, sitting days) are read from
 production through the existing ``westminster_weather.db`` adapters and never written here.
@@ -21,23 +21,23 @@ from westminster_weather.takeup.tables import DATA_TABLES, TABLES, takeup_metada
 
 
 class TakeupDatabaseNotConfigured(RuntimeError):
-    """TAKEUP_DATABASE_URL is missing, or points at the production database."""
+    """DATABASE_URL_TAKEUP is missing, or points at the production database."""
 
 
 def _checked_url(direct: bool) -> str:
     pooled = settings.sqlalchemy_takeup_pooled_url
     if not pooled:
         raise TakeupDatabaseNotConfigured(
-            "TAKEUP_DATABASE_URL is not set. Create the Neon branch 'takeup-dev' and add "
-            "TAKEUP_DATABASE_URL and TAKEUP_DATABASE_URL_UNPOOLED to .env.local. The take-up "
-            "tables are never written to the production DATABASE_URL."
+            "DATABASE_URL_TAKEUP is not set. Create the Neon branch 'takeup-dev' and add "
+            "DATABASE_URL_TAKEUP (and optionally DATABASE_URL_TAKEUP_UNPOOLED) to .env.local. "
+            "The take-up code never falls back to the production DATABASE_URL."
         )
     url = settings.sqlalchemy_takeup_direct_url if direct else pooled
     production = {settings.sqlalchemy_pooled_url, settings.sqlalchemy_direct_url}
     if url in production:
         raise TakeupDatabaseNotConfigured(
             "The take-up database URL is the same as the production DATABASE_URL; "
-            "point TAKEUP_DATABASE_URL at the 'takeup-dev' branch instead."
+            "point DATABASE_URL_TAKEUP at the 'takeup-dev' branch instead."
         )
     return url
 

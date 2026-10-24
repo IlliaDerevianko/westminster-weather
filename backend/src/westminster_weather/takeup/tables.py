@@ -3,17 +3,18 @@
 Safety: these tables are deliberately NOT registered on ``westminster_weather.db.Base``. The
 app runs ``Base.metadata.create_all`` on start-up against the production database; the
 take-up tables must only ever be created by ``takeup.db.migrate()`` on the take-up database
-(``TAKEUP_DATABASE_URL``, Neon branch ``takeup-dev``).
+(``DATABASE_URL_TAKEUP``, Neon branch ``takeup-dev``).
 
-Foreign keys between take-up tables are declared. ``idea_bill_links.bill_id`` refers to the
-production ``bills`` table, which lives on ``Base.metadata``; it is NOT declared as a
-database-level foreign key (another MetaData cannot resolve it, and ``bills`` is maintained by
-the passage-model pipeline). The check is done in Python instead (DATA_CONTRACT §10.10).
+Foreign keys between take-up tables are declared (all within ``takeup_metadata``).
+``idea_bill_links.bill_id`` and ``kings_speech_items.bill_id`` refer to the production
+``bills`` table, which lives on ``Base.metadata``; they are NOT declared as database-level
+foreign keys (another MetaData cannot resolve them, and ``bills`` is maintained by the
+passage-model pipeline). The check is done in Python instead (DATA_CONTRACT §10.10).
 ``idea_mentions.mention_id`` points at either ``signal_mentions`` or ``kings_speech_items``,
 so it has no foreign key either.
 
-The contract is a draft awaiting approval: each table is one ``Table(...)`` call below, so a
-column change is a one-line edit here plus a re-run of ``migrate()`` on the branch.
+Each table is one ``Table(...)`` call below, so a column change is a one-line edit here plus
+a re-run of ``migrate()`` on the branch.
 JSON values are stored as TEXT (standard SQL; compatible with SQLite and PostgreSQL).
 """
 
@@ -37,6 +38,39 @@ def _ingested_at() -> Column:
     return Column("ingested_at", DateTime(timezone=True), nullable=False)
 
 
+def _fetched_at() -> Column:
+    return Column("fetched_at", DateTime(timezone=True), nullable=False)
+
+
+# §10.0a Raw sources: every written ministerial statement (Nov 2014 onwards) and every Hansard
+# contribution that contains a trigger phrase. The NLP pipeline reads from here.
+source_documents = Table(
+    "source_documents",
+    takeup_metadata,
+    Column("doc_id", Text, primary_key=True),  # wms-<id> | han-<ContributionExtId> | hanw-<...>
+    Column("source", Text, nullable=False),  # wms | hansard_spoken | hansard_written
+    Column("source_id", Text, nullable=False),  # API ID as published
+    Column("event_date", Date, nullable=False),
+    Column("member_id", Integer, nullable=True),
+    Column("house", Text, nullable=True),  # Commons | Lords
+    Column("title", Text, nullable=False),
+    Column("department", Text, nullable=True),  # answering body (written statements)
+    Column("text", Text, nullable=False),  # full text, HTML stripped
+    Column("matched_phrases", Text, nullable=True),  # Hansard only, comma-separated
+    _fetched_at(),
+)
+
+# §10.0b Government posts per member ("was the speaker a minister on that date").
+member_government_posts = Table(
+    "member_government_posts",
+    takeup_metadata,
+    Column("member_id", Integer, primary_key=True),
+    Column("post_name", Text, primary_key=True),
+    Column("start_date", Date, primary_key=True),
+    Column("end_date", Date, nullable=True),  # NULL = still in post
+    _fetched_at(),
+)
+
 # §10.1 One row per bill announced in a King's/Queen's Speech briefing note.
 kings_speech_items = Table(
     "kings_speech_items",
@@ -47,6 +81,8 @@ kings_speech_items = Table(
     Column("is_draft", Boolean, nullable=False),
     Column("is_carried_over", Boolean, nullable=False),
     Column("department", Text, nullable=True),
+    # Hand-checked bill this item became; NULL = none. Production bills: not a DB-level FK.
+    Column("bill_id", Integer, nullable=True),
     Column("source_url", Text, nullable=False),
     _ingested_at(),
 )
@@ -55,9 +91,9 @@ kings_speech_items = Table(
 signal_mentions = Table(
     "signal_mentions",
     takeup_metadata,
-    Column("mention_id", Text, primary_key=True),  # <source>-<source_id>-<sentence index>
+    Column("mention_id", Text, primary_key=True),  # <doc_id>-<sentence index>
     Column("source", Text, nullable=False),  # wms | hansard_spoken | hansard_written
-    Column("source_id", Text, nullable=False),
+    Column("doc_id", Text, ForeignKey("source_documents.doc_id"), nullable=False),
     Column("event_date", Date, nullable=False),
     Column("member_id", Integer, nullable=True),
     Column("is_minister", Boolean, nullable=True),  # NULL = unknown
@@ -77,13 +113,13 @@ signal_mentions = Table(
 ideas = Table(
     "ideas",
     takeup_metadata,
-    Column("idea_id", Text, primary_key=True),  # A-<item_id> or B-<nnnnn>
-    Column("tier", Text, nullable=False),  # A | B
+    Column("idea_id", Text, primary_key=True),  # ks-<speech_date>-<nn> (= item_id) | nlp-<nnnnn>
+    Column("origin", Text, nullable=False),  # kings_speech | nlp
     Column("topic", Text, nullable=False),
     Column("trigger_date", Date, nullable=False),
     Column("department", Text, nullable=True),
-    Column("first_source", Text, nullable=False),
-    Column("initial_firmness", Integer, nullable=False),
+    Column("first_source", Text, nullable=False),  # kings_speech | wms | hansard_*
+    Column("initial_firmness", Integer, nullable=False),  # King's Speech = 2
     Column("n_mentions", Integer, nullable=False),
     _ingested_at(),
 )
@@ -136,7 +172,7 @@ takeup_runs = Table(
 
 # §10.8 One forecast per (run, signal, as_of). Keyed on signal_id, not idea_id: before the
 # bill's first reading an idea's topic groups are separate signals ('<idea_id>:<group_id>'),
-# so one idea can have several forecasts at the same as_of. (Needs §10.8 updated to match.)
+# so one idea can have several forecasts at the same as_of.
 takeup_forecasts = Table(
     "takeup_forecasts",
     takeup_metadata,
@@ -150,14 +186,17 @@ takeup_forecasts = Table(
     Column("verdict", Text, nullable=False),  # likely | unlikely | uncertain
     Column("weeks_elapsed", Integer, nullable=False),
     Column("pi_now", Float, nullable=False),
-    Column("p_bill_26w", Float, nullable=False),
-    Column("p_bill_52w", Float, nullable=False),
-    Column("t_p10", Integer, nullable=True),
-    Column("t_p50", Integer, nullable=True),
-    Column("t_p90", Integer, nullable=True),
+    Column("p26", Float, nullable=False),  # P(first reading within 26 weeks of as_of)
+    Column("p52", Float, nullable=False),
+    # weeks from the trigger, conditional on weeks_elapsed; NULL beyond the 5-year window
+    Column("t_10", Integer, nullable=True),
+    Column("t_50", Integer, nullable=True),
+    Column("t_90", Integer, nullable=True),
     Column("created_at", DateTime(timezone=True), nullable=False),
 )
 
+# Raw sources (§10.0a, §10.0b): read by the NLP pipeline, not by get_takeup_signals.
+SOURCE_TABLES: tuple[Table, ...] = (source_documents, member_government_posts)
 # The six tables get_takeup_signals reads (runs and forecasts are model outputs).
 DATA_TABLES: tuple[Table, ...] = (
     kings_speech_items,
