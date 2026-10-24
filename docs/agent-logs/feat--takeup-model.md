@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 21:50 — feat(takeup): add Tier B fetcher with local cache
+
+- **What:** new package `westminster_weather.takeup` with `tier_b.py` (written ministerial statements with full text, Hansard spoken / written trigger-phrase searches, Members API government posts) and `cli.py` (`fetch-tier-b`). Ported `triggers.py` from the prototype unchanged except a lint fix.
+- **Why:** task 3 of the take-up plan: start the Tier B fetch immediately. It only fills `backend/data/cache/takeup/`; no database writes.
+- **Checks:** `ruff check`: clean; `pytest`: 42 passed; smoke run on Sept 2024 cached full statement texts and Hansard results.
+- **Notes:** the written statements *list* endpoint truncates text to ~250 characters (the prototype used it), so full text is fetched per statement; its `searchTerm` is a word search, not a phrase search, so all statements are fetched. Hansard answers in ~20 s per request, so searches run 4 at a time while request starts stay ≥ 0.35 s apart. Cache files are keyed by exact date range, so a partial run can't masquerade as a full year.
+
 ## 2026-10-24 21:40 — chore(gitignore): ignore backend/data and backend/models
 
 - **What:** added `backend/data/` and `backend/models/` to `.gitignore`.
