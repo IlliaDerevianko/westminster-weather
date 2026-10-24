@@ -36,6 +36,8 @@ class TrackedStageNodeSchema(StageNodeSchema):
     web_url: str | None = None
     visible_events: list[ApiEvidenceEventSchema] = []
     active_stop_reason: StopReason | None = None
+    sitting_count: int = 0
+
 
 
 class MilestoneDateSchema(BaseModel):

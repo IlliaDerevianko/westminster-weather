@@ -1,5 +1,12 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 22:51 — Merge main into feat/passage-model-tasks-4-11
+
+- **What:** merged latest `main` (#16 ping-pong skipped/rounds on stage cards, #17 post-Royal-Assent ingestion from legislation.gov.uk with new interface functions `get_act_commencements` and `get_post_royal_assent_events`). No conflicts.
+- **Why:** Aleks asked to bring the branch up to date.
+- **Checks:** `ruff`: clean; `pytest`: 100 passed. The Royal Assent labelling fix and `get_stage_sittings` are intact.
+- **Notes:** the new Phase 3 interface functions could feed a future commencement model; the passage model does not use them yet.
+
 ## 2026-10-24 22:49 — feat(api): GET /api/v1/bills/{bill_id}/forecast
 
 - **What:** added the forecast endpoint to `main.py` (`as_of` query, defaults to today; 404 for unknown bills or dates before the training cutoff).

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 
-type StageStatus = "completed" | "current" | "upcoming" | "stopped";
+type StageStatus = "completed" | "current" | "upcoming" | "stopped" | "skipped";
 type PhaseKey = "before_parliament" | "inside_parliament" | "after_royal_assent";
 
 interface ApiEvidenceEvent {
@@ -24,6 +24,7 @@ interface TrackedStageNode {
   description: string;
   stop_risks: string[];
   status: StageStatus;
+  sitting_count: number;
   entered_date: string | null;
   completed_date: string | null;
   summary: string | null;
@@ -426,7 +427,7 @@ function BillTrackerContent() {
             {PHASE_CONFIG.map((phaseCfg) => {
               const phaseStages = stagesByPhase[phaseCfg.key] ?? [];
               const completedCount = phaseStages.filter(
-                (s) => s.status === "completed"
+                (s) => s.status === "completed" || s.status === "skipped"
               ).length;
               const isActivePhase = bill.current_phase === phaseCfg.key;
               return (
@@ -540,6 +541,10 @@ function BillTrackerContent() {
               Completed
             </span>
             <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded-full bg-teal-500"></span>
+              Skipped (0 rounds)
+            </span>
+            <span className="flex items-center gap-1.5">
               <span className="inline-block h-3 w-3 rounded-full bg-amber-500 ring-4 ring-amber-200"></span>
               <strong>Current Stage</strong>
             </span>
@@ -574,7 +579,7 @@ function BillTrackerContent() {
           {PHASE_CONFIG.map((phaseCfg) => {
             const phaseStages = stagesByPhase[phaseCfg.key] ?? [];
             const completedCount = phaseStages.filter(
-              (s) => s.status === "completed"
+              (s) => s.status === "completed" || s.status === "skipped"
             ).length;
 
             return (
@@ -601,8 +606,37 @@ function BillTrackerContent() {
                 <div className="space-y-3">
                   {phaseStages.map((stage, idx) => {
                     const isCompleted = stage.status === "completed";
+                    const isSkipped = stage.status === "skipped";
                     const isCurrent = stage.status === "current";
                     const isStageStopped = stage.status === "stopped";
+                    const isPingPong = stage.stage === "ping_pong";
+                    const isPostRoyalAssent =
+                      stage.phase === "after_royal_assent";
+                    const countUnit =
+                      stage.stage === "ping_pong"
+                        ? stage.sitting_count === 1
+                          ? "round"
+                          : "rounds"
+                        : stage.stage === "commencement_orders"
+                        ? stage.sitting_count === 1
+                          ? "order"
+                          : "orders"
+                        : stage.stage === "regulations_drafted"
+                        ? stage.sitting_count === 1
+                          ? "draft SI"
+                          : "draft SIs"
+                        : stage.stage === "regulations_laid"
+                        ? stage.sitting_count === 1
+                          ? "SI"
+                          : "SIs"
+                        : stage.stage === "amended_or_repealed"
+                        ? stage.sitting_count === 1
+                          ? "instrument"
+                          : "instruments"
+                        : null;
+                    const countLabel = countUnit
+                      ? `${stage.sitting_count} ${countUnit}`
+                      : null;
                     const stopRiskKey =
                       stage.active_stop_reason ?? stage.stop_risks[0];
                     const stopMeta = stopRiskKey
@@ -623,6 +657,8 @@ function BillTrackerContent() {
                                 ? "border-2 border-amber-500 bg-amber-50/90 shadow-md ring-2 ring-amber-200"
                                 : isCompleted
                                 ? "border-emerald-300 bg-emerald-50/70"
+                                : isSkipped
+                                ? "border-teal-300 bg-teal-50/60"
                                 : "border-slate-200 bg-slate-50/60 opacity-75"
                             }`}
                           >
@@ -636,11 +672,15 @@ function BillTrackerContent() {
                                       ? "bg-amber-500 text-white"
                                       : isCompleted
                                       ? "bg-emerald-600 text-white"
+                                      : isSkipped
+                                      ? "bg-teal-600 text-white"
                                       : "bg-slate-200 text-slate-700"
                                   }`}
                                 >
                                   {isCompleted
                                     ? "✓"
+                                    : isSkipped
+                                    ? "0"
                                     : isStageStopped
                                     ? "✕"
                                     : stage.order}
@@ -663,24 +703,44 @@ function BillTrackerContent() {
                                     ? "bg-amber-500 text-white"
                                     : isCompleted
                                     ? "bg-emerald-100 text-emerald-800"
+                                    : isSkipped
+                                    ? "bg-teal-100 text-teal-800"
                                     : "bg-slate-200 text-slate-600"
                                 }`}
                               >
                                 {isStageStopped
                                   ? "Stopped"
+                                  : isSkipped
+                                  ? countLabel
+                                    ? `Skipped (${countLabel})`
+                                    : "Skipped (0)"
                                   : isCurrent
-                                  ? "Current"
+                                  ? countLabel
+                                    ? `Current (${countLabel})`
+                                    : "Current"
                                   : isCompleted
-                                  ? "Done"
+                                  ? countLabel
+                                    ? `Done (${countLabel})`
+                                    : "Done"
                                   : "Upcoming"}
                               </span>
                             </div>
 
                             {/* Entered/Completed Dates & Collapsible Sittings */}
                             {(stage.entered_date ||
-                              stage.visible_events.length > 0) && (
+                              stage.visible_events.length > 0 ||
+                              ((isPingPong || isPostRoyalAssent || isSkipped) &&
+                                stage.summary)) && (
                               <div className="mt-2.5 rounded border border-slate-200/80 bg-white p-2 text-[11px] space-y-1.5">
-                                {stage.entered_date && (
+                                {(isPingPong ||
+                                  isPostRoyalAssent ||
+                                  isSkipped) &&
+                                  stage.summary && (
+                                    <div className="font-medium text-teal-900">
+                                      {stage.summary}
+                                    </div>
+                                  )}
+                                {stage.entered_date && !isSkipped && (
                                   <div className="flex flex-wrap items-center justify-between gap-1 text-slate-700 font-medium">
                                     <span>
                                       {stage.entered_date}

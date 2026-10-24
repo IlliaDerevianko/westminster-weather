@@ -498,3 +498,170 @@ def fetch_sitting_days_df() -> pd.DataFrame:
         engine.dispose()
 
 
+def save_post_royal_assent_tables_to_db(
+    commencements_df: pd.DataFrame, events_df: pd.DataFrame
+) -> dict[str, int]:
+    """Persist Phase 3 (`act_commencements` and `post_royal_assent_events`) to Neon Postgres."""
+    from westminster_weather.models import ActCommencementRow, PostRoyalAssentEventRow
+
+    ensure_reference_tables_seeded_sync()
+    engine = get_sync_direct_engine()
+    counts: dict[str, int] = {}
+    try:
+        with engine.begin() as conn:
+            Base.metadata.create_all(conn)
+
+            if not commencements_df.empty:
+                records = [_clean_record(r) for r in commencements_df.to_dict("records")]
+                _upsert_rows(conn, ActCommencementRow.__table__, records)
+                counts["act_commencements"] = len(records)
+
+            conn.execute(delete(PostRoyalAssentEventRow))
+            if not events_df.empty:
+                event_records = [_clean_record(r) for r in events_df.to_dict("records")]
+                for i in range(0, len(event_records), 500):
+                    chunk = event_records[i : i + 500]
+                    conn.execute(pg_insert(PostRoyalAssentEventRow.__table__).values(chunk))
+                counts["post_royal_assent_events"] = len(event_records)
+            else:
+                counts["post_royal_assent_events"] = 0
+        return counts
+    finally:
+        engine.dispose()
+
+
+def fetch_act_commencements_df() -> pd.DataFrame:
+    """DB adapter: read `act_commencements` table from Neon Lakebase Postgres."""
+    from westminster_weather.models import ActCommencementRow
+
+    ensure_reference_tables_seeded_sync()
+    engine = get_sync_pooled_engine()
+    try:
+        with Session(engine) as session:
+            rows = (
+                session.execute(select(ActCommencementRow).order_by(ActCommencementRow.bill_id))
+                .scalars()
+                .all()
+            )
+            columns = [
+                "bill_id",
+                "ukpga_year",
+                "ukpga_number",
+                "ukpga_uri",
+                "act_title",
+                "isbn",
+                "royal_assent_date",
+                "some_sections_start_date",
+                "first_commencement_order_date",
+                "latest_commencement_order_date",
+                "commencement_orders_count",
+                "first_draft_regulation_date",
+                "latest_draft_regulation_date",
+                "draft_regulations_count",
+                "first_laid_regulation_date",
+                "latest_laid_regulation_date",
+                "laid_regulations_count",
+                "law_fully_in_force_date",
+                "is_fully_in_force",
+                "first_amendment_or_repeal_date",
+                "latest_amendment_or_repeal_date",
+                "amendment_and_repeal_count",
+                "is_repealed",
+                "ingested_at",
+            ]
+            if not rows:
+                return pd.DataFrame(columns=columns)
+            return pd.DataFrame(
+                [
+                    {
+                        "bill_id": r.bill_id,
+                        "ukpga_year": r.ukpga_year,
+                        "ukpga_number": r.ukpga_number,
+                        "ukpga_uri": r.ukpga_uri,
+                        "act_title": r.act_title,
+                        "isbn": r.isbn,
+                        "royal_assent_date": r.royal_assent_date,
+                        "some_sections_start_date": r.some_sections_start_date,
+                        "first_commencement_order_date": r.first_commencement_order_date,
+                        "latest_commencement_order_date": r.latest_commencement_order_date,
+                        "commencement_orders_count": r.commencement_orders_count,
+                        "first_draft_regulation_date": r.first_draft_regulation_date,
+                        "latest_draft_regulation_date": r.latest_draft_regulation_date,
+                        "draft_regulations_count": r.draft_regulations_count,
+                        "first_laid_regulation_date": r.first_laid_regulation_date,
+                        "latest_laid_regulation_date": r.latest_laid_regulation_date,
+                        "laid_regulations_count": r.laid_regulations_count,
+                        "law_fully_in_force_date": r.law_fully_in_force_date,
+                        "is_fully_in_force": r.is_fully_in_force,
+                        "first_amendment_or_repeal_date": r.first_amendment_or_repeal_date,
+                        "latest_amendment_or_repeal_date": r.latest_amendment_or_repeal_date,
+                        "amendment_and_repeal_count": r.amendment_and_repeal_count,
+                        "is_repealed": r.is_repealed,
+                        "ingested_at": pd.Timestamp(r.ingested_at),
+                    }
+                    for r in rows
+                ],
+                columns=columns,
+            )
+    finally:
+        engine.dispose()
+
+
+def fetch_post_royal_assent_events_df() -> pd.DataFrame:
+    """DB adapter: read `post_royal_assent_events` table from Neon Lakebase Postgres."""
+    from westminster_weather.models import PostRoyalAssentEventRow
+
+    ensure_reference_tables_seeded_sync()
+    engine = get_sync_pooled_engine()
+    try:
+        with Session(engine) as session:
+            rows = (
+                session.execute(
+                    select(PostRoyalAssentEventRow).order_by(
+                        PostRoyalAssentEventRow.bill_id,
+                        PostRoyalAssentEventRow.event_date,
+                        PostRoyalAssentEventRow.event_id,
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            columns = [
+                "event_id",
+                "bill_id",
+                "stage",
+                "event_date",
+                "document_type",
+                "citation",
+                "title",
+                "note",
+                "source_api_url",
+                "web_url",
+                "ingested_at",
+            ]
+            if not rows:
+                return pd.DataFrame(columns=columns)
+            return pd.DataFrame(
+                [
+                    {
+                        "event_id": r.event_id,
+                        "bill_id": r.bill_id,
+                        "stage": r.stage,
+                        "event_date": r.event_date,
+                        "document_type": r.document_type,
+                        "citation": r.citation,
+                        "title": r.title,
+                        "note": r.note,
+                        "source_api_url": r.source_api_url,
+                        "web_url": r.web_url,
+                        "ingested_at": pd.Timestamp(r.ingested_at),
+                    }
+                    for r in rows
+                ],
+                columns=columns,
+            )
+    finally:
+        engine.dispose()
+
+
+

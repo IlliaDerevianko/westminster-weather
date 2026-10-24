@@ -79,8 +79,10 @@ def _serialize_tracked_nodes(
                 for e in t.visible_events
             ],
             active_stop_reason=t.active_stop_reason,
+            sitting_count=t.sitting_count,
         )
         for t in tracked_nodes
+
     ]
 
 

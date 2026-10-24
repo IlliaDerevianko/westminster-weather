@@ -24,8 +24,10 @@ from westminster_weather.domain.stages import (
     StopReason,
 )
 from westminster_weather.models import (
+    ActCommencementRow,
     ApiEvidenceEventRow,
     BillRow,
+    PostRoyalAssentEventRow,
     StageMapRow,
     StageRecordRow,
     StageSittingRow,
@@ -35,9 +37,11 @@ from westminster_weather.models import (
 
 class StageStatus(StrEnum):
     COMPLETED = "completed"
+    SKIPPED = "skipped"
     CURRENT = "current"
     UPCOMING = "upcoming"
     STOPPED = "stopped"
+
 
 
 @dataclass(frozen=True)
@@ -78,6 +82,8 @@ class TrackedStageNode:
     web_url: str | None = None
     visible_events: list[ApiEvidenceEvent] = field(default_factory=list)
     active_stop_reason: StopReason | None = None
+    sitting_count: int = 0
+
 
 
 @dataclass
@@ -621,8 +627,26 @@ async def evaluate_parliament_bill_from_db(
         stage_map_rows = (await session.execute(select(StageMapRow))).scalars().all()
         stage_names = {r.api_stage_id: r.api_stage_name for r in stage_map_rows}
 
+        act_comm = (
+            await session.execute(
+                select(ActCommencementRow).where(ActCommencementRow.bill_id == bill_id)
+            )
+        ).scalar_one_or_none()
+        post_event_rows = (
+            (
+                await session.execute(
+                    select(PostRoyalAssentEventRow)
+                    .where(PostRoyalAssentEventRow.bill_id == bill_id)
+                    .order_by(PostRoyalAssentEventRow.event_date, PostRoyalAssentEventRow.event_id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
     pre_domain = _row_to_domain(tracked_pre_row) if tracked_pre_row is not None else None
     all_dates = [s.event_date for s in sittings]
+    post_dates = [e.event_date for e in post_event_rows]
     first_reading_dt = bill_row.introduced_date or (
         min(all_dates) if all_dates else date.today()
     )
@@ -630,7 +654,12 @@ async def evaluate_parliament_bill_from_db(
         pre_domain.earliest_signal_date if pre_domain is not None else first_reading_dt
     )
     latest_sitting_date = max(all_dates) if all_dates else first_reading_dt
-    default_as_of = bill_row.outcome_date or latest_sitting_date
+    latest_post_date = max(post_dates) if post_dates else None
+    default_as_of = max(
+        d
+        for d in (bill_row.outcome_date, latest_sitting_date, latest_post_date)
+        if d is not None
+    )
     eval_date = as_of_date or default_as_of
 
     # Group sittings by BillStage
@@ -771,8 +800,33 @@ async def evaluate_parliament_bill_from_db(
         )
         entry_dt = full_entry_dates.get(st)
         if entry_dt is None or entry_dt > eval_date:
-            tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
+            if (
+                st == BillStage.PING_PONG
+                and entry_dt is None
+                and BillStage.ROYAL_ASSENT in entered_parl_as_of
+            ):
+                ra_dt = full_entry_dates.get(BillStage.ROYAL_ASSENT)
+                tracked_nodes.append(
+                    TrackedStageNode(
+                        node=node,
+                        status=StageStatus.SKIPPED,
+                        entered_date=ra_dt,
+                        completed_date=ra_dt,
+                        summary=(
+                            "0 ping-pong rounds — Second House agreed to the Bill "
+                            "without exchanging amendments."
+                        ),
+                        source_reference=web_url,
+                        source_api_url=api_url,
+                        web_url=web_url,
+                        visible_events=[],
+                        sitting_count=0,
+                    )
+                )
+            else:
+                tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
             continue
+
 
         idx_in_entered = entered_parl_as_of.index(st)
         if idx_in_entered + 1 < len(entered_parl_as_of):
@@ -820,10 +874,16 @@ async def evaluate_parliament_bill_from_db(
             for s in st_sittings
         ]
         plural = "s" if len(st_sittings) != 1 else ""
-        summary_text = (
-            f"Entered {label} on {entry_dt.isoformat()} "
-            f"({len(st_sittings)} sitting{plural} recorded ≤ {eval_date.isoformat()})."
-        )
+        if st == BillStage.PING_PONG:
+            summary_text = (
+                f"{len(st_sittings)} ping-pong round{plural} recorded "
+                f"(entered {entry_dt.isoformat()}, ≤ {eval_date.isoformat()})."
+            )
+        else:
+            summary_text = (
+                f"Entered {label} on {entry_dt.isoformat()} "
+                f"({len(st_sittings)} sitting{plural} recorded ≤ {eval_date.isoformat()})."
+            )
         tracked_nodes.append(
             TrackedStageNode(
                 node=node,
@@ -836,14 +896,43 @@ async def evaluate_parliament_bill_from_db(
                 web_url=web_url,
                 visible_events=visible_events,
                 active_stop_reason=node_stop,
+                sitting_count=len(st_sittings),
             )
         )
+
 
     # ------------------------------------------------------------------
     # PHASE 3: AFTER ROYAL ASSENT (Orders 17..22)
     # ------------------------------------------------------------------
     ra_date = full_entry_dates.get(BillStage.ROYAL_ASSENT)
     has_royal_assent_as_of = ra_date is not None and ra_date <= eval_date
+    post_events_by_stage: dict[str, list[PostRoyalAssentEventRow]] = {}
+    for pev in post_event_rows:
+        post_events_by_stage.setdefault(pev.stage, []).append(pev)
+
+    # Also enrich the Royal Assent node (Order 16) with legislation.gov.uk Act citation if present
+    if has_royal_assent_as_of and act_comm is not None and tracked_nodes:
+        ra_node = tracked_nodes[-1]
+        if ra_node.node.stage == BillStage.ROYAL_ASSENT:
+            act_web = f"https://www.legislation.gov.uk/ukpga/{act_comm.ukpga_year}/{act_comm.ukpga_number}/enacted"
+            act_xml = f"{act_web}/data.xml"
+            ra_node.source_reference = act_web
+            ra_node.source_api_url = act_xml
+            ra_node.web_url = act_web
+            ra_node.summary = (
+                f"Enacted as {act_comm.act_title} ({act_comm.ukpga_year} c. "
+                f"{act_comm.ukpga_number}) on {act_comm.royal_assent_date.isoformat()}."
+            )
+
+    in_force_dt = (
+        act_comm.law_fully_in_force_date
+        if act_comm is not None and act_comm.law_fully_in_force_date is not None
+        else ra_date
+    )
+    is_in_force_as_of = (
+        has_royal_assent_as_of and in_force_dt is not None and in_force_dt <= eval_date
+    )
+
     post_base_order = base_order + len(ordered_parl_states)
     for post_idx, (post_st, post_label, post_desc, post_stops) in enumerate(
         POST_ROYAL_ASSENT_STAGE_INFO, start=1
@@ -857,47 +946,227 @@ async def evaluate_parliament_bill_from_db(
             description=post_desc,
             stop_risks=post_stops,
         )
-        if (
-            has_royal_assent_as_of
-            and ra_date is not None
-            and post_st == BillStage.SOME_SECTIONS_START
-        ):
-            leg_url = f"https://www.legislation.gov.uk/ukpga/{ra_date.year}"
+        if not has_royal_assent_as_of or ra_date is None:
+            tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
+            continue
 
+        all_stage_events = post_events_by_stage.get(post_st.value, [])
+        vis_stage_events = [e for e in all_stage_events if e.event_date <= eval_date]
+        leg_base_url = (
+            f"https://www.legislation.gov.uk/ukpga/{act_comm.ukpga_year}/{act_comm.ukpga_number}"
+            if act_comm is not None
+            else f"https://www.legislation.gov.uk/ukpga/{ra_date.year}"
+        )
+        leg_xml_url = f"{leg_base_url}/data.xml"
+
+        if post_st == BillStage.SOME_SECTIONS_START:
+            ev_models = [
+                ApiEvidenceEvent(
+                    event_date=e.event_date,
+                    title=e.title,
+                    note=e.note,
+                    source_api_url=e.source_api_url,
+                    web_url=e.web_url,
+                    document_type=e.document_type,
+                )
+                for e in vis_stage_events
+            ]
+            # Completed once Commencement Orders, Regulations, or Law Fully in Force is entered
+            has_later_post = is_in_force_as_of or any(
+                e.event_date <= eval_date
+                for k, evs in post_events_by_stage.items()
+                if k not in (BillStage.ROYAL_ASSENT.value, BillStage.SOME_SECTIONS_START.value)
+                for e in evs
+            )
+            st_status = StageStatus.COMPLETED if has_later_post else StageStatus.CURRENT
             tracked_nodes.append(
                 TrackedStageNode(
                     node=node,
-                    status=StageStatus.CURRENT,
+                    status=st_status,
                     entered_date=ra_date,
-                    completed_date=None,
+                    completed_date=ra_date if st_status == StageStatus.COMPLETED else None,
                     summary=(
-                        f"Initial citation, extent, and commencement-power sections took effect "
-                        f"upon Royal Assent on {ra_date.isoformat()}."
+                        "Initial citation, extent, and immediate commencement "
+                        f"provisions took effect on {ra_date.isoformat()}."
                     ),
-                    source_reference=leg_url,
-                    source_api_url=api_url,
-                    web_url=leg_url,
-                    visible_events=[
-                        ApiEvidenceEvent(
-                            event_date=ra_date,
-                            title=f"{bill_row.short_title} enacted ({ra_date.year})",
-                            note=(
-                                "General and preliminary sections commenced on Royal Assent; "
-                                "remaining substantive provisions await Commencement Orders (SIs)."
-                            ),
-                            source_api_url=api_url,
-                            web_url=leg_url,
-                            document_type="act_of_parliament",
-                        )
-                    ],
+                    source_reference=leg_base_url,
+                    source_api_url=leg_xml_url,
+                    web_url=leg_base_url,
+                    visible_events=ev_models,
+                    sitting_count=len(ev_models) or 1,
                 )
             )
             current_stage = post_st
             current_order = order
-        else:
-            tracked_nodes.append(
-                TrackedStageNode(node=node, status=StageStatus.UPCOMING)
-            )
+
+        elif post_st in (
+            BillStage.COMMENCEMENT_ORDERS,
+            BillStage.REGULATIONS_DRAFTED,
+            BillStage.REGULATIONS_LAID,
+        ):
+            total_for_stage = len(all_stage_events)
+            if total_for_stage == 0:
+                if is_in_force_as_of:
+                    zero_msg = {
+                        BillStage.COMMENCEMENT_ORDERS: (
+                            "0 commencement orders — Act commenced directly via its enactment "
+                            "commencement clause without separate Commencement Order SIs."
+                        ),
+                        BillStage.REGULATIONS_DRAFTED: (
+                            "0 draft affirmative regulations — No separate Draft Statutory "
+                            "Instruments (UKDSI) published under this Act."
+                        ),
+                        BillStage.REGULATIONS_LAID: (
+                            "0 secondary regulations — No separate Statutory Instruments (UKSI) "
+                            "required under this Act."
+                        ),
+                    }[post_st]
+                    tracked_nodes.append(
+                        TrackedStageNode(
+                            node=node,
+                            status=StageStatus.SKIPPED,
+                            entered_date=ra_date,
+                            completed_date=ra_date,
+                            summary=zero_msg,
+                            source_reference=leg_base_url,
+                            source_api_url=leg_xml_url,
+                            web_url=leg_base_url,
+                            visible_events=[],
+                            sitting_count=0,
+                        )
+                    )
+                else:
+                    tracked_nodes.append(
+                        TrackedStageNode(node=node, status=StageStatus.UPCOMING)
+                    )
+            elif not vis_stage_events:
+                tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
+            else:
+                first_ev_dt = min(e.event_date for e in vis_stage_events)
+                last_ev_dt = max(e.event_date for e in vis_stage_events)
+                all_done_as_of = len(vis_stage_events) == total_for_stage
+                st_status = StageStatus.COMPLETED if all_done_as_of else StageStatus.CURRENT
+                ev_models = [
+                    ApiEvidenceEvent(
+                        event_date=e.event_date,
+                        title=e.title,
+                        note=e.note,
+                        source_api_url=e.source_api_url,
+                        web_url=e.web_url,
+                        document_type=e.document_type,
+                    )
+                    for e in vis_stage_events
+                ]
+                noun = {
+                    BillStage.COMMENCEMENT_ORDERS: "Commencement Order SI",
+                    BillStage.REGULATIONS_DRAFTED: "Draft Statutory Instrument",
+                    BillStage.REGULATIONS_LAID: "Statutory Instrument",
+                }[post_st]
+                plural = "s" if len(vis_stage_events) != 1 else ""
+                tracked_nodes.append(
+                    TrackedStageNode(
+                        node=node,
+                        status=st_status,
+                        entered_date=first_ev_dt,
+                        completed_date=last_ev_dt if all_done_as_of else None,
+                        summary=(
+                            f"{len(vis_stage_events)} of {total_for_stage} {noun}{plural} "
+                            f"recorded on legislation.gov.uk ≤ {eval_date.isoformat()}."
+                        ),
+                        source_reference=vis_stage_events[-1].web_url,
+                        source_api_url=vis_stage_events[-1].source_api_url,
+                        web_url=vis_stage_events[-1].web_url,
+                        visible_events=ev_models,
+                        sitting_count=len(vis_stage_events),
+                    )
+                )
+                current_stage = post_st
+                current_order = order
+
+        elif post_st == BillStage.LAW_FULLY_IN_FORCE:
+            if is_in_force_as_of and in_force_dt is not None:
+                ev_models = [
+                    ApiEvidenceEvent(
+                        event_date=e.event_date,
+                        title=e.title,
+                        note=e.note,
+                        source_api_url=e.source_api_url,
+                        web_url=e.web_url,
+                        document_type=e.document_type,
+                    )
+                    for e in vis_stage_events
+                ]
+                comm_cnt = act_comm.commencement_orders_count if act_comm else 0
+                summary_txt = (
+                    f"All {comm_cnt} Commencement Order(s) in force as of "
+                    f"{in_force_dt.isoformat()}."
+                    if comm_cnt > 0
+                    else (
+                        f"Act commenced directly on {in_force_dt.isoformat()} "
+                        "without separate Commencement Orders."
+                    )
+                )
+                tracked_nodes.append(
+                    TrackedStageNode(
+                        node=node,
+                        status=StageStatus.COMPLETED,
+                        entered_date=in_force_dt,
+                        completed_date=in_force_dt,
+                        summary=summary_txt,
+                        source_reference=leg_base_url,
+                        source_api_url=leg_xml_url,
+                        web_url=leg_base_url,
+                        visible_events=ev_models,
+                        sitting_count=len(ev_models) or 1,
+                    )
+                )
+                current_stage = post_st
+                current_order = order
+            else:
+                tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
+
+        elif post_st == BillStage.AMENDED_OR_REPEALED:
+            if vis_stage_events:
+                first_ev_dt = min(e.event_date for e in vis_stage_events)
+                last_ev_dt = max(e.event_date for e in vis_stage_events)
+                ev_models = [
+                    ApiEvidenceEvent(
+                        event_date=e.event_date,
+                        title=e.title,
+                        note=e.note,
+                        source_api_url=e.source_api_url,
+                        web_url=e.web_url,
+                        document_type=e.document_type,
+                    )
+                    for e in vis_stage_events
+                ]
+                plural = "s" if len(vis_stage_events) != 1 else ""
+                rep_note = (
+                    " (Act marked repealed on legislation.gov.uk)"
+                    if (act_comm and act_comm.is_repealed)
+                    else ""
+                )
+                tracked_nodes.append(
+                    TrackedStageNode(
+                        node=node,
+                        status=StageStatus.COMPLETED,
+                        entered_date=first_ev_dt,
+                        completed_date=last_ev_dt,
+                        summary=(
+                            f"{len(vis_stage_events)} amending/repealing instrument{plural} "
+                            f"recorded ≤ {eval_date.isoformat()}{rep_note}."
+                        ),
+                        source_reference=vis_stage_events[-1].web_url,
+                        source_api_url=vis_stage_events[-1].source_api_url,
+                        web_url=vis_stage_events[-1].web_url,
+                        visible_events=ev_models,
+                        sitting_count=len(vis_stage_events),
+                    )
+                )
+                current_stage = post_st
+                current_order = order
+            else:
+                tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
 
     # Build dynamic database-driven milestone dates across all phases
     milestones: list[dict[str, Any]] = []
@@ -940,6 +1209,24 @@ async def evaluate_parliament_bill_from_db(
                 "note": f"Final outcome: {bill_row.outcome}",
             }
         )
+    if act_comm is not None:
+        for post_dt, post_lbl in (
+            (act_comm.first_commencement_order_date, "3. 1st Commencement Order"),
+            (act_comm.first_draft_regulation_date, "3. 1st Draft Regulation"),
+            (act_comm.first_laid_regulation_date, "3. 1st Laid Regulation"),
+            (act_comm.law_fully_in_force_date, "3. Law in Force"),
+            (act_comm.latest_amendment_or_repeal_date, "3. Amended / Repealed"),
+        ):
+            if post_dt is not None and post_dt not in seen_dates:
+                seen_dates.add(post_dt)
+                milestones.append(
+                    {
+                        "label": f"{post_dt.isoformat()} ({post_lbl})",
+                        "date": post_dt,
+                        "note": f"{act_comm.act_title}: {post_lbl}",
+                    }
+                )
+    milestones.sort(key=lambda m: m["date"])
 
     if has_royal_assent_as_of:
         current_phase = LifecyclePhase.AFTER_ROYAL_ASSENT

@@ -199,3 +199,53 @@ class ScheduledSittingRow(Base):
     ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class ActCommencementRow(Base):
+    """Phase 3 (After Royal Assent) summary & transition dates per UK Government Act."""
+
+    __tablename__ = "act_commencements"
+
+    bill_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    ukpga_year: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    ukpga_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    ukpga_uri: Mapped[str] = mapped_column(String(500), nullable=False)
+    act_title: Mapped[str] = mapped_column(Text, nullable=False)
+    isbn: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    royal_assent_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    some_sections_start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    first_commencement_order_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    latest_commencement_order_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    commencement_orders_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    first_draft_regulation_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    latest_draft_regulation_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    draft_regulations_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    first_laid_regulation_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    latest_laid_regulation_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    laid_regulations_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    law_fully_in_force_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    is_fully_in_force: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    first_amendment_or_repeal_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    latest_amendment_or_repeal_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    amendment_and_repeal_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    is_repealed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class PostRoyalAssentEventRow(Base):
+    """Phase 3 (After Royal Assent) events: Commencement Orders, Draft SIs, Laid SIs, Amendments."""
+
+    __tablename__ = "post_royal_assent_events"
+
+    event_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    bill_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    stage: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    event_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    document_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    citation: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    note: Mapped[str] = mapped_column(Text, nullable=False)
+    source_api_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    web_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+
