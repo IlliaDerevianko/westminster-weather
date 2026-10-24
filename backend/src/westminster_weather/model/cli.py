@@ -317,6 +317,10 @@ def _comparison_table(columns: dict[str, dict]) -> pd.DataFrame:
             f"{m['median_abs_error_days']['model']:.0f}"
         )
         rows.setdefault("80% window coverage", {})[name] = f"{100 * m['coverage_p10_p90']:.0f}%"
+        if "share_median_too_early" in m:
+            rows.setdefault("Median forecast too early", {})[name] = (
+                f"{100 * m['share_median_too_early']:.0f}%"
+            )
         rows.setdefault("Average forecast pass chance vs actual", {})[name] = (
             f"{100 * m['mean_predicted_passage']:.0f}% vs {100 * m['actual_passage_rate']:.0f}%"
         )
@@ -344,9 +348,11 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
     )
     fitted_b = baseline.fit()
     C = hazard.HazardModel.load(MODELS_DIR / "hazard_train.joblib").C
-    columns: dict[str, dict] = {}
+    metrics_path = REPORTS_DIR / "metrics.json"
+    saved = json.loads(metrics_path.read_text()) if metrics_path.exists() else {}
+    columns: dict[str, dict] = dict(saved.get("backtest_comparison", {}))
     before = PROCESSED_DIR / "backtest_before.parquet"
-    if before.exists():
+    if not columns and before.exists():
         columns["Before (frozen 2019, old session end)"] = evaluate.score(
             pd.read_parquet(before), fitted_b
         )
@@ -355,8 +361,10 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         results = evaluate.run_backtest(
             points, workers=args.workers, mode=mode, evaluated_as_of=args.as_of, C=C
         )
-        results.to_parquet(PROCESSED_DIR / f"backtest_{mode}.parquet", index=False)
-        label = {"frozen": "New session end, frozen 2019", "rolling": "After (new + rolling)"}
+        slug = "".join(c if c.isalnum() else "_" for c in args.label.lower()).strip("_")
+        name = f"backtest_{mode}" if mode == "frozen" else f"backtest_{slug}"
+        results.to_parquet(PROCESSED_DIR / f"{name}.parquet", index=False)
+        label = {"frozen": "New session end, frozen 2019", "rolling": args.label}
         columns[label[mode]] = evaluate.score(results, fitted_b)
         print(f"  {mode} backtest done ({time.perf_counter() - started:.0f} s)")
     metrics = columns[label["rolling"]]
@@ -416,6 +424,9 @@ def main(argv: list[str] | None = None) -> None:
     ev = sub.add_parser("evaluate", help="Backtest on test sessions, metrics and charts")
     ev.add_argument("--as-of", type=date.fromisoformat, default=date.today())
     ev.add_argument("--workers", type=int, default=6)
+    ev.add_argument(
+        "--label", default="After (new + rolling)", help="Column name for this run in the table"
+    )
     ev.add_argument(
         "--also-frozen", action="store_true", help="Also run the frozen-2019 models for comparison"
     )

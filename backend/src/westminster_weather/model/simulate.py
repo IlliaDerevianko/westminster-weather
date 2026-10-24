@@ -33,9 +33,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from westminster_weather.data import calendar
 from westminster_weather.domain.stages import BillStage, StopReason
-from westminster_weather.model import failure, features
+from westminster_weather.model import failure, features, future_calendar
 from westminster_weather.model.failure import MAX_PARLIAMENT_YEARS, VOTE_STATES, FailureModel
 from westminster_weather.model.hazard import HazardModel
 from westminster_weather.model.pingpong import PingPongModel
@@ -74,6 +73,7 @@ class StartState:
     announced_dissolution: date | None
     election_date: date  # election that created the current Parliament
     parliament_first_meeting: date
+    parliaments: pd.DataFrame | None = None  # as known on as_of (for dissolution gaps)
 
 
 @dataclass
@@ -125,11 +125,20 @@ def probability_table(
     return table
 
 
-def _future_days(start: StartState, sitting_days: pd.DataFrame) -> np.ndarray:
-    """Typical-pattern sitting days from ``as_of`` to the 5-year limit of this Parliament."""
+def _future_days(
+    start: StartState, sitting_days: pd.DataFrame, rng: np.random.Generator
+) -> np.ndarray:
+    """Sitting days from ``as_of`` to the 5-year limit of this Parliament, at the density of
+    the training clock (``future_calendar``)."""
     cap = start.parliament_first_meeting + timedelta(days=round(365.25 * MAX_PARLIAMENT_YEARS))
-    prob = calendar.week_sitting_probability(sitting_days, start.as_of)
-    days = calendar.future_sitting_days(start.as_of, cap, prob)
+    parls = (
+        start.parliaments
+        if start.parliaments is not None
+        else pd.DataFrame(
+            columns=["parliament_id", "first_meeting_date", "dissolution_date", "election_date"]
+        )
+    )
+    days = future_calendar.sample_future_days(sitting_days, start.as_of, cap, rng, parls)
     return np.array(days, dtype="datetime64[D]")
 
 
@@ -174,7 +183,7 @@ def simulate(
     rng = np.random.default_rng(
         seed if seed is not None else [start.bill_id, start.as_of.toordinal()]
     )
-    days = _future_days(start, sitting_days)
+    days = _future_days(start, sitting_days, rng)
     horizon = len(days)
     chain = start.chain
     n_states = len(chain)

@@ -215,6 +215,9 @@ def score(results: pd.DataFrame, baselines: baseline.Baselines) -> dict[str, Any
             s: {**by_state.loc[s].to_dict(), "n": int(counts.loc[s])} for s in by_state.index
         },
         "coverage_p10_p90": round(float(acts["covered"].mean()), 3),
+        "share_median_too_early": round(
+            float((pd.to_datetime(acts["p50"]) < pd.to_datetime(acts["outcome_date"])).mean()), 3
+        ),
         "brier_passage_probability": round(
             float(np.mean((df["passage_probability"] - df["ra"]) ** 2)), 4
         ),
@@ -350,6 +353,10 @@ def write_report(all_metrics: dict[str, Any], path: Path) -> Path:
             ("Median error (days)", lambda c: f"{c['median_abs_error_days']['model']:.0f}"),
             ("80% window coverage", lambda c: f"{100 * c['coverage_p10_p90']:.0f}%"),
             (
+                "Median forecast too early",
+                lambda c: f"{100 * c.get('share_median_too_early', float('nan')):.0f}%",
+            ),
+            (
                 "Forecast pass chance vs actual",
                 lambda c: (
                     f"{100 * c['mean_predicted_passage']:.0f}% vs "
@@ -370,7 +377,7 @@ def write_report(all_metrics: dict[str, Any], path: Path) -> Path:
         body = "".join(
             f"| {name} | " + " | ".join(fn(c) for c in cols.values()) + " |\n" for name, fn in lines
         )
-        comparison = "## Before and after the session-end fix\n\n" + header + body
+        comparison = "## Improvement steps (rolling backtest)\n\n" + header + body
     mae_row = f"{mae['model']:.0f}** | {mae['B1']:.0f} | {mae['B0']:.0f}"
     train_range = f"{m['train_sessions'][0]}-{m['train_sessions'][-1]}"
     test_range = f"{m['test_sessions'][0]}-{m['test_sessions'][-1]}"

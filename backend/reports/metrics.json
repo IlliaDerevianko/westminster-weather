@@ -212,122 +212,123 @@
     "n_forecasts_for_acts": 1207,
     "n_act_forecasts_without_ra_paths": 0,
     "mae_days": {
-      "model": 71.2,
+      "model": 68.4,
       "B0": 106.8,
       "B1": 82.8
     },
     "mae_days_carried_over_bills": {
-      "model": 253.9,
+      "model": 219.7,
       "B1": 274.3,
       "n": 32
     },
     "median_abs_error_days": {
-      "model": 39.0,
+      "model": 41.0,
       "B1": 51.0
     },
     "mae_days_by_start_state": {
       "commons_1st_reading": {
-        "p50_err": 109.1,
+        "p50_err": 103.2,
         "b0_err": 126.0,
         "b1_err": 117.0,
         "n": 185
       },
       "commons_2nd_reading": {
-        "p50_err": 101.6,
+        "p50_err": 96.3,
         "b0_err": 123.2,
         "b1_err": 106.9,
         "n": 144
       },
       "commons_committee": {
-        "p50_err": 100.6,
+        "p50_err": 93.6,
         "b0_err": 137.6,
         "b1_err": 119.9,
         "n": 106
       },
       "commons_report_stage": {
-        "p50_err": 119.5,
+        "p50_err": 112.5,
         "b0_err": 208.9,
         "b1_err": 170.9,
         "n": 15
       },
       "commons_3rd_reading": {
-        "p50_err": 57.7,
+        "p50_err": 57.2,
         "b0_err": 110.6,
         "b1_err": 75.7,
         "n": 158
       },
       "lords_1st_and_2nd_reading": {
-        "p50_err": 70.1,
+        "p50_err": 67.6,
         "b0_err": 119.1,
         "b1_err": 87.4,
         "n": 193
       },
       "lords_committee": {
-        "p50_err": 67.5,
+        "p50_err": 63.3,
         "b0_err": 98.6,
         "b1_err": 83.5,
         "n": 120
       },
       "lords_report_and_3rd_reading": {
-        "p50_err": 32.1,
+        "p50_err": 34.5,
         "b0_err": 80.6,
         "b1_err": 36.8,
         "n": 182
       },
       "ping_pong": {
-        "p50_err": 19.7,
+        "p50_err": 19.5,
         "b0_err": 30.9,
         "b1_err": 19.6,
         "n": 104
       }
     },
-    "coverage_p10_p90": 0.568,
-    "brier_passage_probability": 0.0489,
+    "coverage_p10_p90": 0.592,
+    "share_median_too_early": 0.574,
+    "brier_passage_probability": 0.0491,
     "brier_passage_base_rate": 0.0544,
-    "brier_ra_before_session_end": 0.0608,
-    "concordance_index": 0.772,
+    "brier_ra_before_session_end": 0.0611,
+    "concordance_index": 0.766,
     "calibration": [
       {
         "bin": 2,
-        "predicted": 0.285,
-        "actual": 0.0,
-        "n": 1
-      },
-      {
-        "bin": 3,
-        "predicted": 0.342,
+        "predicted": 0.257,
         "actual": 0.0,
         "n": 3
       },
       {
-        "bin": 4,
-        "predicted": 0.446,
+        "bin": 3,
+        "predicted": 0.347,
         "actual": 0.0,
-        "n": 7
+        "n": 4
+      },
+      {
+        "bin": 4,
+        "predicted": 0.452,
+        "actual": 0.5,
+        "n": 12
       },
       {
         "bin": 5,
-        "predicted": 0.559,
-        "actual": 0.889,
-        "n": 18
+        "predicted": 0.556,
+        "actual": 0.87,
+        "n": 23
       },
       {
         "bin": 6,
-        "predicted": 0.664,
-        "actual": 0.795,
-        "n": 39
+        "predicted": 0.652,
+        "actual": 0.711,
+        "n": 38
       },
       {
         "bin": 7,
-        "predicted": 0.759,
-        "actual": 0.684,
-        "n": 38
+        "predicted": 0.761,
+        "actual": 0.767,
+        "n": 30
       },
       {
         "bin": 8,
         "predicted": 0.868,
-        "actual": 0.942,
-        "n": 430
+        "actual": 0.944,
+        "n": 426
       },
       {
         "bin": 9,
@@ -337,7 +338,7 @@
       }
     ],
     "actual_passage_rate": 0.942,
-    "mean_predicted_passage": 0.9
+    "mean_predicted_passage": 0.896
   },
   "backtest_before": {
     "train_sessions": [
@@ -594,6 +595,7 @@
         }
       },
       "coverage_p10_p90": 0.522,
+      "share_median_too_early": 0.67,
       "brier_passage_probability": 0.1036,
       "brier_passage_base_rate": 0.0544,
       "brier_ra_before_session_end": 0.112,
@@ -755,6 +757,7 @@
         }
       },
       "coverage_p10_p90": 0.54,
+      "share_median_too_early": 0.646,
       "brier_passage_probability": 0.0472,
       "brier_passage_base_rate": 0.0544,
       "brier_ra_before_session_end": 0.061,
@@ -959,7 +962,164 @@
         }
       ],
       "actual_passage_rate": 0.942,
-      "mean_predicted_passage": 0.9
+      "mean_predicted_passage": 0.9,
+      "share_median_too_early": 0.63
+    },
+    "Step 1: clock fix": {
+      "train_sessions": [
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "test_sessions": [
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "train_cutoff": "2019-10-14",
+      "n_forecasts": 1281,
+      "n_bills": 222,
+      "n_forecasts_for_acts": 1207,
+      "n_act_forecasts_without_ra_paths": 0,
+      "mae_days": {
+        "model": 68.4,
+        "B0": 106.8,
+        "B1": 82.8
+      },
+      "mae_days_carried_over_bills": {
+        "model": 219.7,
+        "B1": 274.3,
+        "n": 32
+      },
+      "median_abs_error_days": {
+        "model": 41.0,
+        "B1": 51.0
+      },
+      "mae_days_by_start_state": {
+        "commons_1st_reading": {
+          "p50_err": 103.2,
+          "b0_err": 126.0,
+          "b1_err": 117.0,
+          "n": 185
+        },
+        "commons_2nd_reading": {
+          "p50_err": 96.3,
+          "b0_err": 123.2,
+          "b1_err": 106.9,
+          "n": 144
+        },
+        "commons_committee": {
+          "p50_err": 93.6,
+          "b0_err": 137.6,
+          "b1_err": 119.9,
+          "n": 106
+        },
+        "commons_report_stage": {
+          "p50_err": 112.5,
+          "b0_err": 208.9,
+          "b1_err": 170.9,
+          "n": 15
+        },
+        "commons_3rd_reading": {
+          "p50_err": 57.2,
+          "b0_err": 110.6,
+          "b1_err": 75.7,
+          "n": 158
+        },
+        "lords_1st_and_2nd_reading": {
+          "p50_err": 67.6,
+          "b0_err": 119.1,
+          "b1_err": 87.4,
+          "n": 193
+        },
+        "lords_committee": {
+          "p50_err": 63.3,
+          "b0_err": 98.6,
+          "b1_err": 83.5,
+          "n": 120
+        },
+        "lords_report_and_3rd_reading": {
+          "p50_err": 34.5,
+          "b0_err": 80.6,
+          "b1_err": 36.8,
+          "n": 182
+        },
+        "ping_pong": {
+          "p50_err": 19.5,
+          "b0_err": 30.9,
+          "b1_err": 19.6,
+          "n": 104
+        }
+      },
+      "coverage_p10_p90": 0.592,
+      "share_median_too_early": 0.574,
+      "brier_passage_probability": 0.0491,
+      "brier_passage_base_rate": 0.0544,
+      "brier_ra_before_session_end": 0.0611,
+      "concordance_index": 0.766,
+      "calibration": [
+        {
+          "bin": 2,
+          "predicted": 0.257,
+          "actual": 0.0,
+          "n": 3
+        },
+        {
+          "bin": 3,
+          "predicted": 0.347,
+          "actual": 0.0,
+          "n": 4
+        },
+        {
+          "bin": 4,
+          "predicted": 0.452,
+          "actual": 0.5,
+          "n": 12
+        },
+        {
+          "bin": 5,
+          "predicted": 0.556,
+          "actual": 0.87,
+          "n": 23
+        },
+        {
+          "bin": 6,
+          "predicted": 0.652,
+          "actual": 0.711,
+          "n": 38
+        },
+        {
+          "bin": 7,
+          "predicted": 0.761,
+          "actual": 0.767,
+          "n": 30
+        },
+        {
+          "bin": 8,
+          "predicted": 0.868,
+          "actual": 0.944,
+          "n": 426
+        },
+        {
+          "bin": 9,
+          "predicted": 0.952,
+          "actual": 0.979,
+          "n": 745
+        }
+      ],
+      "actual_passage_rate": 0.942,
+      "mean_predicted_passage": 0.896
     }
   }
 }

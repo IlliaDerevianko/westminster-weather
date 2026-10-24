@@ -1,5 +1,11 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 23:35 — fix(model): future sitting days match the training clock (Part 1, step 1)
+
+- **What:** clock check: the old future-calendar generator produced 2,148 sitting days for 2012–2025 against 1,796 on the training clock (+20%; it sat Mon–Thu in every likely week, about 4 days/week vs the clock's ~3.5, and ~38–40 weeks/year vs ~36). Added `model/future_calendar.py`: each future ISO week copies the actual clock days of the same week in a random year among the last 5 (dissolution-gap weeks skipped); 1,818 days for 2012–2025. The simulator uses it (parliaments come from `get_calendar`). `cli evaluate --label` now appends a column to the comparison table; added "median forecast too early" to the metrics.
+- **Why:** the hazard is fitted per training-clock sitting day; a denser future calendar makes simulated bills too fast in calendar time.
+- **Checks:** `ruff`: clean; `pytest`: all passed. Rolling backtest: MAE 71 → 68 days, coverage 57% → 59%, too-early share 63% → 57%, carried-over bills 254 → 220; pass chance and Brier unchanged. Kept.
+
 ## 2026-10-24 23:19 — feat(model): prorogation outcomes (die / carry over / rush through) and rolling backtest
 
 - **What:** `failure.py` learns, from government bills in progress in the last 30 sitting days before past prorogations, P(died / carried over / rushed through) for bills still in their first House (90 cases: 12% / 56% / 32%) and in the second House or ping-pong (145: 4% / 0% / 96%), relearned at every refit. `simulate.py` applies it at each drawn session end (agreed carry-over motion → carried over for certain; carried bills keep their stage and time in stage and get a new session; rushed bills keep end-of-session speed until they finish); elections unchanged. `p_ra_before_session_end` now means Royal Assent without a carry-over. `evaluate.py` adds a rolling backtest (refit once per session on bills finished before it) and a carried-over-bills error; `cli evaluate` prints a before/after table. Tests added; models refitted.

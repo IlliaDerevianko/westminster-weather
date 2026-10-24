@@ -185,6 +185,7 @@ def start_state(
         announced_dissolution=_announced(cal, ("dissolution",), as_of),
         election_date=previous["election_date"],
         parliament_first_meeting=current["first_meeting_date"],
+        parliaments=cal["parliaments"],
     )
     return start, bill, trans
 
