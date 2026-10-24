@@ -19,7 +19,7 @@ class ParliamentBillsClient:
     """
 
     def __init__(
-        self, base_url: str | None = None, timeout: float = 15.0, max_retries: int = 5
+        self, base_url: str | None = None, timeout: float = 20.0, max_retries: int = 5
     ) -> None:
         self.base_url = (base_url or settings.parliament_bills_api_base_url).rstrip("/")
         self.timeout = timeout

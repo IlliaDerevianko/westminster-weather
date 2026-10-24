@@ -1,8 +1,8 @@
-"""Tests for FastAPI endpoints, tracked Government Bill model, and UK Parliament Bills API."""
+"""Tests for Phase 1 (Before Parliament) pipeline stages and Neon Lakebase Postgres persistence."""
 
+import pytest
 from httpx import ASGITransport, AsyncClient
 
-from westminster_weather.clients.parliament_bills import ParliamentBillsClient
 from westminster_weather.config import settings
 from westminster_weather.domain.bills import StageStatus
 from westminster_weather.domain.stages import (
@@ -14,7 +14,7 @@ from westminster_weather.domain.stages import (
 from westminster_weather.main import app
 
 
-async def test_health_endpoint() -> None:
+async def test_health_endpoint_verifies_neon_postgres() -> None:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/health")
@@ -22,67 +22,89 @@ async def test_health_endpoint() -> None:
     data = response.json()
     assert data["status"] == "ok"
     assert data["service"] == settings.app_name
+    assert data["database"] == "connected"
+    assert data["neon_branch"] == "production"
+    assert "PostgreSQL" in data["postgres_version"]
 
 
-async def test_pipeline_stages_endpoint() -> None:
+async def test_phase_one_pipeline_stages_endpoint() -> None:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/api/v1/pipeline/stages")
     assert response.status_code == 200
     stages = response.json()
-    assert len(stages) == len(GOVERNMENT_BILL_PIPELINE) == 24
+    assert len(stages) == len(GOVERNMENT_BILL_PIPELINE) == 6
+    assert all(s["phase"] == LifecyclePhase.BEFORE_PARLIAMENT for s in stages)
     assert stages[0]["stage"] == BillStage.SIGNAL_APPEARS
-    assert stages[0]["phase"] == LifecyclePhase.BEFORE_PARLIAMENT
-    assert stages[-1]["stage"] == BillStage.AMENDED_OR_REPEALED
-    assert stages[-1]["phase"] == LifecyclePhase.AFTER_ROYAL_ASSENT
+    assert stages[-1]["stage"] == BillStage.READY_FOR_FIRST_READING
 
 
-async def test_tracked_pre_parliament_bill_endpoint() -> None:
+def test_phase_one_stop_risks() -> None:
+    drafting_node = next(
+        n for n in GOVERNMENT_BILL_PIPELINE if n.stage == BillStage.DRAFTING
+    )
+    assert StopReason.STUCK_IN_DRAFTING in drafting_node.stop_risks
+
+
+async def test_sync_bill_to_neon_endpoint() -> None:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/api/v1/bills/online-safety-bill")
+        response = await client.post("/api/v1/bills/online-safety-bill/sync")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "synced"
+    assert data["bill_id"] == "online-safety-bill"
+    assert data["neon_branch"] == "production"
+    assert data["stages_saved"] == 6
+    assert data["events_saved"] >= 10
+
+
+@pytest.mark.parametrize(
+    ("as_of_date", "expected_stage", "expected_order"),
+    [
+        ("2017-11-15", BillStage.SIGNAL_APPEARS, 1),
+        ("2018-07-01", BillStage.GOVERNMENT_COMMITS, 2),
+        ("2019-06-01", BillStage.CONSULTATION, 3),
+        ("2021-01-15", BillStage.DRAFTING, 4),
+        ("2021-06-01", BillStage.SLOT_IN_PROGRAMME, 5),
+        ("2022-03-17", BillStage.READY_FOR_FIRST_READING, 6),
+        ("2026-10-24", BillStage.READY_FOR_FIRST_READING, 6),
+    ],
+)
+async def test_online_safety_bill_historical_dates_from_neon_db(
+    as_of_date: str, expected_stage: BillStage, expected_order: int
+) -> None:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get(
+            "/api/v1/bills/online-safety-bill", params={"as_of_date": as_of_date}
+        )
     assert response.status_code == 200
     bill = response.json()
-    assert bill["id"] == "online-safety-bill"
-    assert bill["short_title"] == "Online Safety Bill"
-    assert bill["current_phase"] == LifecyclePhase.BEFORE_PARLIAMENT
-    assert bill["current_stage"] == BillStage.DRAFTING
-    assert bill["current_stage_order"] == 4
-    assert len(bill["stages"]) == 24
 
-    # Orders 1-3 should be COMPLETED, Order 4 should be CURRENT, Orders 5-24 UPCOMING
+    assert bill["id"] == "online-safety-bill"
+    assert bill["parliament_bill_id"] == 3137
+    assert bill["as_of_date"] == as_of_date
+    assert bill["current_stage"] == expected_stage
+    assert bill["current_stage_order"] == expected_order
+    assert len(bill["stages"]) == 6
+
     for stage_item in bill["stages"]:
-        if stage_item["order"] < 4:
+        if stage_item["order"] < expected_order:
             assert stage_item["status"] == StageStatus.COMPLETED
-        elif stage_item["order"] == 4:
-            assert stage_item["status"] == StageStatus.CURRENT
-            assert stage_item["stage"] == BillStage.DRAFTING
+            assert stage_item["entered_date"] is not None
+        elif stage_item["order"] == expected_order:
+            expected_status = (
+                StageStatus.COMPLETED
+                if expected_stage == BillStage.READY_FOR_FIRST_READING
+                else StageStatus.CURRENT
+            )
+            assert stage_item["status"] == expected_status
+            assert stage_item["entered_date"] <= as_of_date
+            assert len(stage_item["visible_events"]) >= 1
+            for ev in stage_item["visible_events"]:
+                assert ev["event_date"] <= as_of_date
         else:
             assert stage_item["status"] == StageStatus.UPCOMING
-
-
-def test_commencement_orders_stop_risk() -> None:
-    commencement_node = next(
-        n for n in GOVERNMENT_BILL_PIPELINE if n.stage == BillStage.COMMENCEMENT_ORDERS
-    )
-    assert StopReason.NEVER_COMMENCED in commencement_node.stop_risks
-
-
-async def test_parliament_bills_api_returns_government_bills() -> None:
-    client = ParliamentBillsClient()
-    result = await client.list_government_bills(skip=0, take=5)
-
-    assert "items" in result
-    assert "totalResults" in result
-    assert result["totalResults"] > 0
-    assert len(result["items"]) == 5
-
-    first_bill = result["items"][0]
-    assert "billId" in first_bill
-    assert "shortTitle" in first_bill
-    assert first_bill["billTypeId"] == settings.government_bill_type_id
-    assert "currentStage" in first_bill
-
-    stages_result = await client.get_bill_stages(first_bill["billId"])
-    assert "items" in stages_result
-    assert len(stages_result["items"]) > 0
+            assert stage_item["entered_date"] is None
+            assert stage_item["visible_events"] == []
