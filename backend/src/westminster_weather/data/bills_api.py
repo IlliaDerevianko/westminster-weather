@@ -89,13 +89,11 @@ class BillsApiDownloader:
                 time.sleep(wait)
         raise RuntimeError("unreachable")
 
-    def list_bills(self, bill_type: int | None) -> list[dict[str, Any]]:
-        """All bills of one type (or of every type when ``bill_type`` is None)."""
+    def list_bills(self, bill_type: int) -> list[dict[str, Any]]:
+        """All bills of one type."""
         items: list[dict[str, Any]] = []
         while True:
-            params: dict[str, Any] = {"Take": PAGE_SIZE, "Skip": len(items)}
-            if bill_type is not None:
-                params["BillType"] = bill_type
+            params: dict[str, Any] = {"Take": PAGE_SIZE, "Skip": len(items), "BillType": bill_type}
             page = self.get("/Bills", params)
             items.extend(page["items"])
             if not page["items"] or len(items) >= page["totalResults"]:
@@ -130,11 +128,10 @@ def _needs_download(cached: dict[str, Any] | None, list_item: dict[str, Any], de
 
 
 def fetch_all_payloads(
-    include_all_types: bool = True,
     downloader: BillsApiDownloader | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, int]]:
-    """Download government bills (list + detail + stages) and, optionally, the stages of
-    every other bill type (used for the sitting-day calendar).
+    """Download UK Government Bills only (list + detail + stages); the project accepts no
+    other bill type (DATA_SCOPE.md).
     """
     own = downloader is None
     dl = downloader or BillsApiDownloader()
@@ -142,15 +139,14 @@ def fetch_all_payloads(
         gov_type = settings.government_bill_type_id
         logger.info("Listing bills from UK Parliament Bills API")
         stage_types = dl.list_stage_types()
-        listed = dl.list_bills(None if include_all_types else gov_type)
+        listed = dl.list_bills(gov_type)
 
         def work(item: dict[str, Any]) -> dict[str, Any]:
             bill_id = item["billId"]
-            is_gov = item["billTypeId"] == gov_type
             return {
                 "fetched_at": datetime.now(UTC).isoformat(),
                 "list_item": item,
-                "detail": dl.bill_detail(bill_id) if is_gov else None,
+                "detail": dl.bill_detail(bill_id),
                 "stages": dl.bill_stages(bill_id),
             }
 
@@ -363,24 +359,28 @@ def build_tables_from_payloads(
     *,
     persist_to_db: bool = False,
 ) -> dict[str, pd.DataFrame]:
-    """Flatten bill payloads into DATA_CONTRACT tables and optionally persist to Neon Postgres."""
+    """Flatten bill payloads into DATA_CONTRACT tables and optionally persist to Neon Postgres.
+
+    Payloads of any bill type other than government bills are dropped (DATA_SCOPE.md), so every
+    table, including the sitting-day calendar and sessions, is built from government bills only.
+    """
     gov_type = settings.government_bill_type_id
-    all_sittings, scheduled = split_scheduled(flatten_stage_sittings(payloads))
     gov_payloads = [p for p in payloads if p["list_item"]["billTypeId"] == gov_type]
-    gov_sittings = all_sittings[all_sittings["bill_type_id"] == gov_type].reset_index(drop=True)
-    sessions = calendar.sessions(all_sittings)
-    bills = flatten_bills(gov_payloads, gov_sittings, sessions)
-    stage_map = flatten_stage_map(stage_types or [], payloads)
+    if len(gov_payloads) < len(payloads):
+        logger.warning("dropped %d non-government bills", len(payloads) - len(gov_payloads))
+    sittings, scheduled = split_scheduled(flatten_stage_sittings(gov_payloads))
+    sessions = calendar.sessions(sittings)
+    bills = flatten_bills(gov_payloads, sittings, sessions)
+    stage_map = flatten_stage_map(stage_types or [], gov_payloads)
 
     tables = {
         "stage_map": stage_map,
         "bills": bills,
-        "stage_sittings": gov_sittings,
-        "all_stage_sittings": all_sittings,
+        "stage_sittings": sittings,
         "scheduled_sittings": scheduled,
         "sessions": sessions,
         "parliaments": calendar.parliaments(),
-        "sitting_days": calendar.sitting_days(all_sittings),
+        "sitting_days": calendar.sitting_days(sittings),
     }
     if persist_to_db:
         save_dataset_tables_to_db(tables)
@@ -388,13 +388,9 @@ def build_tables_from_payloads(
 
 
 def fetch_and_persist_all(
-    include_all_types: bool = True,
     downloader: BillsApiDownloader | None = None,
 ) -> tuple[dict[str, pd.DataFrame], dict[str, int]]:
-    """Fetch all UK Parliament Bills and persist flattened tables into Neon Lakebase Postgres."""
-    payloads, stage_types, counts = fetch_all_payloads(
-
-        include_all_types=include_all_types, downloader=downloader
-    )
+    """Fetch all UK Government Bills and persist flattened tables into Neon Lakebase Postgres."""
+    payloads, stage_types, counts = fetch_all_payloads(downloader=downloader)
     tables = build_tables_from_payloads(payloads, stage_types, persist_to_db=True)
     return tables, counts
