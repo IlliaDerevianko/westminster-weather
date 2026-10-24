@@ -1,5 +1,19 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 23:39 — docs(model): first real take-up evaluation report and charts
+
+- **What:** `docs/model/TAKEUP_EVALUATION.md`, `backend/reports/takeup/` (metrics.json, calibration, pi_now curves, time-to-bill, feature effects) from the first real run on 985 ideas.
+- **Why:** task 9; Roman asked for honest results.
+- **Checks:** `run_evaluation(write=False)` on takeup-dev; nothing written to the database.
+- **Notes:** the model does not beat baseline B1 (52-week AUC 0.57/0.53 vs 0.63; Brier 0.113 vs 0.109); 80% timing windows cover 22–38% of bills. Strong effects: repeat mention (+2.0 ± 0.2), firmness (+0.81 ± 0.27), later firm commitment (+0.99 ± 0.41).
+
+## 2026-10-24 23:39 — feat(takeup): GOV.UK events fetch and matching
+
+- **What:** `takeup/govuk_events.py`: fetches consultations, consultation responses, white/green papers and draft bills from the GOV.UK search API (13,952 events, cached), matches them to ideas by text (no bill information), and loads `idea_events` via the take-up upsert (refuses production).
+- **Why:** task 5.
+- **Checks:** `pytest tests/takeup/test_takeup_govuk.py`: 19 passed; `ruff`: clean. Dry run: 255 ideas would get 547 events.
+- **Notes:** not written to the database: spot-check precision ~50–60%, mostly from weak idea topics. Re-running `nlp` renumbers ideas, so events must be re-matched afterwards.
+
 ## 2026-10-24 23:37 — feat(takeup): NLP pipeline (label, group, link) and review/score
 
 - **What:** `takeup/nlp.py`: trigger sentences from `source_documents` (rules + an extra commitment check), Hansard minister check by date, TF-IDF topic grouping with 2-year gap splits, linking to Government Bills first read in [trigger − 7 d, trigger + 5 y] (title / long title, bill named in the text → auto), merging groups that link to the same bill with `group_id` kept for leakage control; writes `signal_mentions`, `ideas`, `idea_mentions`, `idea_bill_links` in one transaction; `review` / `score` with an overwrite guard. CLI `nlp`, `review`, `score`; `db.clear_derived_tables` (refuses production and raw tables).
