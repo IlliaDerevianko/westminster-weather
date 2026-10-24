@@ -146,6 +146,7 @@ def cmd_train(args: argparse.Namespace) -> None:
     print(f"\nMetrics saved: {out}\nChart saved: {chart}")
 
     _train_hazard()
+    _train_failure_and_pingpong(args.as_of)
 
 
 def _train_hazard() -> None:
@@ -194,6 +195,46 @@ def _train_hazard() -> None:
     print(f"\nModel saved: {model_path}\nChart saved: {chart}\nMetrics saved: {metrics_path}")
 
 
+def _train_failure_and_pingpong(as_of: date) -> None:
+    import json
+
+    import joblib
+    import numpy as np
+
+    from westminster_weather.model import failure, pingpong
+    from westminster_weather.model.splits import TRAIN_CUTOFF, TRAIN_SESSIONS
+
+    metrics_path = REPORTS_DIR / "metrics.json"
+    metrics = json.loads(metrics_path.read_text()) if metrics_path.exists() else {}
+    for name, cutoff, sessions in (
+        ("train", TRAIN_CUTOFF, TRAIN_SESSIONS),
+        ("live", as_of, None),
+    ):
+        fail = failure.fit_failure(cutoff, sessions=sessions)
+        pp = pingpong.fit_pingpong(cutoff, sessions=sessions)
+        scope = "training sessions" if sessions else "all sessions"
+        print(f"\nFailure routes and ping-pong ({name}: data as of {cutoff}, {scope}):")
+        for line in [*fail.describe(), *pp.describe()]:
+            print(f"  - {line}")
+        fail.save(MODELS_DIR / f"failure_{name}.joblib")
+        joblib.dump(pp, MODELS_DIR / f"pingpong_{name}.joblib")
+        if name == "live":
+            chart = failure.plot_components(fail, pp, REPORTS_DIR / "failure_and_pingpong.png")
+            print(f"  Chart saved: {chart}")
+        metrics.setdefault("failure", {})[name] = {
+            "data_as_of": cutoff.isoformat(),
+            "session_lengths_sitting_days": sorted(int(x) for x in fail.session_lengths.lengths),
+            "dissolution_daily_rate": fail.dissolution.rates,
+            "dissolution_events": fail.dissolution.events,
+            "withdrawal_daily_rate": fail.withdrawal.rate,
+            "defeat_probability_per_vote_stage": fail.defeat_probability,
+            "ping_pong_probability": pp.probability,
+            "ping_pong_median_sitting_days": float(np.median(pp.durations)),
+        }
+    metrics_path.write_text(json.dumps(metrics, indent=2) + "\n")
+    print(f"\nModels saved in {MODELS_DIR}; metrics saved: {metrics_path}")
+
+
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -215,7 +256,9 @@ def main(argv: list[str] | None = None) -> None:
     build.add_argument("--as-of", type=date.fromisoformat, default=date.today())
     build.set_defaults(func=cmd_build)
 
-    train = sub.add_parser("train", help="Fit and score the models (baselines, hazard)")
+    train = sub.add_parser(
+        "train", help="Fit and score the models (baselines, hazard, failure routes, ping-pong)"
+    )
     train.add_argument("--as-of", type=date.fromisoformat, default=date.today())
     train.set_defaults(func=cmd_train)
 

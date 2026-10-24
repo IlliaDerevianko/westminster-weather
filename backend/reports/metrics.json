@@ -119,5 +119,69 @@
       "dept_northern_ireland_office": 2.77,
       "same_day_2r_3r": 3.175
     }
+  },
+  "failure": {
+    "train": {
+      "data_as_of": "2019-10-14",
+      "session_lengths_sitting_days": [
+        117,
+        131,
+        133,
+        135,
+        144,
+        152,
+        266,
+        270
+      ],
+      "dissolution_daily_rate": {
+        "<3": 0.0013111888111888112,
+        "3-4": 0.0018450184501845018,
+        "4-4.5": 0.004672897196261682,
+        "4.5+": 0.01893939393939394
+      },
+      "dissolution_events": {
+        "<3": 1,
+        "3-4": 0,
+        "4-4.5": 0,
+        "4.5+": 2
+      },
+      "withdrawal_daily_rate": 3.8452664769668536e-05,
+      "defeat_probability_per_vote_stage": 0.002,
+      "ping_pong_probability": 0.53125,
+      "ping_pong_median_sitting_days": 4.0
+    },
+    "live": {
+      "data_as_of": "2026-10-24",
+      "session_lengths_sitting_days": [
+        117,
+        131,
+        133,
+        135,
+        141,
+        144,
+        152,
+        188,
+        204,
+        262,
+        266,
+        270
+      ],
+      "dissolution_daily_rate": {
+        "<3": 0.001326259946949602,
+        "3-4": 0.0012406947890818859,
+        "4-4.5": 0.008620689655172414,
+        "4.5+": 0.01893939393939394
+      },
+      "dissolution_events": {
+        "<3": 2,
+        "3-4": 0,
+        "4-4.5": 1,
+        "4.5+": 2
+      },
+      "withdrawal_daily_rate": 0.00010964912280701755,
+      "defeat_probability_per_vote_stage": 0.002,
+      "ping_pong_probability": 0.5423076923076923,
+      "ping_pong_median_sitting_days": 6.0
+    }
   }
 }

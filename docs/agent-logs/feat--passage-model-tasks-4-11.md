@@ -1,5 +1,12 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 22:37 — feat(model): failure routes and ping-pong (task 8)
+
+- **What:** added `model/failure.py` (session-length distribution from prorogued sessions, conditional draws; dissolution hazard by years since election with a 5-year cap; carry-over rule; constant defeat fallback 0.002 per Commons vote stage; constant withdrawal hazard) and `model/pingpong.py` (ping-pong probability; total ping-pong → Royal Assent duration). `cli train` fits a training version (as of 2019-10-14, sessions 20–30) and a live version, saves them in `backend/models/`, writes `metrics.json` (`failure`) and `reports/failure_and_pingpong.png`. Added `tests/model/test_failure.py`.
+- **Why:** BUILD_PLAN task 8, MODEL_SPEC §4.2–4.5. Task 7 skipped (optional), per Aleks's "keep going".
+- **Checks:** `ruff`: clean; `pytest`: 83 passed.
+- **Notes:** ping-pong rounds and round gaps (MODEL_SPEC §4.4) need individual ping-pong sittings, which the §5 interface does not expose; total ping-pong duration is used instead — asked Aleks. Only prorogued sessions feed the session-length distribution (dissolution is its own route). Dissolution bucket rates are smoothed (+0.5 events) because there are only 5 dissolutions.
+
 ## 2026-10-24 22:31 — feat(model): logistic advance hazard (task 6)
 
 - **What:** added `model/hazard.py` (pooled L2 logistic hazard: state × time-in-state cells, end-of-session buckets, shared Tier 1 effects; C chosen by time-ordered validation; optional LightGBM comparison), `cli train` now also fits it and saves `backend/models/hazard.joblib`, `reports/hazard_coefficients.png` and `metrics.json` (`hazard`). Added `tests/model/test_hazard.py`. Installed `libomp` with Homebrew so the existing `lightgbm` dependency loads.
