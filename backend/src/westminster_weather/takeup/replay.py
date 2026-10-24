@@ -1,5 +1,6 @@
-"""Stage 1 replay (run: uv run python -m westminster_weather.takeup.replay): for past promises, what the hazard model predicted at the time vs what happened.
-Each promise's model is trained only on signals visible before its trigger date. Read-only."""
+"""Stage 1 replay: for past promises, what the hazard model predicted at the time vs what
+happened. Each promise's model is trained only on signals visible before its trigger date.
+Read-only. Run: uv run python -m westminster_weather.takeup.replay"""
 
 import warnings
 
@@ -71,8 +72,8 @@ for idea_id in IDEAS:
         m = tl[tl["signal_id"] == s["signal_id"]]
         p = model.predict(s, m, as_of, td.sitting_dates(as_of), td.week_probability(as_of))
 
-        def wk(x):
-            return (trig + pd.Timedelta(weeks=int(x))).strftime("%b %Y") if pd.notna(x) else "—"
+        def wk(x, start=trig):
+            return (start + pd.Timedelta(weeks=int(x))).strftime("%b %Y") if pd.notna(x) else "—"
 
         hit = ""
         if actual_date is not None and pd.notna(p.get("t_10")) and pd.notna(p.get("t_90")):
@@ -81,7 +82,8 @@ for idea_id in IDEAS:
         in52 = actual_date is not None and actual_date <= as_of + pd.Timedelta(weeks=52)
         print(
             f"    as of {as_of.date()} (+{w:>3}w, {len(m)} mentions so far): "
-            f"chance now {p['pi_now']:.0%}, within 52w {p['p52']:.0%} [real: {'yes' if in52 else 'no'}], "
+            f"chance now {p['pi_now']:.0%}, within 52w {p['p52']:.0%} "
+            f"[real: {'yes' if in52 else 'no'}], "
             f"verdict {p['verdict']}, if it comes ~{wk(p.get('t_50'))} "
             f"(80%: {wk(p.get('t_10'))}–{wk(p.get('t_90'))}){hit}"
         )
