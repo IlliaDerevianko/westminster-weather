@@ -1,3 +1,9 @@
+## 2026-10-24 20:42 — test(data): add bills_api and interface tests against Neon Postgres
+
+- **What:** Added `tests/model/test_bills_api.py` and `tests/model/test_interface.py` testing bill flattening, outcome labelling, state transitions, covariates, and live Neon Lakebase Postgres dataset counts (~588 Government Bills) and no-leakage guarantees.
+- **Why:** Verify that all UK Government Bills and stage sittings in Neon Lakebase Postgres satisfy the `DATA_CONTRACT.md` invariants and §5 model interface.
+- **Checks:** `uv run ruff check .`: clean; synthetic unit tests pass; Neon DB assertions run once `cli fetch` finishes populating Neon.
+
 ## 2026-10-24 20:38 — feat(data): add Neon DB adapters, bills_api, and interface
 
 - **What:** Added `save_dataset_tables_to_db`, `fetch_bills_df`, `fetch_stage_sittings_df`, `fetch_scheduled_sittings_df`, `fetch_sessions_df`, and `fetch_sitting_days_df` in `db.py`, plus `data/bills_api.py`, `data/interface.py` (`DatabaseInterface`), and `model/cli.py`.
