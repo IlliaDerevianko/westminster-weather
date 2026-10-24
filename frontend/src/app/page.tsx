@@ -380,19 +380,9 @@ function BillTrackerContent() {
                   {bill.sponsoring_department}
                 </p>
                 <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-                  {bill.earliest_signal_date !== bill.first_reading_date && (
-                    <span>
-                      <strong className="text-slate-700">
-                        Pre-Parliament Signal:
-                      </strong>{" "}
-                      {bill.earliest_signal_date}
-                    </span>
-                  )}
                   <span>
-                    <strong className="text-slate-700">
-                      1st Reading (Parliament):
-                    </strong>{" "}
-                    {bill.first_reading_date}
+                    <strong className="text-slate-700">First Signal:</strong>{" "}
+                    {bill.earliest_signal_date}
                   </span>
                   {bill.outcome_date && (
                     <span>

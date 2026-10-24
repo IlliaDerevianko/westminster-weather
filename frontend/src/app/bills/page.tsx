@@ -289,14 +289,7 @@ export default function BillsDirectoryPage() {
                     </span>
                     {b.earliest_signal_date && (
                       <span>
-                        <strong>Pre-Parliament Signal:</strong>{" "}
-                        {b.earliest_signal_date}
-                      </span>
-                    )}
-                    {b.introduced_date && (
-                      <span>
-                        <strong>1st Reading (Parliament):</strong>{" "}
-                        {b.introduced_date}
+                        <strong>First Signal:</strong> {b.earliest_signal_date}
                       </span>
                     )}
                     {b.outcome_date && (
