@@ -27,8 +27,9 @@ from westminster_weather.domain.stages import StopReason
 
 logger = logging.getLogger(__name__)
 
-MAX_PARALLEL = 10
+MAX_PARALLEL = 20
 PAGE_SIZE = 250
+
 MAX_RETRIES = 5
 
 STAGE_ROYAL_ASSENT = 11

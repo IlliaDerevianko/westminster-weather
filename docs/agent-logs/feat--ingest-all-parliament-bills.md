@@ -1,3 +1,9 @@
+## 2026-10-24 20:46 — perf(data): increase parallel downloads to 20 and verify 588 bills in Neon
+
+- **What:** Increased `MAX_PARALLEL` to 20 in `data/bills_api.py` and ingested all 588 UK Government Bills (`bills`), 10,290 `stage_sittings`, 49 `stage_map` rows, 19 `sessions`, 4,274 `sitting_days`, and 27 `scheduled_sittings` into Neon Lakebase Postgres.
+- **Why:** Populate Neon Lakebase Postgres with the full historical dataset of all 588 UK Government Bills from the UK Parliament Bills API.
+- **Checks:** `uv run ruff check .`: clean; `uv run pytest -v`: 42 passed (including live Neon DB count & no-leakage checks).
+
 ## 2026-10-24 20:42 — test(data): add bills_api and interface tests against Neon Postgres
 
 - **What:** Added `tests/model/test_bills_api.py` and `tests/model/test_interface.py` testing bill flattening, outcome labelling, state transitions, covariates, and live Neon Lakebase Postgres dataset counts (~588 Government Bills) and no-leakage guarantees.
