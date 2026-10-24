@@ -58,6 +58,7 @@ def cmd_fetch(args: argparse.Namespace) -> None:
 BACKEND_DIR = Path(__file__).resolve().parents[3]
 REPORTS_DIR = BACKEND_DIR / "reports"
 PROCESSED_DIR = BACKEND_DIR / "data" / "processed"
+MODELS_DIR = BACKEND_DIR / "models"
 
 
 def cmd_states(args: argparse.Namespace) -> None:
@@ -144,6 +145,54 @@ def cmd_train(args: argparse.Namespace) -> None:
     chart = baseline.plot_mae_by_state(metrics, REPORTS_DIR / "baselines_mae_by_state.png")
     print(f"\nMetrics saved: {out}\nChart saved: {chart}")
 
+    _train_hazard()
+
+
+def _train_hazard() -> None:
+    import json
+
+    import numpy as np
+
+    from westminster_weather.model import hazard
+
+    built = hazard.training_rows()
+    fitted = hazard.fit_hazard(built)
+    val = fitted.validation
+    print(
+        f"\nAdvance hazard: {len(built.rows):,} training rows from "
+        f"{built.rows['bill_id'].nunique()} bills"
+    )
+    print(
+        f"Validation (fit sessions {val['fit_sessions'][0]}-{val['fit_sessions'][-1]}, "
+        f"score {val['validation_sessions'][0]}-{val['validation_sessions'][-1]}), "
+        "log-loss (lower is better):"
+    )
+    print(f"  constant daily rate          {val['log_loss_constant_rate']}")
+    print(f"  state x time-in-state only   {val['log_loss_state_and_time_only']}")
+    print(f"  full logistic model (C={fitted.C})  {val['log_loss_best']}")
+    lgbm = hazard.lightgbm_validation(built)
+    val["lightgbm_log_loss"] = lgbm["log_loss"]
+    print(f"  LightGBM (optional)          {lgbm['log_loss']}")
+
+    coefs = fitted.coefficients()
+    shared = coefs[[c for c in coefs.index if not c.startswith("cell:")]].sort_values()
+    print("\nShared effects (odds ratio per day; >1 faster, <1 slower):")
+    for col, value in shared.items():
+        print(f"  {hazard.label(col, fitted.departments):<62}{np.exp(value):6.2f}")
+
+    model_path = fitted.save(MODELS_DIR / "hazard.joblib")
+    chart = hazard.plot_coefficients(fitted, REPORTS_DIR / "hazard_coefficients.png")
+    metrics_path = REPORTS_DIR / "metrics.json"
+    metrics = json.loads(metrics_path.read_text()) if metrics_path.exists() else {}
+    metrics["hazard"] = {
+        **val,
+        "C": fitted.C,
+        "training_rows": len(built.rows),
+        "odds_ratios": {c: round(float(np.exp(v)), 3) for c, v in shared.items()},
+    }
+    metrics_path.write_text(json.dumps(metrics, indent=2) + "\n")
+    print(f"\nModel saved: {model_path}\nChart saved: {chart}\nMetrics saved: {metrics_path}")
+
 
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
@@ -166,7 +215,7 @@ def main(argv: list[str] | None = None) -> None:
     build.add_argument("--as-of", type=date.fromisoformat, default=date.today())
     build.set_defaults(func=cmd_build)
 
-    train = sub.add_parser("train", help="Fit and score the models (task 5: baselines)")
+    train = sub.add_parser("train", help="Fit and score the models (baselines, hazard)")
     train.add_argument("--as-of", type=date.fromisoformat, default=date.today())
     train.set_defaults(func=cmd_train)
 

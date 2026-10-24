@@ -60,5 +60,64 @@
         "ping_pong": 18.9
       }
     }
+  },
+  "hazard": {
+    "fit_sessions": [
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26
+    ],
+    "validation_sessions": [
+      27,
+      28,
+      29,
+      30
+    ],
+    "fit_rows": 17052,
+    "validation_rows": 8954,
+    "log_loss_by_C": {
+      "0.001": 0.34228,
+      "0.003": 0.3325,
+      "0.01": 0.31572,
+      "0.03": 0.30131,
+      "0.1": 0.29376,
+      "0.3": 0.2919,
+      "1.0": 0.29206,
+      "3.0": 0.29226,
+      "10.0": 0.29247
+    },
+    "best_C": 0.3,
+    "log_loss_best": 0.2919,
+    "log_loss_constant_rate": 0.35244,
+    "log_loss_state_and_time_only": 0.30383,
+    "lightgbm_log_loss": 0.27838,
+    "C": 0.3,
+    "training_rows": 26006,
+    "odds_ratios": {
+      "originating_house_lords": 0.647,
+      "carry_over": 0.68,
+      "n_stage_sittings_cum": 0.775,
+      "dept_department_for_business_and_trade": 0.853,
+      "dept_ministry_of_justice": 0.933,
+      "dept_cabinet_office": 0.944,
+      "dept_department_for_education": 0.991,
+      "dept_home_office": 0.999,
+      "committee_whole_house": 1.0,
+      "parliament_age_years": 1.0,
+      "dept_department_for_work_and_pensions": 1.003,
+      "dept_ministry_of_housing_communities_and_local_government": 1.013,
+      "dept_department_for_transport": 1.045,
+      "introduced_months_into_session": 1.101,
+      "end:16-40": 1.13,
+      "end:6-15": 1.171,
+      "end:0-5": 1.42,
+      "dept_hm_treasury": 1.802,
+      "dept_northern_ireland_office": 2.77,
+      "same_day_2r_3r": 3.175
+    }
   }
 }

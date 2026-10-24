@@ -1,5 +1,12 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 22:31 — feat(model): logistic advance hazard (task 6)
+
+- **What:** added `model/hazard.py` (pooled L2 logistic hazard: state × time-in-state cells, end-of-session buckets, shared Tier 1 effects; C chosen by time-ordered validation; optional LightGBM comparison), `cli train` now also fits it and saves `backend/models/hazard.joblib`, `reports/hazard_coefficients.png` and `metrics.json` (`hazard`). Added `tests/model/test_hazard.py`. Installed `libomp` with Homebrew so the existing `lightgbm` dependency loads.
+- **Why:** BUILD_PLAN task 6, MODEL_SPEC §4.1.
+- **Checks:** `ruff`: clean; `pytest`: 75 passed. Validation log-loss (fit 20–26, score 27–30): constant 0.352, state × time only 0.304, logistic (C = 0.3) 0.292, LightGBM 0.278.
+- **Notes:** `committee_whole_house` is 0 for every training bill: the Bills API only records stage 49 (Committee of the whole House) from session 37 (2022–23); earlier it is coded as stage 8. Its coefficient is therefore 0 — reported to Aleks. LightGBM beats logistic on validation; logistic is kept as the default (MODEL_SPEC: explainable) pending Aleks's decision.
+
 ## 2026-10-24 22:12 — feat(model): baselines B0 and B1 (task 5)
 
 - **What:** added `model/splits.py` (train sessions 20–30, test 34–39, training data as of 2019-10-14), `model/baseline.py` (B0, B1, backtest forecast points, MAE), `cli train`, `tests/model/test_baseline.py`, `reports/metrics.json` (`baselines`) and `reports/baselines_mae_by_state.png`.
