@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 23:19 — feat(takeup): take-up API endpoints
+
+- **What:** `takeup/api.py` (router included in `main.py`): `GET /api/v1/takeup/ideas`, `/forecast`, `/history` (all `as_of`-safe; split groups resolve to their own signal and don't reveal the later merge). Model rebuilt from the latest `takeup_runs` row, else fitted once in memory; stored `takeup_forecasts` used when present; 503 if `DATABASE_URL_TAKEUP` is not set.
+- **Why:** task 10.
+- **Checks:** `pytest tests/takeup/test_takeup_api.py`: 12 passed (offline, synthetic data, injected service); `ruff`: clean.
+- **Notes:** saved runs keep only estimates and SEs, so CIs from a rebuilt model ignore covariances (approximate); speed against the real data not yet measured.
+
 ## 2026-10-24 23:14 — feat(takeup): evaluation, baselines and charts
 
 - **What:** `takeup/evaluate.py`: time-split backtest (cuts 2019-01-01 and 2022-01-01; training only on signals visible at the cut, asserted), baselines B0 / B1, AUC and Brier at 26 / 52 weeks, 5-bin calibration, 80% window coverage, concordance, verdict accuracy, parameter table; 4 charts + `metrics.json` in `backend/reports/takeup/`; generator for `docs/model/TAKEUP_EVALUATION.md`; `save_run` to `takeup_runs` / `takeup_forecasts` (refuses production); `run_evaluation(write=False)`.
