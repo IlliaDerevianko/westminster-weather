@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 21:40 — chore(gitignore): ignore backend/data and backend/models
+
+- **What:** added `backend/data/` and `backend/models/` to `.gitignore`.
+- **Why:** the Tier B fetch caches thousands of API responses under `backend/data/cache/`; `git check-ignore` showed they were not ignored. BUILD_PLAN already asks for both paths to be ignored.
+- **Checks:** `git check-ignore -v backend/data/cache/takeup/x.json` now matches. No code changed.
+
 ## 2026-10-24 21:25 — docs(model): add Phase 1 → 2 take-up model plan
 
 - **What:** added `docs/model/TAKEUP_PLAN.md`: design, the four changes from the prototype, Neon safety rules, features, evaluation, tasks with checkpoints, and decisions needed.

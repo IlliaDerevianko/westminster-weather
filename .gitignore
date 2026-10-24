@@ -27,6 +27,8 @@ htmlcov/
 *.sqlite3
 data/raw/
 data/processed/
+backend/data/
+backend/models/
 
 # Node / Frontend (future)
 node_modules/
