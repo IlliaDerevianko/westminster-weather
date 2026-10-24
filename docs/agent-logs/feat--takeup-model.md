@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 21:58 — docs(contract): connect King's Speech items to earlier commitments
+
+- **What:** amended the draft `DATA_CONTRACT.md` section 10: a King's Speech item is matched by text to earlier Tier B ideas and stored as their `kings_speech` event (dated on the speech), so `x_kings_speech` updates a forecast from the speech day; only unmatched items become their own Tier A ideas. Bill-based merging is kept only for de-duplication.
+- **Why:** Roman pointed out that the tiers are connected (NLP finds the trigger, the King's Speech then moves the forecast). The previous draft joined them only through a shared bill, which under the `as_of` rule is invisible until first reading, so a forecast would miss the speech in exactly the window that matters.
+- **Checks:** none (docs only; still a draft for checkpoint 2).
+- **Notes:** follow-ups: `signals.py` must take `x_kings_speech` from `idea_events`; Tier B linking (task 7) must add the idea ↔ King's Speech item matching.
+
 ## 2026-10-24 21:32 — chore(deps): add pypdf for King's Speech briefing notes
 
 - **What:** added `pypdf` to `backend/pyproject.toml` / `uv.lock`. Corrected the timestamps of the earlier entries in this log to the real commit times (they had been written 10–30 minutes ahead).

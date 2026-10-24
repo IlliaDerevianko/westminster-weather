@@ -385,7 +385,10 @@ Status: **draft for approval** (checkpoint 2 of `docs/model/TAKEUP_PLAN.md`). Ow
 
 The take-up model asks whether a government commitment to legislate becomes a bill, and when. These tables are separate from the passage model's: they are defined on their own SQLAlchemy `MetaData` (`takeup/tables.py`), are **not** created by the app's start-up `create_all`, and are migrated first on the Neon branch `takeup-dev` (`TAKEUP_DATABASE_URL`), then on `production` only after review.
 
-An **idea** is one commitment to legislate on one topic. Tier A ideas come from King's/Queen's Speech briefing notes (one idea per announced bill). Tier B ideas come from ministers' words (written ministerial statements, Hansard), grouped by topic.
+An **idea** is one commitment to legislate on one topic. Tier B ideas come from ministers' words (written ministerial statements, Hansard), grouped by topic; their earliest commitment is the trigger. Tier A (King's/Queen's Speech briefing notes) connects to them in two ways:
+
+- **King's Speech as an event of an earlier idea.** Each speech item is matched by text (announced name and briefing-note text vs the idea's topic, no bill information) to Tier B ideas whose trigger is before the speech. A match is stored as an `idea_events` row (`event_type = 'kings_speech'`, `event_date` = speech date), so the forecast for that idea updates from the speech day onward (`x_kings_speech`), even before any bill is introduced. The matched item does not become a separate idea.
+- **King's Speech as a trigger.** An item with no earlier matching Tier B idea becomes its own Tier A idea (`A-<item_id>`), triggered on the speech date.
 
 ### 10.1 `kings_speech_items`
 One row per bill announced in a King's/Queen's Speech briefing note (2012 onwards).
@@ -400,7 +403,7 @@ One row per bill announced in a King's/Queen's Speech briefing note (2012 onward
 | `source_url` | TEXT | GOV.UK publication page |
 | `ingested_at` | TIMESTAMP | |
 
-The link to a bill is stored in `idea_bill_links` (the item's idea is `A-<item_id>`), not here, so there is one source of truth for links.
+The link to a bill is stored in `idea_bill_links` (for an item that is its own idea, `A-<item_id>`), not here, so there is one source of truth for links. Items matched to an earlier Tier B idea appear as that idea's `kings_speech` event (10.5) instead.
 
 ### 10.2 `signal_mentions`
 One row per sentence in which the government commits (or seems to commit) to legislate.
@@ -507,7 +510,7 @@ The take-up model reads data only through this function. One row per idea with a
 | `z_*` | Features known at `signal_date` |
 | `x_*` | Dates time-varying events happened, only if ≤ `as_of` |
 
-Rules: mentions, events and links dated after `as_of` are invisible; merges of groups follow `idea_mentions.group_id` (10.4); first reading = earliest sitting of Bills API stage 6 or 1.
+Rules: mentions, events and links dated after `as_of` are invisible; merges of groups follow `idea_mentions.group_id` (10.4); first reading = earliest sitting of Bills API stage 6 or 1. `x_kings_speech` comes from the idea's `kings_speech` event (text match, dated on the speech), so it is visible from the speech date even if the bill has not yet been introduced; merging through a shared bill is only for de-duplicating ideas and stays invisible until that bill's first reading.
 
 ### 10.10 Validation checks
 - Every `idea_mentions.mention_id` exists in `signal_mentions` or `kings_speech_items`.
