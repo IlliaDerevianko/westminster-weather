@@ -1,5 +1,11 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 23:40 — feat(model): pace feature (Part 1, step 2)
+
+- **What:** added `log_pace` = log((sitting days from first reading to entering the current state + 1) / (median for finished bills reaching that state, by originating House + 1)), capped at ±2, to the training rows and hazard; medians are fitted at each refit and stored in the hazard model; the simulator uses the bill's pace on `as_of`, frozen.
+- **Why:** Aleks's Part 1 step 2.
+- **Checks:** `ruff`: clean; `pytest`: all passed. Validation log-loss 0.2919 → 0.2885 (coefficient −0.63: bills slow so far stay slow). Rolling backtest: MAE 68 → 66, coverage 59% → 62%, too early 57% → 52%, carried-over 220 → 189; pass chance 90% → 88% and Brier 0.049 → 0.050 (marginally worse). Kept.
+
 ## 2026-10-24 23:35 — fix(model): future sitting days match the training clock (Part 1, step 1)
 
 - **What:** clock check: the old future-calendar generator produced 2,148 sitting days for 2012–2025 against 1,796 on the training clock (+20%; it sat Mon–Thu in every likely week, about 4 days/week vs the clock's ~3.5, and ~38–40 weeks/year vs ~36). Added `model/future_calendar.py`: each future ISO week copies the actual clock days of the same week in a random year among the last 5 (dissolution-gap weeks skipped); 1,818 days for 2012–2025. The simulator uses it (parliaments come from `get_calendar`). `cli evaluate --label` now appends a column to the comparison table; added "median forecast too early" to the metrics.

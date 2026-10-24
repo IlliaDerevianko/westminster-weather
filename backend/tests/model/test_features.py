@@ -2,6 +2,7 @@
 
 from datetime import date
 
+import numpy as np
 import pandas as pd
 import pytest
 from test_states import LORDS_FIRST_ACT, _payload, _source
@@ -118,3 +119,16 @@ def test_real_rows_do_not_change_with_a_later_cutoff(real_rows):
     assert len(merged) == len(early)
     for col in cols:
         assert (merged[f"{col}_x"] == merged[f"{col}_y"]).all(), col
+
+
+def test_log_pace():
+    assert features.log_pace(0, 0) == 0.0  # first state: as fast as anyone
+    assert features.log_pace(19, 9) == pytest.approx(np.log(2))  # twice as slow
+    assert features.log_pace(500, 0) == features.PACE_CAP
+    assert features.log_pace(10, None) == 0.0
+
+
+def test_pace_rows_use_medians_of_finished_bills(rows, synthetic):
+    built = features.build_training_rows(CUTOFF, synthetic)
+    assert built.pace_medians  # learned from bills finished by the cutoff
+    assert built.rows["log_pace"].between(-features.PACE_CAP, features.PACE_CAP).all()

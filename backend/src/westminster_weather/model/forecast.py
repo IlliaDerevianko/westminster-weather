@@ -32,7 +32,13 @@ from westminster_weather.domain.stages import BillStage, LifecyclePhase, StopRea
 from westminster_weather.model import states
 from westminster_weather.model.departments import current_department
 from westminster_weather.model.failure import FailureModel, carried_over_in_session
-from westminster_weather.model.features import COVARIATE_FEATURES, DAYS_PER_MONTH, department_column
+from westminster_weather.model.features import (
+    COVARIATE_FEATURES,
+    DAYS_PER_MONTH,
+    days_since_first_reading,
+    department_column,
+    log_pace,
+)
 from westminster_weather.model.hazard import HazardModel
 from westminster_weather.model.simulate import (
     N_PATHS,
@@ -128,6 +134,17 @@ def shared_features(
     return values
 
 
+def current_log_pace(
+    trans: pd.DataFrame, dates: np.ndarray, house: str, medians: dict[tuple[str, str], float]
+) -> float:
+    """Pace of the bill to its current state (frozen for the rest of the simulation)."""
+    if not medians:
+        return 0.0
+    days = days_since_first_reading(trans, dates)
+    last = trans.iloc[-1]
+    return log_pace(days.iloc[-1], medians.get((house, last["model_state"])))
+
+
 def _current_session(sessions: pd.DataFrame, as_of: date) -> pd.Series:
     return sessions[sessions["start_date"] <= as_of].sort_values("start_date").iloc[-1]
 
@@ -141,7 +158,7 @@ def _announced(cal: dict[str, pd.DataFrame], kinds: tuple[str, ...], as_of: date
 
 
 def start_state(
-    bill_id: int, as_of: date, src: Any, departments: list[str]
+    bill_id: int, as_of: date, src: Any, hazard: HazardModel
 ) -> tuple[StartState | None, pd.Series, pd.DataFrame]:
     """The bill's position on ``as_of``. Returns ``None`` as the start state when the bill had
     already reached Royal Assent or failed by then."""
@@ -177,7 +194,12 @@ def start_state(
         chain=chain,
         k0=chain.index(last["model_state"]),
         tau0=calendar.count_sitting_days(dates, last["entered_date"], as_of),
-        shared_features=shared_features(bill, as_of, src, departments),
+        shared_features={
+            **shared_features(bill, as_of, src, hazard.departments),
+            "log_pace": current_log_pace(
+                trans, dates, bill["originating_house"], getattr(hazard, "pace_medians", {})
+            ),
+        },
         carry_over_active=(not between_sessions)
         and carried_over_in_session(bill["carry_over_date"], session["start_date"]),
         session_days_so_far=session_days,
@@ -263,7 +285,7 @@ def forecast_bill(
         models = load_models(variant, models_dir)
     else:
         variant = variant or "custom"
-    start, bill, trans = start_state(bill_id, as_of, src, models.hazard.departments)
+    start, bill, trans = start_state(bill_id, as_of, src, models.hazard)
     common = {
         "bill_id": bill_id,
         "short_title": bill["short_title"],

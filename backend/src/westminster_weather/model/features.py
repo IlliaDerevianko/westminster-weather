@@ -220,10 +220,45 @@ class TrainingRows:
     feature_columns: list[str]
     departments: list[str] = field(default_factory=list)
     as_of_cutoff: date | None = None
+    pace_medians: dict[tuple[str, str], float] = field(default_factory=dict)
 
     @property
     def positive_rate(self) -> float:
         return float(self.rows["y"].mean()) if len(self.rows) else float("nan")
+
+
+# --------------------------------------------------------------------------- pace
+
+PACE_CAP = 2.0  # |log pace| is capped at this value
+
+
+def days_since_first_reading(trans: pd.DataFrame, cal: np.ndarray) -> pd.Series:
+    """Sitting days (either House) from a bill's first state to entering each state."""
+    first = trans.groupby("bill_id")["entered_date"].transform("min")
+    lo = np.searchsorted(cal, pd.to_datetime(first).to_numpy().astype("datetime64[D]"), "right")
+    hi = np.searchsorted(
+        cal, pd.to_datetime(trans["entered_date"]).to_numpy().astype("datetime64[D]"), "right"
+    )
+    return pd.Series(np.maximum(hi - lo, 0), index=trans.index)
+
+
+def fit_pace_medians(
+    trans: pd.DataFrame, cal: np.ndarray, finished: set[int]
+) -> dict[tuple[str, str], float]:
+    """Median sitting days from first reading to each (originating House, state), from bills
+    that had finished."""
+    done = trans[trans["bill_id"].isin(finished)]
+    days = days_since_first_reading(done, cal)
+    return (
+        done.assign(days=days).groupby(["originating_house", "model_state"])["days"].median()
+    ).to_dict()
+
+
+def log_pace(days: float, median: float | None) -> float:
+    """log((days + 1) / (median + 1)), capped at ±``PACE_CAP``; 0 when no median exists."""
+    if median is None or pd.isna(median):
+        return 0.0
+    return float(np.clip(np.log((days + 1) / (median + 1)), -PACE_CAP, PACE_CAP))
 
 
 def _row_skeleton(trans: pd.DataFrame, cal: np.ndarray, cutoff: date) -> pd.DataFrame:
@@ -342,11 +377,27 @@ def build_training_rows(
     bills = bills[bills["introduced_session_id"] >= states.MIN_SESSION_ID]
     cal_tables = src.get_calendar(as_of_cutoff)
     cal = calendar.sitting_dates(cal_tables["sitting_days"])
-    trans = states.build_transitions(as_of_cutoff, src)
-    trans = trans[trans["model_state"].isin([s.value for s in HAZARD_STATES])]
+    all_trans = states.build_transitions(as_of_cutoff, src)
+    trans = all_trans[all_trans["model_state"].isin([s.value for s in HAZARD_STATES])]
 
     rows = _row_skeleton(trans, cal, as_of_cutoff)
     rows = _add_covariates(rows, src.get_covariates(as_of_cutoff))
+
+    # Pace: how fast the bill reached its current state compared with finished bills.
+    finished = set(bills.loc[bills["outcome"] != "in_progress", "bill_id"])
+    medians = fit_pace_medians(all_trans, cal, finished)
+    pace = trans.assign(days=days_since_first_reading(all_trans, cal).loc[trans.index])
+    pace["log_pace"] = [
+        log_pace(d, medians.get((h, st)))
+        for d, h, st in zip(
+            pace["days"], pace["originating_house"], pace["model_state"], strict=True
+        )
+    ]
+    rows = rows.merge(
+        pace[["bill_id", "model_state", "log_pace"]].rename(columns={"model_state": "state"}),
+        on=["bill_id", "state"],
+        how="left",
+    )
 
     # Fixed features, known at introduction.
     sessions = cal_tables["sessions"]
@@ -388,6 +439,7 @@ def build_training_rows(
         "introduced_months_into_session",
         *COVARIATE_FEATURES,
         "parliament_age_years",
+        "log_pace",
         *dept_cols,
     ]
     columns = [
@@ -403,7 +455,7 @@ def build_training_rows(
         "y",
     ]
     rows = rows[columns].sort_values(["bill_id", "date", "state"]).reset_index(drop=True)
-    return TrainingRows(rows, feature_columns, departments, as_of_cutoff)
+    return TrainingRows(rows, feature_columns, departments, as_of_cutoff, medians)
 
 
 def row_as_of(row_date: date | pd.Timestamp) -> date:

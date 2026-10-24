@@ -83,6 +83,7 @@ class HazardModel:
     C: float
     departments: list[str]
     validation: dict[str, Any]
+    pace_medians: dict[tuple[str, str], float] = field(default_factory=dict)
 
     def predict(self, rows: pd.DataFrame) -> np.ndarray:
         """P(advance on that sitting day) for each row."""
@@ -151,7 +152,9 @@ def fit_hazard(built: features.TrainingRows) -> HazardModel:
     validation = choose_c(built.rows, built.feature_columns)
     spec = DesignSpec.fit(built.rows, built.feature_columns)
     model = _fit(built.rows, spec, validation["best_C"])
-    return HazardModel(spec, model, validation["best_C"], built.departments, validation)
+    return HazardModel(
+        spec, model, validation["best_C"], built.departments, validation, built.pace_medians
+    )
 
 
 def fit_hazard_with_c(
@@ -159,7 +162,9 @@ def fit_hazard_with_c(
 ) -> HazardModel:
     """Refit with a C already chosen by validation (used for the live model on all data)."""
     spec = DesignSpec.fit(built.rows, built.feature_columns)
-    return HazardModel(spec, _fit(built.rows, spec, C), C, built.departments, validation)
+    return HazardModel(
+        spec, _fit(built.rows, spec, C), C, built.departments, validation, built.pace_medians
+    )
 
 
 def lightgbm_validation(built: features.TrainingRows) -> dict[str, Any]:
@@ -200,6 +205,7 @@ LABELS = {
     "same_day_2r_3r": "2nd and 3rd reading on the same day",
     "carry_over": "Carried over from previous session",
     "parliament_age_years": "Older Parliament (+1 SD)",
+    "log_pace": "Slower so far than typical (log pace +1)",
 }
 
 
