@@ -45,3 +45,7 @@ Never work directly on `main`. Always create and switch to a branch named accord
 - Entry: `## YYYY-MM-DD HH:MM — <commit summary>` followed by **What**, **Why**, **Checks** (commands and results) and optional **Notes**.
 - Full rules and the entry template: [`AGENTS.md`](./AGENTS.md) sections 3–4.
 
+
+### 5. Government Bills Only
+- **This project accepts UK Government Bills only (Bills API `BillType = 1`).** Never download, store, use or display other bill types, not even as helper data (e.g. for the sitting-day calendar).
+- Full rules: [`DATA_SCOPE.md`](./DATA_SCOPE.md). If code or docs conflict with this, `DATA_SCOPE.md` wins: stop and tell the user.

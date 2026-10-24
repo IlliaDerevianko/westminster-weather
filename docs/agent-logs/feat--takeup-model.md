@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 22:29 — Merge origin/main into feat/takeup-model
+
+- **What:** merged 13 commits from `main` (PRs #12–#16: `/api/v1/bills` list and dynamic tracker for any bill, bill selector page, all three lifecycle phases on the tracker, Government-Bills-only ingestion, ping-pong skipped/rounds display).
+- **Why:** Roman asked to bring the branch up to date with `main`.
+- **Checks:** no conflicts; `pytest`: 149 passed; `ruff check`: clean.
+
 ## 2026-10-24 22:27 — feat(takeup): take-up tables, database access and get_takeup_signals
 
 - **What:** `takeup/tables.py` (take-up tables on their own MetaData, never created by the app's `create_all`), `takeup/db.py` (engines for the take-up Neon branch that refuse to fall back to production, `migrate()` not yet run, upserts, a strictly read-only loader for production reference tables), `takeup/signals.py` (`TakeupData.get_takeup_signals(as_of)`: visible mentions only, group split until the bill's first reading, change-of-government censoring, z/x features, sitting dates and week probabilities for the model), two optional settings in `config.py`.

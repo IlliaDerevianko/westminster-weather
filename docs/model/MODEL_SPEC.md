@@ -83,7 +83,7 @@ The failure **stage** is the state the bill was in when it failed.
 - **Clock:** **sitting days**, defined as dates on which **either** House sat. Recesses don't count.
 - **Sitting-day calendar** (in priority order):
   1. Parliament calendar / What's On API, if the data teammate provides it (`sitting_days` table).
-  2. **Fallback (build this first):** the union of all dates that appear in any Bills API stage sitting, for any bill type, plus all Commons and Lords division dates. This is a good approximation because the Houses do business on almost every sitting day.
+  2. **Fallback (build this first):** the union of all dates that appear in any **government-bill** stage sitting, plus all Commons and Lords division dates. Other bill types are never used ([`DATA_SCOPE.md`](../../DATA_SCOPE.md)); this undercounts sitting days somewhat, so prefer source 1 when it exists.
 - **Future sitting days** (needed by the simulator): use the announced calendar if available. Otherwise, assume the **typical pattern**: weekday sitting except standard recesses, using the average share of weekdays that were sitting days in the same calendar week over the past 5 complete years. Simplest acceptable version: a sitting probability per ISO week number, estimated from history, with Monday–Thursday sitting on those weeks.
 - **Output dates** are calendar dates: convert simulated sitting days back using the calendar.
 

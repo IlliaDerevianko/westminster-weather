@@ -108,3 +108,46 @@ async def test_online_safety_bill_historical_dates_from_neon_db(
             assert stage_item["status"] == StageStatus.UPCOMING
             assert stage_item["entered_date"] is None
             assert stage_item["visible_events"] == []
+
+
+async def test_list_all_bills_from_neon_db_endpoint() -> None:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/bills")
+    assert response.status_code == 200
+    bills = response.json()
+    assert len(bills) >= 580
+    assert any(b["bill_id"] == 3137 for b in bills)
+
+
+async def test_get_any_parliament_bill_by_numeric_id_from_neon_db() -> None:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/bills/3137")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["parliament_bill_id"] == 3137
+    assert "Online Safety" in data["short_title"]
+    assert len(data["stages"]) == 22
+    phases = {s["phase"] for s in data["stages"]}
+    assert phases == {"before_parliament", "inside_parliament", "after_royal_assent"}
+    assert len(data["milestone_dates"]) >= 8
+    ping_pong = next(s for s in data["stages"] if s["stage"] == "ping_pong")
+    assert ping_pong["status"] == StageStatus.COMPLETED
+    assert ping_pong["sitting_count"] == 2
+    assert "2 ping-pong rounds" in ping_pong["summary"]
+
+
+async def test_ping_pong_marked_skipped_with_zero_rounds_when_unneeded() -> None:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/bills/4090")
+    assert response.status_code == 200
+    data = response.json()
+    ping_pong = next(s for s in data["stages"] if s["stage"] == "ping_pong")
+    assert ping_pong["status"] == StageStatus.SKIPPED
+    assert ping_pong["sitting_count"] == 0
+    assert "0 ping-pong rounds" in ping_pong["summary"]
+
+
+

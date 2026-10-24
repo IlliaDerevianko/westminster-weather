@@ -1,6 +1,6 @@
 """Command-line entry point for ingesting all UK Parliament Bills into Neon Lakebase Postgres.
 
-uv run python -m westminster_weather.model.cli fetch [--gov-only]
+uv run python -m westminster_weather.model.cli fetch
 """
 
 from __future__ import annotations
@@ -14,14 +14,12 @@ from westminster_weather.data import bills_api, calendar
 
 
 def cmd_fetch(args: argparse.Namespace) -> None:
-    tables, counts = bills_api.fetch_and_persist_all(include_all_types=not args.gov_only)
+    tables, counts = bills_api.fetch_and_persist_all()
     print(
         f"Listed {counts['listed']} bills ({counts['government']} government); "
         f"downloaded {counts['downloaded']} payloads and persisted to Neon Lakebase Postgres."
     )
     for name, df in tables.items():
-        if name == "all_stage_sittings":
-            continue
         print(f"  {name:<24}{len(df):>7} rows in Neon Postgres")
 
     bills, sessions = tables["bills"], tables["sessions"]
@@ -58,12 +56,11 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="westminster_weather.model.cli")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    fetch = sub.add_parser("fetch", help="Download Bills API data and persist to Neon Postgres")
-    fetch.add_argument(
-        "--gov-only",
-        action="store_true",
-        help="Skip non-government bills (they are only used for the sitting-day calendar)",
+    fetch = sub.add_parser(
+        "fetch", help="Download UK Government Bills and persist them to Neon Postgres"
     )
+    # Kept so existing commands still work; government bills only is now always the case.
+    fetch.add_argument("--gov-only", action="store_true", help=argparse.SUPPRESS)
     fetch.set_defaults(func=cmd_fetch)
 
     args = parser.parse_args(argv)
