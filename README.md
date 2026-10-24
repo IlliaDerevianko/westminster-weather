@@ -12,6 +12,47 @@ The primary purpose of Westminster Weather is to enable businesses to make infor
 - **Time-to-Commencement Estimation**: Estimate the timeline until a bill's commencement.
 - **Business Decision Timelines**: Provide actionable timelines around legislative changes so businesses can plan and make informed decisions.
 
+## Running Locally
+
+The project has two parts that run side by side: a FastAPI backend in [`backend/`](./backend) backed by **Neon Lakebase Postgres** and a Next.js frontend in [`frontend/`](./frontend). All commands below start from the repository root (`westminster-weather`).
+
+### Prerequisites
+
+- **Python 3.12** and [**uv**](https://docs.astral.sh/uv/) (`brew install uv` or `curl -LsSf https://astral.sh/uv/install.sh | sh`)
+- **Node.js 18.18+** and **npm**
+- **Neon CLI** (`npm i -g neon@latest`) with `.env.local` populated via `neon deploy` or `neon env pull` (`DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `NEON_BRANCH`)
+
+### 1. Start the backend (port 8000)
+
+```bash
+cd backend
+uv sync
+uv run uvicorn westminster_weather.main:app --reload --port 8000
+```
+
+- Health check (including Neon Postgres connectivity): <http://127.0.0.1:8000/health>
+- Interactive API docs: <http://127.0.0.1:8000/docs>
+
+### 2. Start the frontend (port 3000)
+
+In a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open <http://localhost:3000>. The frontend proxies `/api/v1/*` requests to the backend at `127.0.0.1:8000`, so the backend must be running.
+
+### Running tests and linting
+
+```bash
+cd backend
+uv run pytest
+uv run ruff check .
+```
+
 ## Development Workflow
 
 All contributors and AI agents must follow the repository conventions defined in [`AGENTS.md`](./AGENTS.md) and [`CLAUDE.md`](./CLAUDE.md):
