@@ -3,6 +3,7 @@
 uv run python -m westminster_weather.model.cli fetch
 uv run python -m westminster_weather.model.cli states [--as-of YYYY-MM-DD]
 uv run python -m westminster_weather.model.cli build [--as-of YYYY-MM-DD]
+uv run python -m westminster_weather.model.cli train [--as-of YYYY-MM-DD]
 """
 
 from __future__ import annotations
@@ -113,6 +114,37 @@ def cmd_build(args: argparse.Namespace) -> None:
     print(f"\nRows saved: {out}\nChart saved: {chart}")
 
 
+def cmd_train(args: argparse.Namespace) -> None:
+    from westminster_weather.model import baseline
+
+    fitted = baseline.fit()
+    points, metrics = baseline.evaluate(fitted, args.as_of)
+    print(
+        f"Baselines fitted on {fitted.n_train_acts} Acts from sessions "
+        f"{metrics['train_sessions'][0]}-{metrics['train_sessions'][-1]} "
+        f"(data as of {metrics['train_cutoff']})"
+    )
+    print(
+        "B0 median days from 1st reading to Royal Assent:",
+        {k: round(v) for k, v in fitted.b0_days.items()},
+    )
+    print(
+        f"\nTest: {metrics['n_test_bills']} Acts from sessions "
+        f"{metrics['test_sessions'][0]}-{metrics['test_sessions'][-1]}, "
+        f"{metrics['n_forecasts']} forecasts (one per stage reached)"
+    )
+    print(f"  B0 MAE: {metrics['B0']['mae_days']} days")
+    print(f"  B1 MAE: {metrics['B1']['mae_days']} days")
+    by_state = pd.DataFrame(
+        {"B0": metrics["B0"]["mae_days_by_state"], "B1": metrics["B1"]["mae_days_by_state"]}
+    )
+    print("\nMAE by stage the forecast was made from (days):")
+    print(by_state.to_string())
+    out = baseline.save_metrics(metrics, REPORTS_DIR / "metrics.json")
+    chart = baseline.plot_mae_by_state(metrics, REPORTS_DIR / "baselines_mae_by_state.png")
+    print(f"\nMetrics saved: {out}\nChart saved: {chart}")
+
+
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -133,6 +165,10 @@ def main(argv: list[str] | None = None) -> None:
     build = sub.add_parser("build", help="Build hazard training rows (task 4)")
     build.add_argument("--as-of", type=date.fromisoformat, default=date.today())
     build.set_defaults(func=cmd_build)
+
+    train = sub.add_parser("train", help="Fit and score the models (task 5: baselines)")
+    train.add_argument("--as-of", type=date.fromisoformat, default=date.today())
+    train.set_defaults(func=cmd_train)
 
     args = parser.parse_args(argv)
     args.func(args)

@@ -1,5 +1,12 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 22:12 — feat(model): baselines B0 and B1 (task 5)
+
+- **What:** added `model/splits.py` (train sessions 20–30, test 34–39, training data as of 2019-10-14), `model/baseline.py` (B0, B1, backtest forecast points, MAE), `cli train`, `tests/model/test_baseline.py`, `reports/metrics.json` (`baselines`) and `reports/baselines_mae_by_state.png`.
+- **Why:** BUILD_PLAN task 5, MODEL_SPEC §7.
+- **Checks:** `ruff`: clean; `pytest`: 70 passed. Result: 320 training Acts, 196 test Acts, 1,678 forecasts; B0 MAE 108.6 days, B1 MAE 78.1 days.
+- **Notes:** B1 is by originating House and state (falls back to the state over both Houses below 5 training bills), because a state's position in the chain differs by House; this makes B1 harder to beat. B0 never forecasts a date before `as_of`. Training data is read as of 2019-10-14, the day before the first test session.
+
 ## 2026-10-24 22:10 — feat(model): merge renamed departments; note Task 9 session-end rule
 
 - **What:** added `model/departments.py` (renamed or abolished departments → current successor; 40 names → 24) and applied it to the `department` feature and the top-10 one-hot columns. Added a TASK 9 REQUIREMENT note in `model/features.py`: the simulator must recompute `days_to_session_end` from each path's simulated session end, never use the fixed "41+". Rewrote the task 3 test that relied on bill 3064's old wrong label.
