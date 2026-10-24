@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 22:16 — docs(model): align take-up plan and contract with the task spec
+
+- **What:** rewrote `TAKEUP_PLAN.md` with the spec's naming (Tier A = the model, Tier B = the data pipeline B1–B6), conditional timing quantiles, `DATABASE_URL_TAKEUP`, current fetch status and a spec-reconciliation section. In `DATA_CONTRACT.md` section 10: spec names (`p26`, `p52`, `t_10/50/90`, `kings_speech_items.bill_id`), `ideas.origin` instead of `tier`, carried-over King's Speech items excluded, and a take-up feature registry (10.11).
+- **Why:** Roman shared the full task spec; the plan used the opposite Tier A/B naming and missed the conditional-quantile fix and some column names.
+- **Checks:** none (docs only).
+- **Notes:** flagged for checkpoint 2: King's Speech before 2012 not on GOV.UK; `event_date` kept over `date` (contract convention); endpoints under `/api/v1/takeup/`; take-up registry kept separate from the passage model's 5.5. Code follow-ups after the build workflow: rename the env var, conditional quantiles + test, column names, raw-source tables, `x_kings_speech` from `idea_events`.
+
 ## 2026-10-24 22:01 — docs(contract): store raw Tier B sources in the database
 
 - **What:** added draft tables `source_documents` (all written ministerial statements, Hansard contributions with a trigger phrase; full text) and `member_government_posts` to `DATA_CONTRACT.md` section 10; `signal_mentions` now points to its document via `doc_id`.
