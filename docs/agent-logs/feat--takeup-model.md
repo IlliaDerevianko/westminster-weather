@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 22:27 — feat(takeup): take-up tables, database access and get_takeup_signals
+
+- **What:** `takeup/tables.py` (take-up tables on their own MetaData, never created by the app's `create_all`), `takeup/db.py` (engines for the take-up Neon branch that refuse to fall back to production, `migrate()` not yet run, upserts, a strictly read-only loader for production reference tables), `takeup/signals.py` (`TakeupData.get_takeup_signals(as_of)`: visible mentions only, group split until the bill's first reading, change-of-government censoring, z/x features, sitting dates and week probabilities for the model), two optional settings in `config.py`.
+- **Why:** plan tasks 2 (code) and 6/7 (`get_takeup_signals`, Tier B5).
+- **Checks:** `pytest tests/takeup`: 102 passed (signals: 45, incl. a leakage test with rows on both sides of `as_of`); full suite 144 passed; `ruff check`: clean.
+- **Notes:** 2 reviewers found 12 issues (critical: split groups inherited idea-level events and titles that are only known through the later bill link; major: change-of-government censoring used the dissolution before the election result was known); all fixed with tests. Found while reviewing: the existing `db.fetch_*` readers run `ensure_reference_tables_seeded_sync()`, which writes to production (idempotent `create_all` + merges), so take-up code uses its own read-only loader. Still to align with the spec / contract: env var `TAKEUP_DATABASE_URL` → `DATABASE_URL_TAKEUP`, spec column names, raw-source tables, `origin` instead of `tier`, `x_kings_speech` from `idea_events`, forecasts keyed by `signal_id`.
+
 ## 2026-10-24 22:27 — feat(takeup): port the cure model with a sitting-week mask
 
 - **What:** `takeup/model.py`: the prototype's mixture cure model (pi, weekly hazard with 6 baseline bins, censored log-likelihood, L-BFGS + ridge, delta-method CI, verdicts, bootstrap) plus the sitting-week mask (lambda = 0 in weeks with no sitting day; expected mask from historical sitting probability for future weeks), per-row `data_end`, timing in calendar and sitting weeks, calendar coverage bounds, and a smoothing penalty between neighbouring baseline bins.

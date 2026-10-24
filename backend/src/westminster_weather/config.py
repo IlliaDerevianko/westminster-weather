@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     database_url_unpooled: str | None = None
     neon_branch: str = "production"
 
+    # Take-up model database (Neon branch `takeup-dev`); never falls back to DATABASE_URL
+    takeup_database_url: str | None = None
+    takeup_database_url_unpooled: str | None = None
+
     # UK Public Legislative Data Sources
     parliament_bills_api_base_url: str = "https://bills-api.parliament.uk/api/v1"
     legislation_gov_uk_base_url: str = "https://www.legislation.gov.uk"
@@ -57,6 +61,17 @@ class Settings(BaseSettings):
     def sqlalchemy_direct_url(self) -> str:
         """Direct/unpooled connection URL for schema migrations and DDL."""
         return _to_psycopg_url(self.database_url_unpooled or self.database_url)
+
+    @property
+    def sqlalchemy_takeup_pooled_url(self) -> str | None:
+        """Pooled take-up database URL (TAKEUP_DATABASE_URL), or None if not set."""
+        return _to_psycopg_url(self.takeup_database_url) if self.takeup_database_url else None
+
+    @property
+    def sqlalchemy_takeup_direct_url(self) -> str | None:
+        """Direct take-up database URL for DDL; falls back to the pooled take-up URL only."""
+        url = self.takeup_database_url_unpooled or self.takeup_database_url
+        return _to_psycopg_url(url) if url else None
 
 
 settings = Settings()
