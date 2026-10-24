@@ -91,3 +91,21 @@ def test_pingpong_share_is_about_half():
     assert (model.durations >= 0).all() and model.rounds.min() >= 1
     simulated = model.sample_duration(np.random.default_rng(0), 20_000)
     assert abs(np.median(simulated) - np.median(model.durations)) <= 3
+
+
+def test_session_end_outcomes_from_history():
+    """Bills in progress in the last 30 sitting days before a prorogation (as of Oct 2026)."""
+    outcomes = failure.fit_session_end_outcomes(date(2026, 10, 24))
+    first, second = outcomes.counts[failure.FIRST_HOUSE], outcomes.counts[failure.SECOND_HOUSE]
+    assert sum(first.values()) == 90 and sum(second.values()) == 145
+    assert (first["died"], first["carried_over"]) == (11, 50)
+    assert (second["died"], second["carried_over"]) == (6, 0)
+    for p in outcomes.probabilities.values():
+        assert sum(p.values()) == pytest.approx(1.0)
+
+
+def test_house_group():
+    assert failure.house_group("commons_committee", "Commons") == failure.FIRST_HOUSE
+    assert failure.house_group("lords_committee", "Commons") == failure.SECOND_HOUSE
+    assert failure.house_group("lords_committee", "Lords") == failure.FIRST_HOUSE
+    assert failure.house_group("ping_pong", "Lords") == failure.SECOND_HOUSE

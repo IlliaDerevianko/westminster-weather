@@ -4,8 +4,13 @@ Simulates ``n`` paths of one bill from its state on ``as_of``, all paths togethe
 sitting day at a time. Each day, in this order (MODEL_SPEC §5):
 
 1. Dissolution: past the path's dissolution day E → fails with ``ELECTION_CALLED``.
-2. Session end: past the path's session end S → fails with ``SESSION_RUNS_OUT``, unless the
-   bill has a carry-over motion in this session, in which case a new session is drawn.
+2. Session end (prorogation): past the path's session end S, an unfinished bill **dies**
+   (``SESSION_RUNS_OUT``), is **carried over** (keeps its state and time in state; a new
+   session end is drawn for the next session, with no sitting days counted for the gap) or is
+   **rushed through** (the session is extended until it finishes, at end-of-session speed:
+   its days-to-session-end bucket stays at 0-5). Probabilities depend on whether the bill is
+   still in its first House (``failure.SessionEndOutcomes``). A carry-over motion already
+   agreed on ``as_of`` means carried over with certainty.
 3. Withdrawal: constant daily hazard.
 4. Ping-pong: a path in ping-pong reaches Royal Assent on its drawn day.
 5. Advance: the logistic hazard gives P(move on today) from the state, time in state and
@@ -30,7 +35,7 @@ import pandas as pd
 
 from westminster_weather.data import calendar
 from westminster_weather.domain.stages import BillStage, StopReason
-from westminster_weather.model import features
+from westminster_weather.model import failure, features
 from westminster_weather.model.failure import MAX_PARLIAMENT_YEARS, VOTE_STATES, FailureModel
 from westminster_weather.model.hazard import HazardModel
 from westminster_weather.model.pingpong import PingPongModel
@@ -87,6 +92,8 @@ class SimResult:
     fail_state: np.ndarray  # chain index of the state the path failed in (-1 if none)
     entry_day: np.ndarray  # [path, chain index] day the state was entered (-1 if never)
     first_session_end: np.ndarray  # S before any carry-over
+    carried: np.ndarray  # path was carried over into a later session
+    rushed: np.ndarray  # path was rushed through at a session end
     meta: dict[str, Any] = field(default_factory=dict)
 
     def date_of(self, day: np.ndarray) -> np.ndarray:
@@ -193,6 +200,23 @@ def simulate(
     S = _session_end_days(start, days, models.failure, rng, n)
     first_S = S.copy()
     carry_available = np.full(n, start.carry_over_active)
+    carried = np.zeros(n, dtype=bool)
+    rushed = np.zeros(n, dtype=bool)
+    first_house = np.zeros(n_states, dtype=bool)
+    first_house[: 3 if start.chain[0].startswith("lords") else 5] = True  # first House states
+    outcomes = models.failure.session_end
+    q = {
+        name: np.array(
+            [
+                outcomes.probabilities[failure.FIRST_HOUSE][name],
+                outcomes.probabilities[failure.SECOND_HOUSE][name],
+            ]
+        )
+        if outcomes is not None
+        else np.array([1.0, 1.0]) * (name == "died")
+        for name in failure.SESSION_END_OUTCOMES
+    }
+    never = np.iinfo(np.int64).max // 2
 
     def finish(mask: np.ndarray, code: int, day: int) -> None:
         outcome[mask] = code
@@ -209,11 +233,21 @@ def simulate(
         finish(alive & (j > E), ELECTION, j)
         alive = outcome == RUNNING
         ended = alive & (j > S)
-        carried = ended & carry_available
-        if carried.any():
-            S[carried] = j - 1 + models.failure.session_lengths.sample(0, rng, int(carried.sum()))
-            carry_available[carried] = False
-        finish(ended & ~carried, SESSION_END, j)
+        if ended.any():
+            group = np.where(first_house[state], 0, 1)
+            u = rng.random(n)
+            certain = ended & carry_available
+            dies = ended & ~certain & (u < q["died"][group])
+            carry = ended & ~dies & (certain | (u < q["died"][group] + q["carried_over"][group]))
+            rush = ended & ~dies & ~carry
+            if carry.any():
+                new_session = models.failure.session_lengths.sample(0, rng, int(carry.sum()))
+                S[carry] = j - 1 + new_session
+                carry_available[carry] = False
+                carried[carry] = True
+            S[rush] = never
+            rushed[rush] = True
+            finish(dies, SESSION_END, j)
         alive = outcome == RUNNING
         finish(alive & (rng.random(n) < h_w), WITHDRAWN, j)
         alive = outcome == RUNNING
@@ -223,6 +257,7 @@ def simulate(
         tau[alive] += 1
         active = alive & (state < k_pp)
         end_bucket = np.digitize(np.maximum(S - j, 0), END_EDGES)
+        end_bucket[rushed] = 0  # extended session: end-of-session speed until it finishes
         for _ in range(n_states):
             if not active.any():
                 break
@@ -253,7 +288,7 @@ def simulate(
     unresolved = int((outcome == RUNNING).sum())
     finish(outcome == RUNNING, ELECTION, horizon)
     return SimResult(
-        start, days, outcome, end_day, fail_state, entry_day, first_S,
+        start, days, outcome, end_day, fail_state, entry_day, first_S, carried, rushed,
         meta={"horizon_days": horizon, "unresolved_at_cap": unresolved},
     )  # fmt: skip
 

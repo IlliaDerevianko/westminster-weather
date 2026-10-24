@@ -304,10 +304,37 @@ def cmd_forecast(args: argparse.Namespace) -> None:
     print(f"\nChart saved: {chart}")
 
 
+def _comparison_table(columns: dict[str, dict]) -> pd.DataFrame:
+    """Before/after rows for the evaluation (one column per backtest)."""
+    rows: dict[str, dict[str, str]] = {}
+    for name, m in columns.items():
+        mae, carried = m["mae_days"], m["mae_days_carried_over_bills"]
+        rows.setdefault("Average error, all stages (days)", {})[name] = f"{mae['model']:.0f}"
+        for state, v in m["mae_days_by_start_state"].items():
+            label = f"  from {state.replace('_', ' ')} (n={v['n']})"
+            rows.setdefault(label, {})[name] = f"{v['p50_err']:.0f}"
+        rows.setdefault("Median error (days)", {})[name] = (
+            f"{m['median_abs_error_days']['model']:.0f}"
+        )
+        rows.setdefault("80% window coverage", {})[name] = f"{100 * m['coverage_p10_p90']:.0f}%"
+        rows.setdefault("Average forecast pass chance vs actual", {})[name] = (
+            f"{100 * m['mean_predicted_passage']:.0f}% vs {100 * m['actual_passage_rate']:.0f}%"
+        )
+        rows.setdefault("Brier (pass) vs always-the-pass-rate", {})[name] = (
+            f"{m['brier_passage_probability']:.3f} vs {m['brier_passage_base_rate']:.3f}"
+        )
+        rows.setdefault(f"Error for carried-over bills (days, n={carried['n']})", {})[name] = (
+            f"{carried['model']:.0f}"
+        )
+        rows.setdefault("B1 average error (days)", {})[name] = f"{mae['B1']:.0f}"
+    return pd.DataFrame(rows).T
+
+
 def cmd_evaluate(args: argparse.Namespace) -> None:
+    import json
     import time
 
-    from westminster_weather.model import baseline, evaluate
+    from westminster_weather.model import baseline, evaluate, hazard
 
     started = time.perf_counter()
     points = evaluate.backtest_points(args.as_of)
@@ -315,46 +342,42 @@ def cmd_evaluate(args: argparse.Namespace) -> None:
         f"Backtest: {len(points):,} forecasts for {points['bill_id'].nunique()} test bills "
         f"({int(points['ra'].sum()):,} for bills that became law)"
     )
-    results = evaluate.run_backtest(points, workers=args.workers)
-    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
-    results.to_parquet(PROCESSED_DIR / "backtest.parquet", index=False)
-    metrics = evaluate.score(results, baseline.fit())
-    mae = metrics["mae_days"]
-    print(f"Done in {time.perf_counter() - started:.0f} s\n")
-    print(
-        f"MAE of median Royal Assent date: model {mae['model']} days, "
-        f"B1 {mae['B1']}, B0 {mae['B0']}"
-    )
-    print(f"80% window coverage: {100 * metrics['coverage_p10_p90']:.0f}%")
-    print(
-        f"Brier passage: {metrics['brier_passage_probability']} "
-        f"(base rate {metrics['brier_passage_base_rate']}); "
-        f"before session end: {metrics['brier_ra_before_session_end']}"
-    )
-    print(f"Concordance index: {metrics['concordance_index']}")
-    print(
-        f"Mean forecast passage {metrics['mean_predicted_passage']} vs actual "
-        f"{metrics['actual_passage_rate']}"
-    )
-    print("\nMAE by stage the forecast was made from:")
-    print(pd.DataFrame(metrics["mae_days_by_start_state"]).T.to_string())
-    print("\nCalibration:")
+    fitted_b = baseline.fit()
+    C = hazard.HazardModel.load(MODELS_DIR / "hazard_train.joblib").C
+    columns: dict[str, dict] = {}
+    before = PROCESSED_DIR / "backtest_before.parquet"
+    if before.exists():
+        columns["Before (frozen 2019, old session end)"] = evaluate.score(
+            pd.read_parquet(before), fitted_b
+        )
+    modes = ["frozen", "rolling"] if args.also_frozen else ["rolling"]
+    for mode in modes:
+        results = evaluate.run_backtest(
+            points, workers=args.workers, mode=mode, evaluated_as_of=args.as_of, C=C
+        )
+        results.to_parquet(PROCESSED_DIR / f"backtest_{mode}.parquet", index=False)
+        label = {"frozen": "New session end, frozen 2019", "rolling": "After (new + rolling)"}
+        columns[label[mode]] = evaluate.score(results, fitted_b)
+        print(f"  {mode} backtest done ({time.perf_counter() - started:.0f} s)")
+    metrics = columns[label["rolling"]]
+    print()
+    print(_comparison_table(columns).to_string())
+    print(f"\nConcordance index (after): {metrics['concordance_index']}")
+    print("Calibration (after):")
     print(pd.DataFrame(metrics["calibration"]).to_string(index=False))
 
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    import json
-
     evaluate.save_metrics(metrics, REPORTS_DIR / "metrics.json")
-    report = evaluate.write_report(
-        json.loads((REPORTS_DIR / "metrics.json").read_text()), REPORTS_DIR / "EVALUATION.md"
-    )
-    print(f"Report saved: {report}")
+    all_metrics = json.loads((REPORTS_DIR / "metrics.json").read_text())
+    all_metrics["backtest_comparison"] = {k: v for k, v in columns.items()}
+    (REPORTS_DIR / "metrics.json").write_text(json.dumps(all_metrics, indent=2, default=str))
+    report = evaluate.write_report(all_metrics, REPORTS_DIR / "EVALUATION.md")
     for chart in (
         evaluate.plot_mae_by_state(metrics, REPORTS_DIR / "mae_by_state.png"),
         evaluate.plot_model_vs_baselines(metrics, REPORTS_DIR / "model_vs_baselines.png"),
         evaluate.plot_calibration(metrics, REPORTS_DIR / "calibration.png"),
     ):
         print(f"Chart saved: {chart}")
+    print(f"Report saved: {report}")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -393,6 +416,9 @@ def main(argv: list[str] | None = None) -> None:
     ev = sub.add_parser("evaluate", help="Backtest on test sessions, metrics and charts")
     ev.add_argument("--as-of", type=date.fromisoformat, default=date.today())
     ev.add_argument("--workers", type=int, default=6)
+    ev.add_argument(
+        "--also-frozen", action="store_true", help="Also run the frozen-2019 models for comparison"
+    )
     ev.set_defaults(func=cmd_evaluate)
 
     args = parser.parse_args(argv)

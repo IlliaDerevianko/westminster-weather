@@ -1,9 +1,14 @@
 """Backtest, metrics and charts (BUILD_PLAN task 10, MODEL_SPEC §7).
 
 Every test bill (introduced in ``TEST_SESSIONS``; the current session is never scored) is
-forecast at the entry date of each state it reached before Royal Assent or failure, using
-only the ``train`` models (fitted on data up to ``TRAIN_CUTOFF``) and data as of that date.
-Several states entered on the same day give one forecast from the last of them.
+forecast at the entry date of each state it reached before Royal Assent or failure, with data
+as of that date. Several states entered on the same day give one forecast from the last.
+
+Two ways to choose the models:
+
+- ``frozen``: the ``train`` models, fitted once on data up to ``TRAIN_CUTOFF``;
+- ``rolling``: refitted once per session, on bills that had finished before the session in
+  which the forecast is made began (the hazard keeps the C chosen by validation).
 
 Metrics:
 
@@ -19,7 +24,7 @@ from __future__ import annotations
 
 import json
 from concurrent.futures import ProcessPoolExecutor
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -67,11 +72,36 @@ def backtest_points(evaluated_as_of: date, data: Any = None) -> pd.DataFrame:
     return points.reset_index(drop=True)
 
 
-def _forecast_one(args: tuple[int, date]) -> dict[str, Any]:
+def fit_models_as_of(cutoff: date, C: float, data: Any = None) -> Any:
+    """All model components fitted on data available on ``cutoff``; the hazard only on bills
+    that had finished by then."""
+    from westminster_weather.model import failure, features, hazard, pingpong
+    from westminster_weather.model.simulate import Models
+
+    src = states._source(data)
+    built = features.build_training_rows(cutoff, src)
+    finished = src.get_bills(cutoff).query("outcome != 'in_progress'")["bill_id"]
+    built.rows = built.rows[built.rows["bill_id"].isin(finished)]
+    return Models(
+        hazard=hazard.fit_hazard_with_c(built, C, {"refit_as_of": cutoff.isoformat()}),
+        failure=failure.fit_failure(cutoff, src),
+        pingpong=pingpong.fit_pingpong(cutoff, src),
+    )
+
+
+def _forecast_chunk(args: tuple[Any, list[tuple[int, date]]]) -> list[dict[str, Any]]:
+    models, jobs = args
+    return [_forecast_one(job, models) for job in jobs]
+
+
+def _forecast_one(job: tuple[int, date], models: Any = None) -> dict[str, Any]:
     from westminster_weather.model.forecast import forecast_bill
 
-    bill_id, as_of = args
-    r = forecast_bill(bill_id, as_of, variant="train")
+    bill_id, as_of = job
+    if models is None:
+        r = forecast_bill(bill_id, as_of, variant="train")
+    else:
+        r = forecast_bill(bill_id, as_of, models=models, variant="rolling")
     t = r.time_to_royal_assent
     return {
         "bill_id": bill_id,
@@ -86,11 +116,34 @@ def _forecast_one(args: tuple[int, date]) -> dict[str, Any]:
     }
 
 
-def run_backtest(points: pd.DataFrame, workers: int = 6) -> pd.DataFrame:
-    """Forecast every point with the train models, in parallel processes."""
+def run_backtest(
+    points: pd.DataFrame,
+    workers: int = 6,
+    mode: str = "frozen",
+    evaluated_as_of: date | None = None,
+    C: float | None = None,
+) -> pd.DataFrame:
+    """Forecast every point in parallel processes, with ``frozen`` or ``rolling`` models."""
     jobs = list(zip(points["bill_id"].astype(int), points["as_of"], strict=True))
-    with ProcessPoolExecutor(max_workers=workers) as pool:
-        results = list(pool.map(_forecast_one, jobs, chunksize=8))
+    if mode == "frozen":
+        with ProcessPoolExecutor(max_workers=workers) as pool:
+            results = list(pool.map(_forecast_one, jobs, chunksize=8))
+    else:
+        sessions = (
+            states._source(None)
+            .get_calendar(evaluated_as_of or date.today())["sessions"]
+            .sort_values("start_date")
+        )
+        starts = sessions["start_date"].to_numpy()
+        idx = np.searchsorted(starts, points["as_of"].to_numpy(), side="right") - 1
+        refit_dates = [start - timedelta(days=1) for start in starts[idx]]
+        tasks = []
+        for refit in sorted(set(refit_dates)):
+            models = fit_models_as_of(refit, C)
+            mine = [job for job, r in zip(jobs, refit_dates, strict=True) if r == refit]
+            tasks += [(models, mine[i : i + 20]) for i in range(0, len(mine), 20)]
+        with ProcessPoolExecutor(max_workers=workers) as pool:
+            results = [row for chunk in pool.map(_forecast_chunk, tasks) for row in chunk]
     return points.merge(pd.DataFrame(results), on=["bill_id", "as_of"])
 
 
@@ -115,6 +168,7 @@ def score(results: pd.DataFrame, baselines: baseline.Baselines) -> dict[str, Any
         pd.to_datetime(acts["outcome_date"]) <= pd.to_datetime(acts["p90"])
     )
     no_ra_paths = acts["p50"].isna()
+    carried = acts[pd.to_datetime(acts["outcome_date"]) > pd.to_datetime(acts["session_end"])]
 
     by_state = (
         acts.groupby("start_state")[["p50_err", "b0_err", "b1_err"]]
@@ -147,6 +201,11 @@ def score(results: pd.DataFrame, baselines: baseline.Baselines) -> dict[str, Any
             "model": round(float(acts["p50_err"].mean()), 1),
             "B0": round(float(acts["b0_err"].mean()), 1),
             "B1": round(float(acts["b1_err"].mean()), 1),
+        },
+        "mae_days_carried_over_bills": {
+            "model": round(float(carried["p50_err"].mean()), 1),
+            "B1": round(float(carried["b1_err"].mean()), 1),
+            "n": len(carried),
         },
         "median_abs_error_days": {
             "model": float(acts["p50_err"].median()),
@@ -282,6 +341,36 @@ def write_report(all_metrics: dict[str, Any], path: Path) -> Path:
         for c, v in drivers
     )
     verdict = "beats" if mae["model"] < mae["B1"] else "does NOT beat"
+    comparison = ""
+    if "backtest_comparison" in all_metrics:
+        cols = all_metrics["backtest_comparison"]
+        header = "| | " + " | ".join(cols) + " |\n|---|" + "---|" * len(cols) + "\n"
+        lines = [
+            ("Average error (days)", lambda c: f"{c['mae_days']['model']:.0f}"),
+            ("Median error (days)", lambda c: f"{c['median_abs_error_days']['model']:.0f}"),
+            ("80% window coverage", lambda c: f"{100 * c['coverage_p10_p90']:.0f}%"),
+            (
+                "Forecast pass chance vs actual",
+                lambda c: (
+                    f"{100 * c['mean_predicted_passage']:.0f}% vs "
+                    f"{100 * c['actual_passage_rate']:.0f}%"
+                ),
+            ),
+            (
+                "Brier vs always-the-pass-rate",
+                lambda c: (
+                    f"{c['brier_passage_probability']:.3f} vs {c['brier_passage_base_rate']:.3f}"
+                ),
+            ),
+            (
+                "Error for carried-over bills (days)",
+                lambda c: f"{c['mae_days_carried_over_bills']['model']:.0f}",
+            ),
+        ]
+        body = "".join(
+            f"| {name} | " + " | ".join(fn(c) for c in cols.values()) + " |\n" for name, fn in lines
+        )
+        comparison = "## Before and after the session-end fix\n\n" + header + body
     mae_row = f"{mae['model']:.0f}** | {mae['B1']:.0f} | {mae['B0']:.0f}"
     train_range = f"{m['train_sessions'][0]}-{m['train_sessions'][-1]}"
     test_range = f"{m['test_sessions'][0]}-{m['test_sessions'][-1]}"
@@ -292,8 +381,9 @@ Backtest of the inside-Parliament passage model (MODEL_SPEC §7). Generated by
 
 ## How it was tested
 
-- **Trained on** bills introduced in sessions {train_range}
-  (2006-07 to 2017-19), using only data available on {m["train_cutoff"]}.
+- **Rolling refits:** before each test session, every model is refitted on the bills that had
+  finished before that session began (first refit: data up to {m["train_cutoff"]}, sessions
+  {train_range}, 2006-07 to 2017-19).
 - **Tested on** {m["n_bills"]} bills introduced in sessions {test_range}
   (2019 onwards) that have finished; the current session is not scored.
 - Each test bill was forecast on the day it entered each stage, as if it were that day:
@@ -335,16 +425,18 @@ Largest shared effects in the advance hazard (effect on the daily chance of movi
 
 The end of a session speeds bills up; carried-over and Lords-first bills are slower.
 
+{comparison}
 ## Limitations
 
-- **Session-end risk is overstated.** The model treats the end of a session as an outside event,
-  so a bill that is behind schedule often "dies" in the simulation. In reality governments time
-  prorogation around their main bills, so few bills die at a session end. This is the main cause
-  of the low pass probabilities and too-early dates.
-- **Sessions since 2019 have been longer and bills slower** than in the training period, which the
-  model, trained on 2006-2019, does not anticipate.
-- **Future carry-over motions are not anticipated**: a bill introduced late in a session is
-  forecast as if it must finish before the session ends (e.g. Online Safety Bill).
+- **Bills are forecast too fast.** The median forecast is earlier than the real Royal Assent date
+  for about 6 in 10 forecasts, and a third of real dates fall after the 80% window. Bills since
+  2019 have moved more slowly than the training history suggests. This is the main reason the
+  80% window covers only {100 * m["coverage_p10_p90"]:.0f}% of outcomes.
+- **Carried-over bills** are forecast far too early (about 200 days): most simulated paths finish
+  before the drawn session end, so the carry-over route rarely applies.
+- **Session ends:** a prorogation kills an unfinished bill only with the historical rate
+  (12% in its first House, 4% later); otherwise the bill is carried over or rushed through. The
+  rates rest on 17 deaths, 10 of them at the October 2019 prorogation.
 - **No vote, rebellion or Lords-defeat data yet** (BUILD_PLAN task 7 skipped): defeat risk is a
   fixed 0.2% per Commons vote stage.
 - **Committee of the whole House** is only recorded separately by the Bills API from 2022-23,

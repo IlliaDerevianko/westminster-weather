@@ -237,9 +237,8 @@ def summarise(result: SimResult, entered_current: date) -> dict[str, Any]:
         )
     return {
         "passage_probability": float(ra.mean()),
-        "p_ra_before_session_end": float(
-            np.mean(ra & (result.end_day <= result.first_session_end))
-        ),
+        # Royal Assent in the current session (an extended, rushed-through session counts).
+        "p_ra_before_session_end": float(np.mean(ra & ~result.carried)),
         "time_to_royal_assent": _quantiles(start.as_of, result.date_of(result.end_day[ra])),
         "primary_stop_risks": risks,
         "stages": stages,
@@ -253,11 +252,16 @@ def forecast_bill(
     variant: str | None = None,
     n: int = N_PATHS,
     models_dir: Path = MODELS_DIR,
+    models: Models | None = None,
 ) -> BillForecastResponse:
-    """Forecast one bill as of ``as_of`` (MODEL_SPEC §5)."""
+    """Forecast one bill as of ``as_of`` (MODEL_SPEC §5). ``models`` overrides the saved model
+    sets (the rolling backtest passes models fitted on data before ``as_of``)."""
     src = states._source(data)
-    variant = variant or choose_variant(as_of, models_dir)
-    models = load_models(variant, models_dir)
+    if models is None:
+        variant = variant or choose_variant(as_of, models_dir)
+        models = load_models(variant, models_dir)
+    else:
+        variant = variant or "custom"
     start, bill, trans = start_state(bill_id, as_of, src, models.hazard.departments)
     common = {
         "bill_id": bill_id,

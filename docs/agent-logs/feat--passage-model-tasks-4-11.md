@@ -1,5 +1,12 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 23:19 — feat(model): prorogation outcomes (die / carry over / rush through) and rolling backtest
+
+- **What:** `failure.py` learns, from government bills in progress in the last 30 sitting days before past prorogations, P(died / carried over / rushed through) for bills still in their first House (90 cases: 12% / 56% / 32%) and in the second House or ping-pong (145: 4% / 0% / 96%), relearned at every refit. `simulate.py` applies it at each drawn session end (agreed carry-over motion → carried over for certain; carried bills keep their stage and time in stage and get a new session; rushed bills keep end-of-session speed until they finish); elections unchanged. `p_ra_before_session_end` now means Royal Assent without a carry-over. `evaluate.py` adds a rolling backtest (refit once per session on bills finished before it) and a carried-over-bills error; `cli evaluate` prints a before/after table. Tests added; models refitted.
+- **Why:** Aleks chose option 2 (fix session-end risk) plus a rolling backtest, no calibration yet.
+- **Checks:** `ruff`: clean; `pytest`: 107 passed. Rolling backtest: MAE 71 days (was 73), median error 39, coverage 57% (was 52%), forecast pass 90% vs actual 94% (was 80%), Brier 0.049 vs base rate 0.054 (was 0.104), carried-over bills 254 days (was 251).
+- **Notes:** coverage is still well below 80% and dates are biased early (median forecast too early for 63% of forecasts); reported to Aleks before any calibration.
+
 ## 2026-10-24 22:58 — feat(model): backtest, metrics and evaluation report (task 10)
 
 - **What:** added `model/evaluate.py` (backtest points, parallel forecasts with train models, MAE/coverage/Brier/C-index, charts, EVALUATION.md generator), `cli evaluate`, `tests/model/test_evaluate.py`, `reports/EVALUATION.md`, `reports/mae_by_state.png`, `reports/model_vs_baselines.png`, `reports/calibration.png` and `metrics.json` (`backtest`).

@@ -4,6 +4,14 @@
   sitting days) conditional on the session having lasted as long as it has. Only sessions
   ended by prorogation are used: sessions cut short by an election are the dissolution
   route below, so including them would count election risk twice.
+- **What a prorogation does to an unfinished bill:** the government times the session end
+  around its bills, so reaching S does not simply kill a bill. A bill still in progress at S
+  **dies**, is **carried over** (keeps its stage and time in stage and continues in the next
+  session) or is **rushed through** (the session is extended until it finishes, at
+  end-of-session speed), with probabilities learned from government bills in progress in
+  the last ``SESSION_END_WINDOW`` sitting days before past prorogations, separately for bills
+  still in their first House and bills in the second House or ping-pong. A bill whose
+  carry-over motion is already agreed is carried over with certainty.
 - **Dissolution E:** an announced dissolution, else a per-sitting-day hazard by years since
   the last general election (buckets <3, 3-4, 4-4.5, 4.5+), with a hard cap 5 years after
   the Parliament first met. Five dissolutions in the data give few events per bucket, so
@@ -56,6 +64,11 @@ VOTE_STATES: frozenset[str] = frozenset(
 # A session that has already outlasted every past session is assumed to end within this
 # many more sitting days (uniformly).
 OVERRUN_SITTING_DAYS = 20
+# Bills in progress this many sitting days before a prorogation are the cases for the
+# session-end outcome probabilities.
+SESSION_END_WINDOW = 30
+FIRST_HOUSE, SECOND_HOUSE = "first_house", "second_house_or_ping_pong"
+SESSION_END_OUTCOMES = ("died", "carried_over", "rushed_through")
 
 
 def years_bucket(years: float) -> str:
@@ -112,6 +125,103 @@ def fit_session_lengths(as_of: date, data: DataSource | None = None) -> SessionL
         ]
     )
     return SessionLengths(lengths, [int(s) for s in done["session_id"]])
+
+
+# --------------------------------------------------------------------------- prorogation
+
+
+def house_group(state: str, originating_house: str) -> str:
+    """Whether a bill in ``state`` is still in its first House."""
+    first = states.chain(originating_house)[: 5 if originating_house != "Lords" else 3]
+    return FIRST_HOUSE if state in {s.value for s in first} else SECOND_HOUSE
+
+
+@dataclass
+class SessionEndOutcomes:
+    """P(died / carried over / rushed through) for a bill still in progress when a session
+    ends by prorogation, by ``house_group``."""
+
+    probabilities: dict[str, dict[str, float]]
+    counts: dict[str, dict[str, int]]
+
+    def describe(self) -> str:
+        parts = []
+        for group, p in self.probabilities.items():
+            n = sum(self.counts[group].values())
+            parts.append(
+                f"{group.replace('_', ' ')} ({n} cases): dies {100 * p['died']:.0f}%, "
+                f"carried over {100 * p['carried_over']:.0f}%, "
+                f"rushed through {100 * p['rushed_through']:.0f}%"
+            )
+        return "; ".join(parts)
+
+
+def session_end_cases(as_of: date, data: DataSource | None = None) -> pd.DataFrame:
+    """Every (prorogation, government bill) where the bill was in progress at the start of
+    the last ``SESSION_END_WINDOW`` sitting days before a prorogation known on ``as_of``,
+    with its stage group then and what happened by the prorogation."""
+    src = states._source(data)
+    cal = src.get_calendar(as_of)
+    dates = calendar.sitting_dates(cal["sitting_days"])
+    sess = cal["sessions"]
+    sess = sess[
+        (sess["end_type"] == "prorogation")
+        & sess["end_date"].notna()
+        & (sess["session_id"] >= states.MIN_SESSION_ID)
+    ]
+    bills = src.get_bills(as_of)
+    bills = bills[bills["introduced_session_id"] >= states.MIN_SESSION_ID].set_index("bill_id")
+    trans = states.build_transitions(as_of, src)
+    ra = trans[trans["model_state"] == "royal_assent"].set_index("bill_id")["entered_date"]
+
+    rows = []
+    for s in sess.itertuples():
+        i_end = np.searchsorted(dates, np.datetime64(s.end_date, "D"), side="right") - 1
+        window_start = dates[max(i_end - SESSION_END_WINDOW + 1, 0)].astype(date)
+        for bill_id, b in bills.iterrows():
+            if b["introduced_date"] > s.end_date:
+                continue
+            assent = ra.get(bill_id)
+            if assent is not None and assent < window_start:
+                continue
+            failed_on = b["outcome_date"] if b["outcome"] != "royal_assent" else None
+            if failed_on is not None and failed_on < window_start:
+                continue
+            t = trans[(trans["bill_id"] == bill_id) & (trans["entered_date"] <= window_start)]
+            stage = (
+                t.iloc[-1]["model_state"]
+                if len(t)
+                else trans.loc[trans["bill_id"] == bill_id, "model_state"].iloc[0]
+            )
+            if assent is not None and assent <= s.end_date:
+                fate = "rushed_through"  # passed before the session ended
+            elif b["outcome"] == "withdrawn" and b["outcome_date"] <= s.end_date:
+                fate = "rushed_through"  # neither died at the session end nor carried over
+            elif b["outcome"] == "fell_session_end" and b["outcome_date"] == s.end_date:
+                fate = "died"
+            else:
+                fate = "carried_over"
+            rows.append(
+                {
+                    "session_id": s.session_id,
+                    "bill_id": bill_id,
+                    "stage": stage,
+                    "group": house_group(stage, b["originating_house"]),
+                    "fate": fate,
+                }
+            )
+    return pd.DataFrame(rows, columns=["session_id", "bill_id", "stage", "group", "fate"])
+
+
+def fit_session_end_outcomes(as_of: date, data: DataSource | None = None) -> SessionEndOutcomes:
+    cases = session_end_cases(as_of, data)
+    probabilities, counts = {}, {}
+    for group in (FIRST_HOUSE, SECOND_HOUSE):
+        fates = cases.loc[cases["group"] == group, "fate"]
+        n = max(len(fates), 1)
+        counts[group] = {o: int((fates == o).sum()) for o in SESSION_END_OUTCOMES}
+        probabilities[group] = {o: counts[group][o] / n for o in SESSION_END_OUTCOMES}
+    return SessionEndOutcomes(probabilities, counts)
 
 
 # --------------------------------------------------------------------------- dissolution
@@ -214,6 +324,7 @@ class FailureModel:
     session_lengths: SessionLengths
     dissolution: DissolutionHazard
     withdrawal: WithdrawalHazard
+    session_end: SessionEndOutcomes | None = None
     defeat_probability: float = DEFEAT_PROBABILITY_FALLBACK
     fitted_as_of: date | None = None
     notes: list[str] = field(default_factory=list)
@@ -225,6 +336,7 @@ class FailureModel:
     def describe(self) -> list[str]:
         return [
             f"Session end: {self.session_lengths.describe()}.",
+            f"At a prorogation, an unfinished bill: {self.session_end.describe()}.",
             f"Dissolution: {self.dissolution.describe()}. "
             f"Hard cap {MAX_PARLIAMENT_YEARS} years after a Parliament first meets.",
             f"Withdrawal: {self.withdrawal.describe()}.",
@@ -255,10 +367,11 @@ def fit_failure(
         session_lengths=fit_session_lengths(as_of, data),
         dissolution=fit_dissolution(as_of, data),
         withdrawal=fit_withdrawal(as_of, data, sessions),
+        session_end=fit_session_end_outcomes(as_of, data),
         fitted_as_of=as_of,
         notes=[
-            "Carry-over: a bill with a carry-over motion in the current session survives the "
-            "session end and continues into the next session; an election still ends it."
+            "Carry-over: a bill with a carry-over motion already agreed in the current session "
+            "is carried over at the session end; an election still ends it."
         ],
     )
 

@@ -33,14 +33,26 @@ class FakeHazard:
         return np.array([self.rule(r) for r in frame.itertuples()], dtype=float)
 
 
-def _models(rule, session_length=100, pi_pp=0.0, withdrawal=0.0, defeat=0.0, dissolution=0.0):
+DIES = {"died": 1.0, "carried_over": 0.0, "rushed_through": 0.0}
+CARRIED = {"died": 0.0, "carried_over": 1.0, "rushed_through": 0.0}
+RUSHED = {"died": 0.0, "carried_over": 0.0, "rushed_through": 1.0}
+
+
+def _models(
+    rule, session_length=100, pi_pp=0.0, withdrawal=0.0, defeat=0.0, dissolution=0.0,
+    first=DIES, second=DIES,
+):  # fmt: skip
     rates = {b: dissolution for *_, b in failure.YEARS_BUCKETS}
+    session_end = failure.SessionEndOutcomes(
+        {failure.FIRST_HOUSE: first, failure.SECOND_HOUSE: second}, {}
+    )
     fail = failure.FailureModel(
         session_lengths=failure.SessionLengths(np.array([session_length]), [1]),
         dissolution=failure.DissolutionHazard(
             rates, dict.fromkeys(rates, 0), dict.fromkeys(rates, 1)
         ),
         withdrawal=failure.WithdrawalHazard(withdrawal, 0, 1),
+        session_end=session_end,
         defeat_probability=defeat,
     )
     pp = pingpong.PingPongModel(
@@ -81,6 +93,33 @@ def test_carry_over_survives_one_session_end():
     result = _run(_models(lambda r: 0.0, session_length=30), _start(carry=True))
     assert (result.outcome == simulate.SESSION_END).all()
     assert (result.end_day == 61).all()
+
+
+def test_prorogation_can_carry_over_a_bill():
+    result = _run(_models(lambda r: 0.0, session_length=30, first=CARRIED))
+    assert result.carried.all()
+    assert (result.outcome != simulate.SESSION_END).all()  # only the election ends it
+
+
+def _late_rush(r):
+    """Moves only after 61+ sitting days in a state and in the last 0-5 days of a session,
+    so a bill can only finish if its session is extended."""
+    return 1.0 if r.tau_bucket == "61+" and r.days_to_session_end_bucket == "0-5" else 0.0
+
+
+def test_rushed_bills_finish_at_end_of_session_speed():
+    result = _run(_models(_late_rush, session_length=3, first=RUSHED))
+    assert result.rushed.all()
+    assert (result.outcome == simulate.ROYAL_ASSENT).all()
+    assert (result.end_day > 3).all()  # finished in the extended session
+
+
+def test_session_end_outcome_depends_on_house():
+    models = _models(_late_rush, session_length=3, first=DIES, second=RUSHED)
+    in_lords = _run(models, _start(k0=CHAIN.index("lords_committee")))
+    assert in_lords.rushed.all() and (in_lords.outcome == simulate.ROYAL_ASSENT).all()
+    in_commons = _run(models, _start(k0=CHAIN.index("commons_committee")))
+    assert (in_commons.outcome == simulate.SESSION_END).all()
 
 
 def test_days_to_session_end_is_recomputed_from_each_paths_session_end():
