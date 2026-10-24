@@ -8,11 +8,14 @@ Firmness levels used everywhere in the pipeline:
 Phrases that look like commitments but are NOT (negations, questions, opposition demands)
 are listed in EXCLUDE and checked first.
 """
+
 import re
 
 # The subject must be the government speaking ("we", "the government", "ministers").
 GOV = r"(?:we|the government|this government|ministers|my department|the department)"
-LEG = r"(?:legislat\w*|(?:a|the|new|primary|emergency)?\s*(?:bill|legislation|legislative changes?))"
+LEG = (
+    r"(?:legislat\w*|(?:a|the|new|primary|emergency)?\s*(?:bill|legislation|legislative changes?))"
+)
 
 FIRM = [
     rf"\b{GOV}\s+(?:will|shall|are going to)\s+(?:now\s+)?legislate\b",
@@ -69,15 +72,24 @@ def _c(patterns):
     return [re.compile(p, re.I) for p in patterns]
 
 
-FIRM_RE, MEDIUM_RE, VAGUE_RE, EXCLUDE_RE, TIMING_RE = map(_c, (FIRM, MEDIUM, VAGUE, EXCLUDE, TIMING_FIRM))
+FIRM_RE, MEDIUM_RE, VAGUE_RE, EXCLUDE_RE, TIMING_RE = map(
+    _c, (FIRM, MEDIUM, VAGUE, EXCLUDE, TIMING_FIRM)
+)
 ANY_TRIGGER_RE = FIRM_RE + MEDIUM_RE + VAGUE_RE
 
 # Short phrases for server-side search (Hansard search is keyword-based, so keep them simple).
 SEARCH_PHRASES = [
-    "we will legislate", "we will introduce legislation", "we will bring forward legislation",
-    "we will introduce a bill", "legislation will be introduced", "we intend to legislate",
-    "when parliamentary time allows", "at the earliest opportunity", "draft bill",
-    "we will bring forward a bill", "committed to legislating",
+    "we will legislate",
+    "we will introduce legislation",
+    "we will bring forward legislation",
+    "we will introduce a bill",
+    "legislation will be introduced",
+    "we intend to legislate",
+    "when parliamentary time allows",
+    "at the earliest opportunity",
+    "draft bill",
+    "we will bring forward a bill",
+    "committed to legislating",
 ]
 
 SENT_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[A-Z“\"'])")
@@ -89,7 +101,7 @@ def classify_sentence(sentence):
     if s.endswith("?") or any(r.search(s) for r in EXCLUDE_RE):
         return None, None
     draft = re.search(r"\bdraft (?:bill|legislation)\b", s, re.I)
-    if draft and not any(v.search(s) for v in VAGUE_RE[:3]):   # a draft is a step short of a bill
+    if draft and not any(v.search(s) for v in VAGUE_RE[:3]):  # a draft is a step short of a bill
         return 1, draft.group(0)
     for level, regs in ((2, FIRM_RE), (1, MEDIUM_RE), (0, VAGUE_RE)):
         for r in regs:
@@ -111,6 +123,8 @@ def find_triggers(text, context=1):
     for k, s in enumerate(sents):
         level, phrase = classify_sentence(s)
         if level is not None:
-            snippet = " ".join(sents[max(0, k - context):k + context + 1])
-            hits.append({"sentence": s, "snippet": snippet, "rule_firmness": level, "phrase": phrase})
+            snippet = " ".join(sents[max(0, k - context) : k + context + 1])
+            hits.append(
+                {"sentence": s, "snippet": snippet, "rule_firmness": level, "phrase": phrase}
+            )
     return hits

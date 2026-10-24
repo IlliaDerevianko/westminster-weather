@@ -37,8 +37,12 @@ MEMBER_BIOGRAPHY_URL = "https://members-api.parliament.uk/api/Members/{member_id
 USER_AGENT = "WestminsterWeather/0.1 (OxHack 2026 student project)"
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 PAGE_SIZE = 100
-# Seconds between requests per host. Hansard allows about 1,000 requests per 5 minutes.
-HOST_INTERVALS = {"hansard-api.parliament.uk": 0.35}
+# Seconds between requests per host. Hansard allows about 1,000 requests per 5 minutes; the
+# written statements API publishes no limit, and every 429 is logged so a too-fast pace shows.
+HOST_INTERVALS = {
+    "hansard-api.parliament.uk": 0.35,
+    "questions-statements-api.parliament.uk": 0.05,
+}
 DEFAULT_INTERVAL = 0.1
 
 
@@ -71,6 +75,7 @@ class PoliteClient:
                 if response.status_code not in RETRY_STATUSES:
                     response.raise_for_status()
                     return response.json()
+                log.warning("HTTP %s from %s (attempt %d)", response.status_code, host, attempt + 1)
                 if attempt == self.max_retries:
                     response.raise_for_status()
             time.sleep(min(2**attempt, 60))
@@ -110,7 +115,7 @@ def _is_finished(period_end: date, today: date) -> bool:
 
 # ------------------------------------------------------------- written statements ----
 def fetch_written_statements(
-    client: PoliteClient, start: date, end: date, list_workers: int = 4, workers: int = 8
+    client: PoliteClient, start: date, end: date, list_workers: int = 4, workers: int = 16
 ) -> int:
     """Cache every written ministerial statement in [start, end], with full text."""
     today = date.today()
@@ -165,33 +170,47 @@ def fetch_written_statements(
 
 
 # ---------------------------------------------------------------------- Hansard ----
-def fetch_hansard(client: PoliteClient, kind: str, start: date, end: date, workers: int = 4) -> int:
+def fetch_hansard(client: PoliteClient, kind: str, start: date, end: date, workers: int = 2) -> int:
     """Cache Hansard contributions (kind 'Spoken' or 'Written') containing a trigger phrase,
-    one file per phrase per year. Hansard responds slowly (~20 s), so searches run in
-    parallel; the client still spaces request starts to stay within the rate limit."""
+    one file per phrase per year. Hansard responds slowly (~20 s) and returns HTTP 500 under
+    heavier parallel load, so only a couple of searches run at once. A search that still fails
+    after retries is logged and skipped (not cached), so the next run retries it."""
     today = date.today()
+    failed: list[str] = []
 
     def fetch_one(phrase: str, y_start: date, y_end: date) -> int:
         path = CACHE_DIR / "hansard" / kind.lower() / _slug(phrase) / f"{y_start}_{y_end}.json"
         if path.exists() and _is_finished(y_end, today):
             return len(_read(path))
         items, skip = [], 0
-        while True:
-            page = client.get_json(
-                HANSARD_URL.format(kind=kind),
-                {
-                    "queryParameters.searchTerm": f'"{phrase}"',
-                    "queryParameters.startDate": y_start.isoformat(),
-                    "queryParameters.endDate": y_end.isoformat(),
-                    "queryParameters.take": PAGE_SIZE,
-                    "queryParameters.skip": skip,
-                },
+        try:
+            while True:
+                page = client.get_json(
+                    HANSARD_URL.format(kind=kind),
+                    {
+                        "queryParameters.searchTerm": f'"{phrase}"',
+                        "queryParameters.startDate": y_start.isoformat(),
+                        "queryParameters.endDate": y_end.isoformat(),
+                        "queryParameters.take": PAGE_SIZE,
+                        "queryParameters.skip": skip,
+                    },
+                )
+                batch = page.get("Results", [])
+                items += batch
+                skip += len(batch)
+                if not batch or skip >= page.get("TotalResultCount", 0):
+                    break
+        except (httpx.HTTPError, RuntimeError) as exc:
+            failed.append(f"{phrase} {y_start}..{y_end}")
+            log.error(
+                "hansard %s '%s' %s..%s FAILED, will retry next run: %s",
+                kind,
+                phrase,
+                y_start,
+                y_end,
+                exc,
             )
-            batch = page.get("Results", [])
-            items += batch
-            skip += len(batch)
-            if not batch or skip >= page.get("TotalResultCount", 0):
-                break
+            return 0
         _write(path, items)
         return len(items)
 
@@ -209,6 +228,8 @@ def fetch_hansard(client: PoliteClient, kind: str, start: date, end: date, worke
                 log.info(
                     "hansard %s: %d/%d searches, %d contributions", kind, done, len(tasks), total
                 )
+    if failed:
+        log.error("hansard %s: %d searches FAILED (rerun to retry): %s", kind, len(failed), failed)
     return total
 
 

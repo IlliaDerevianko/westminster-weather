@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 22:26 — feat(takeup): faster, fault-tolerant Tier B fetch
+
+- **What:** written statements now fetched at up to 20 requests/s (16 parallel); every 429/5xx is logged; Hansard runs 2 searches at a time and a search that still fails after retries is logged and skipped (not cached) so the next run retries it. `triggers.py` reformatted (whitespace only).
+- **Why:** Roman approved speeding up the fetch (options A + B); Hansard returned HTTP 500 under 4 parallel searches.
+- **Checks:** fetch 2015+: 17,844 statements, 0 rate-limit responses; Hansard 132/132 searches, 0 failures; 983 speakers. `ruff check` clean; `pytest tests/takeup`: 102 passed.
+
 ## 2026-10-24 22:16 — docs(model): align take-up plan and contract with the task spec
 
 - **What:** rewrote `TAKEUP_PLAN.md` with the spec's naming (Tier A = the model, Tier B = the data pipeline B1–B6), conditional timing quantiles, `DATABASE_URL_TAKEUP`, current fetch status and a spec-reconciliation section. In `DATA_CONTRACT.md` section 10: spec names (`p26`, `p52`, `t_10/50/90`, `kings_speech_items.bill_id`), `ideas.origin` instead of `tier`, carried-over King's Speech items excluded, and a take-up feature registry (10.11).
