@@ -1,5 +1,12 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 22:10 — feat(model): merge renamed departments; note Task 9 session-end rule
+
+- **What:** added `model/departments.py` (renamed or abolished departments → current successor; 40 names → 24) and applied it to the `department` feature and the top-10 one-hot columns. Added a TASK 9 REQUIREMENT note in `model/features.py`: the simulator must recompute `days_to_session_end` from each path's simulated session end, never use the fixed "41+". Rewrote the task 3 test that relied on bill 3064's old wrong label.
+- **Why:** Aleks's follow-ups to task 4.
+- **Checks:** `ruff`: clean; `pytest`: 65 passed.
+- **Notes:** split departments map to one successor (BEIS/BIS/BERR/DTI/DIUS/DIT → Business and Trade; DCMS digital → Culture, Media and Sport). Mapping is model-side only; the database keeps the original names.
+
 ## 2026-10-24 22:07 — fix(data): label bills with a Royal Assent sitting as Acts
 
 - **What:** in `data/bills_api.py` (`flatten_bills`), a bill is an Act (`is_act`, outcome `royal_assent`) if the API says so **or** it has a Royal Assent (stage 11) sitting; a warning is logged when this overrides the API. Added an offline test and a Neon DB test that fails if any non-Act bill has a Royal Assent sitting. Reloaded Neon with `cli fetch` (government bills only).

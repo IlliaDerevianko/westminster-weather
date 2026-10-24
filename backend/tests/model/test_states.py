@@ -120,12 +120,18 @@ def test_checks_catch_an_act_without_royal_assent():
 
 
 def test_checks_catch_royal_assent_on_a_bill_not_labelled_an_act():
-    # The Bills API marks Commercial Rent (Coronavirus) Bill (3064) isAct = False although it
-    # received Royal Assent on 2022-03-24.
+    # Data loading now labels any bill with a Royal Assent sitting an Act (the API's isAct
+    # flag was wrong for bill 3064), so build a deliberately inconsistent record here.
     stages = [(6, "Commons", "2016-06-01"), (11, "Unassigned", "2016-07-10")]
-    source = _source(
-        [_payload(1, stages, is_act=False), _payload(3, [(6, "Commons", "2016-11-01")], session=31)]
+    tables = bills_api.build_tables_from_payloads(
+        [_payload(1, stages, is_act=True), _payload(3, [(6, "Commons", "2016-11-01")], session=31)]
     )
+    bills = tables["bills"]
+    bills.loc[bills["bill_id"] == 1, ["outcome", "stop_reason"]] = [
+        "fell_session_end",
+        "session_runs_out",
+    ]
+    source = DatabaseInterface(tables=tables)
     failed = {r.name for r in states.check_transitions(AS_OF, source) if not r.ok}
     assert "Bills that reached royal_assent but are not labelled Acts" in failed
 

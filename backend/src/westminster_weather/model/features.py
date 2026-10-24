@@ -29,6 +29,7 @@ import pandas as pd
 from westminster_weather.data import calendar
 from westminster_weather.domain.stages import BillStage
 from westminster_weather.model import states
+from westminster_weather.model.departments import current_department
 from westminster_weather.model.states import DataSource
 
 TAU_BUCKETS: tuple[tuple[int, float, str], ...] = (
@@ -44,6 +45,13 @@ END_BUCKETS: tuple[tuple[int, float, str], ...] = (
     (16, 40, "16-40"),
     (41, np.inf, "41+"),
 )
+# Training rows whose session had not ended by the cutoff (the current session) have no
+# known end and fall in this bucket.
+#
+# TASK 9 REQUIREMENT: the simulator must NOT use this fixed "41+" value. On every simulated
+# path, days_to_session_end must be recomputed each sitting day from that path's simulated
+# session end date S (MODEL_SPEC §4.2: announced date, or a draw from the session-length
+# distribution conditional on the session's length so far), then bucketed with END_BUCKETS.
 END_REFERENCE_BUCKET = "41+"
 
 # MODEL_SPEC §4.1: the training session end is the actual end date moved earlier by a random
@@ -107,7 +115,7 @@ def _originating_house_lords(bill_id: int, as_of: date, data: Any) -> float | No
 
 def _department(bill_id: int, as_of: date, data: Any) -> str | None:
     bill = _bill(bill_id, as_of, data)
-    return None if bill is None else bill["department"]
+    return None if bill is None else current_department(bill["department"])
 
 
 def _introduced_months_into_session(bill_id: int, as_of: date, data: Any) -> float | None:
@@ -162,7 +170,8 @@ FEATURES: dict[str, Feature] = {
             _originating_house_lords,
         ),
         Feature(
-            "department", 1, "fixed", "Sponsoring department (top 10 one-hot + other)",
+            "department", 1, "fixed",
+            "Sponsoring department under its current name (top 10 one-hot + other)",
             _department,
         ),
         Feature(
@@ -343,6 +352,7 @@ def build_training_rows(
     sessions = cal_tables["sessions"]
     start = dict(zip(sessions["session_id"], sessions["start_date"], strict=True))
     fixed = bills[["bill_id", "introduced_session_id", "originating_house", "department"]].copy()
+    fixed["department"] = fixed["department"].map(current_department)
     fixed["originating_house_lords"] = (fixed["originating_house"] == "Lords").astype(float)
     fixed["introduced_months_into_session"] = [
         (intro - start[sid]).days / DAYS_PER_MONTH
