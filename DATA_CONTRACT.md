@@ -65,21 +65,22 @@ Maps Bills API stages to model states. Static; filled once by hand.
 | `house` | TEXT NULL | |
 | `model_state` | TEXT NULL | See table below; `NULL` = ignored by the model |
 
+`model_state` values are the `BillStage` enum values in `backend/src/westminster_weather/domain/stages.py` (MODEL_SPEC §2.1). The Python copy of this table is `backend/src/westminster_weather/data/stage_map.py`.
+
 | `model_state` | Commons-first order | Lords-first order | API stage IDs |
 |---|---|---|---|
-| `C_1R` | 1 | 7 | 6 |
-| `C_2R` | 2 | 8 | 7 |
-| `C_MOTIONS` | 3 | 9 | 14, 15 |
-| `C_COMMITTEE` | 4 | 10 | 8, 49 |
-| `C_REPORT` | 5 | 11 | 9 |
-| `C_3R` | 6 | 12 | 10 |
-| `L_1R_2R` | 7 | 1 | 1, 2 |
-| `L_COMMITTEE` | 8 | 2 | 3 |
-| `L_REPORT_3R` | 9 | 3 | 4, 5 |
-| `PING_PONG` | 10 | 13 | 12, 13 |
-| `ROYAL_ASSENT` | 11 | 14 | 11 |
+| `commons_1st_reading` | 1 | 4 | 6 |
+| `commons_2nd_reading` | 2 | 5 | 7, 14 (programme motion), 15 (money resolution), 25 (second reading committee), 36 (ways and means) |
+| `commons_committee` | 3 | 6 | 8 (Public Bill Committee), 43, 48, 49 (Committee of the whole House) |
+| `commons_report_stage` | 4 | 7 | 9 |
+| `commons_3rd_reading` | 5 | 8 | 10 |
+| `lords_1st_and_2nd_reading` | 6 | 1 | 1, 2, 30 |
+| `lords_committee` | 7 | 2 | 3, 46 |
+| `lords_report_and_3rd_reading` | 8 | 3 | 4, 5 |
+| `ping_pong` | 9 | 9 | 12, 13, 42 (optional: only if the second House amended the bill) |
+| `royal_assent` | 10 | 10 | 11 |
 
-For Lords-first bills the Commons states come after the Lords states. The order is derived from `bills.originating_house`.
+For Lords-first bills the Commons states come after the Lords states. The order is derived from `bills.originating_house`. Programme and money motions are merged into `commons_2nd_reading`. All other stage IDs (e.g. carry-over motions 18, 19) map to `NULL`; carry-over motions feed `bills.carry_over_date`.
 
 ### 2.6 `political_snapshots`
 Stored as validity intervals; a new row only when something changes (by-election, defection, new Parliament).
@@ -120,6 +121,9 @@ Stored as validity intervals; a new row only when something changes (by-election
 
 `outcome` values: `'royal_assent'`, `'fell_session_end'`, `'fell_dissolution'`, `'withdrawn'`, `'defeated'`, `'in_progress'`.
 
+- A session that ended within 14 days before a dissolution (the pre-election wash-up prorogations) has `sessions.end_type = 'dissolution'`, so its failed bills are `'fell_dissolution'` (`StopReason.ELECTION_CALLED`), not `'fell_session_end'` (`StopReason.SESSION_RUNS_OUT`).
+- `'in_progress'` only if the bill is in the current session, or had a carry-over motion in the previous session and that session was prorogued (§8). A dissolution ends carried-over bills too.
+
 ### 3.2 `stage_sittings`
 One row per sitting of a stage. The core table for durations.
 | Column | Type | Notes |
@@ -131,6 +135,9 @@ One row per sitting of a stage. The core table for durations.
 | `session_id` | INTEGER FK | |
 | `event_date` | DATE | Date of the sitting |
 | `ingested_at` | TIMESTAMP | |
+
+### 3.2a `scheduled_sittings`
+Same columns as `stage_sittings`, for sittings dated **after** the day they were ingested (future business already scheduled). We do not know when each was announced, so this table is used **only for live forecasts** (`as_of` on or after ingestion) and **never** for training or backtests. `stage_sittings` holds only sittings that have happened.
 
 ### 3.3 `divisions`
 Recorded votes linked to a bill. Lords defeats are derived from here (`house = 'Lords' AND government_won = FALSE`).

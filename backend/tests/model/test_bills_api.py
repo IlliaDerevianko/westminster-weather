@@ -3,7 +3,7 @@ from datetime import date
 import pandas as pd
 import pytest
 
-from westminster_weather.data import bills_api
+from westminster_weather.data import bills_api, calendar
 from westminster_weather.data.paths import PROCESSED_DIR
 
 
@@ -40,6 +40,15 @@ def _payload(bill_id, stages, *, house="Commons", session=30, is_act=False, with
     }
 
 
+NO_OVERRIDES = pd.DataFrame(columns=["session_id", "start_date", "end_date", "end_type"])
+
+
+def _label(payloads):
+    sittings = bills_api.flatten_stage_sittings(payloads)
+    sessions = calendar.sessions(sittings, overrides=NO_OVERRIDES)
+    return bills_api.flatten_bills(payloads, sittings, sessions).set_index("bill_id"), sittings
+
+
 @pytest.fixture
 def synthetic():
     payloads = [
@@ -47,12 +56,11 @@ def synthetic():
         _payload(2, [(6, ["2016-06-02"]), (8, ["2016-07-02", "2016-07-05"])]),
         _payload(3, [(6, ["2016-06-03"])], withdrawn="2016-09-01T00:00:00"),
         _payload(4, [(6, ["2017-04-01"])], session=31),  # ends 2017-04-27, election 2017-06-08
+        # carried over, but the session ended in a dissolution, which kills it anyway
         _payload(5, [(6, ["2017-04-27"]), (18, ["2017-04-20"])], session=31),
         _payload(6, [(6, ["2018-01-01"])], session=32),  # latest session = current
     ]
-    sittings = bills_api.flatten_stage_sittings(payloads)
-    sessions = bills_api.session_bounds(sittings)
-    return bills_api.flatten_bills(payloads, sittings, sessions).set_index("bill_id"), sittings
+    return _label(payloads)
 
 
 def test_stage_sittings_one_row_per_sitting(synthetic):
@@ -69,8 +77,32 @@ def test_outcomes_are_labelled(synthetic):
     assert bills.loc[2, "outcome"] == "fell_session_end"
     assert bills.loc[3, "outcome"] == "withdrawn"
     assert bills.loc[4, "outcome"] == "fell_dissolution"
+    assert bills.loc[4, "stop_reason"] == "election_called"
+    assert bills.loc[5, "outcome"] == "fell_dissolution"
     assert bills.loc[6, "outcome"] == "in_progress"
     assert pd.isna(bills.loc[6, "outcome_date"])
+    assert bills.loc[2, "stop_reason"] == "session_runs_out"
+
+
+def test_carry_over_survives_prorogation_only():
+    bills, _ = _label(
+        [
+            _payload(8, [(6, ["2016-06-01"]), (18, ["2016-06-10"])], session=30),
+            _payload(10, [(6, ["2016-06-02"])], session=30),
+            _payload(9, [(6, ["2016-07-01"])], session=31),  # current session
+        ]
+    )
+    assert bills.loc[8, "outcome"] == "in_progress"
+    assert bills.loc[10, "outcome"] == "fell_session_end"
+
+
+def test_scheduled_sittings_are_split_off():
+    sittings = bills_api.flatten_stage_sittings(
+        [_payload(1, [(6, ["2026-10-20"]), (7, ["2026-10-30"])], session=40)]
+    )
+    past, scheduled = bills_api.split_scheduled(sittings)  # downloaded 2026-10-24
+    assert list(past["event_date"]) == [date(2026, 10, 20)]
+    assert list(scheduled["event_date"]) == [date(2026, 10, 30)]
 
 
 def test_bill_columns(synthetic):
@@ -118,17 +150,14 @@ def test_every_act_has_royal_assent_sitting():
     assert bills.loc[bills["is_act"], "outcome_date"].notna().all()
 
 
-def test_session_bounds_ignore_stray_dates():
-    def rows(session, dates):
-        return [{"session_id": session, "event_date": date.fromisoformat(d)} for d in dates]
-
-    sittings = pd.DataFrame(
-        rows(30, ["2017-06-22", "2019-10-08", "2019-10-16"])  # 2019-10-16 is a stray date
-        + rows(34, ["2019-10-15", "2019-11-05"])
-        + rows(35, ["2019-12-18"])
+@needs_data
+def test_in_progress_bills_are_current_or_carried_over():
+    """DATA_CONTRACT §8: every in-progress bill is in the current session or carried over."""
+    bills = pd.read_parquet(PROCESSED_DIR / "bills.parquet")
+    current = pd.read_parquet(PROCESSED_DIR / "sessions.parquet")["session_id"].max()
+    in_progress = bills[bills["outcome"] == "in_progress"]
+    ok = (
+        in_progress["included_session_ids"].map(lambda s: current in s)
+        | in_progress["carry_over_date"].notna()
     )
-    bounds = bills_api.session_bounds(sittings).set_index("session_id")
-    assert bounds.loc[30, "end_date"] == date(2019, 10, 8)
-    assert bounds.loc[30, "end_type"] == "prorogation"  # next session began before the election
-    assert bounds.loc[34, "end_type"] == "dissolution"  # 2019-12-12 election in the gap
-    assert bounds.loc[35, "end_type"] is None  # current session
+    assert ok.all()

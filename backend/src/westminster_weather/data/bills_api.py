@@ -21,7 +21,10 @@ import httpx
 import pandas as pd
 
 from westminster_weather.config import settings
+from westminster_weather.data import calendar
 from westminster_weather.data.paths import CACHE_DIR, PROCESSED_DIR
+from westminster_weather.data.stage_map import CARRY_OVER_STAGE_IDS
+from westminster_weather.domain.stages import StopReason
 
 logger = logging.getLogger(__name__)
 
@@ -29,22 +32,20 @@ MAX_PARALLEL = 5
 PAGE_SIZE = 250
 MAX_RETRIES = 5
 
-# General elections in the data period (MODEL_SPEC §4.2). Used to tell a session that ended
-# by dissolution from one that ended by prorogation.
-ELECTION_DATES: tuple[date, ...] = (
-    date(2010, 5, 6),
-    date(2015, 5, 7),
-    date(2017, 6, 8),
-    date(2019, 12, 12),
-    date(2024, 7, 4),
-)
-
 STAGE_ROYAL_ASSENT = 11
 STAGE_COMMONS_FIRST_READING = 6
 STAGE_LORDS_FIRST_READING = 1
 STAGE_COMMONS_PUBLIC_BILL_COMMITTEE = 8
 STAGE_COMMITTEE_OF_WHOLE_HOUSE = 49
-CARRY_OVER_STAGES = (18, 19)
+
+OUTCOME_STOP_REASON: dict[str, StopReason | None] = {
+    "royal_assent": None,
+    "in_progress": None,
+    "fell_session_end": StopReason.SESSION_RUNS_OUT,
+    "fell_dissolution": StopReason.ELECTION_CALLED,
+    "withdrawn": StopReason.PAUSED_OR_WITHDRAWN,
+    "defeated": StopReason.DEFEATED,
+}
 
 
 # --------------------------------------------------------------------------- HTTP
@@ -236,51 +237,23 @@ def flatten_stage_sittings(payloads: Iterable[dict[str, Any]]) -> pd.DataFrame:
     return df.sort_values(["bill_id", "event_date", "sort_order"]).reset_index(drop=True)
 
 
-def _best_cut(earlier: list[date], later: list[date]) -> date:
-    """Boundary date between two consecutive sessions that misplaces the fewest sittings.
+def split_scheduled(sittings: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Split sittings into those that have happened and those scheduled for after the day
+    they were downloaded.
 
-    A handful of sittings in the API carry dates outside their session (e.g. a 2016 date
-    filed under the 2014-15 session), so plain min/max would make sessions overlap."""
-    candidates = sorted(set(earlier) | set(later))
-    best, best_errors = candidates[0], None
-    for cut in candidates:
-        errors = sum(d > cut for d in earlier) + sum(d <= cut for d in later)
-        if best_errors is None or errors < best_errors:
-            best, best_errors = cut, errors
-    return best
-
-
-def session_bounds(all_sittings: pd.DataFrame) -> pd.DataFrame:
-    """Start and end date per session and how it ended (``'prorogation'`` or
-    ``'dissolution'``), estimated from sitting dates; corrections live in
-    ``data/calendar.py``. The latest session is current (``end_date`` and ``end_type`` NULL).
-
-    A session ended by dissolution if a general election falls between its last sitting and
-    the next session's first sitting.
+    Scheduled sittings have no record of when they were announced, so they may only be used
+    for live forecasts, never for training or backtests.
     """
-    dates = all_sittings.dropna(subset=["event_date"]).groupby("session_id")["event_date"]
-    by_session = {sid: sorted(g.unique()) for sid, g in dates}
-    ids = sorted(by_session)
-    starts = {ids[0]: by_session[ids[0]][0]}
-    ends: dict[int, date | None] = {ids[-1]: None}
-    for prev, nxt in zip(ids, ids[1:], strict=False):
-        cut = _best_cut(by_session[prev], by_session[nxt])
-        ends[prev] = max((d for d in by_session[prev] if d <= cut), default=cut)
-        starts[nxt] = min((d for d in by_session[nxt] if d > cut), default=cut)
+    future = sittings["event_date"] > sittings["ingested_at"].dt.date
+    return (
+        sittings[~future].reset_index(drop=True),
+        sittings[future].reset_index(drop=True),
+    )
 
-    rows = []
-    for sid in ids:
-        end = ends[sid]
-        if end is None:
-            end_type = None
-        else:
-            next_start = min(starts[s] for s in ids if s > sid)
-            dissolved = any(end <= e < next_start for e in ELECTION_DATES)
-            end_type = "dissolution" if dissolved else "prorogation"
-        rows.append(
-            {"session_id": sid, "start_date": starts[sid], "end_date": end, "end_type": end_type}
-        )
-    return pd.DataFrame(rows)
+
+def _stop_reason_value(outcome: str) -> str | None:
+    reason = OUTCOME_STOP_REASON[outcome]
+    return reason.value if reason is not None else None
 
 
 def _department(detail: dict[str, Any]) -> str | None:
@@ -297,13 +270,21 @@ def flatten_bills(
     sittings: pd.DataFrame,
     sessions: pd.DataFrame,
 ) -> pd.DataFrame:
-    """One row per government bill (DATA_CONTRACT §3.1) plus a few raw API flags
-    (``is_act``, ``is_defeated``, ``withdrawn_date``, ``included_session_ids``) kept for
-    labelling in later tasks."""
+    """One row per government bill (DATA_CONTRACT §3.1) plus ``stop_reason`` (the
+    ``StopReason`` matching ``outcome``) and a few raw API flags (``is_act``,
+    ``is_defeated``, ``withdrawn_date``, ``included_session_ids``).
+
+    A bill that is not an Act, withdrawn or defeated is ``in_progress`` only if it is in the
+    current session, or had a carry-over motion in the session just before it and that
+    session was prorogued (DATA_CONTRACT §8; a dissolution kills carried-over bills too).
+    Otherwise it fell when its last session ended: ``fell_dissolution`` if that session
+    ended by dissolution, else ``fell_session_end``.
+    """
     by_bill = {bid: g for bid, g in sittings.groupby("bill_id")}
     session_end = dict(zip(sessions["session_id"], sessions["end_date"], strict=True))
     session_end_type = dict(zip(sessions["session_id"], sessions["end_type"], strict=True))
     current_session = sessions["session_id"].max()
+    previous_session = sessions.loc[sessions["session_id"] < current_session, "session_id"].max()
 
     rows = []
     for payload in payloads:
@@ -328,8 +309,14 @@ def flatten_bills(
         else:
             committee_type = None
 
-        carry_dates = [first_dates[s] for s in CARRY_OVER_STAGES if s in first_dates]
+        carry = bill_sittings[bill_sittings["api_stage_id"].isin(CARRY_OVER_STAGE_IDS)]
+        carry_dates = list(carry["event_date"])
         last_session = max(item["includedSessionIds"] or [item["introducedSessionId"]])
+        carried_into_current = (
+            last_session == previous_session
+            and session_end_type.get(last_session) == "prorogation"
+            and (carry["session_id"] == last_session).any()
+        )
         withdrawn = _to_date(item["billWithdrawn"])
 
         if item["isAct"]:
@@ -339,7 +326,7 @@ def flatten_bills(
         elif item["isDefeated"]:
             last = bill_sittings["event_date"].max() if len(bill_sittings) else None
             outcome, outcome_date = "defeated", last
-        elif last_session == current_session:
+        elif last_session == current_session or carried_into_current:
             outcome, outcome_date = "in_progress", None
         elif session_end_type.get(last_session) == "dissolution":
             outcome, outcome_date = "fell_dissolution", session_end.get(last_session)
@@ -361,6 +348,7 @@ def flatten_bills(
                 "carry_over_date": min(carry_dates) if carry_dates else None,
                 "outcome": outcome,
                 "outcome_date": outcome_date,
+                "stop_reason": _stop_reason_value(outcome),
                 "last_api_update": pd.Timestamp(item["lastUpdate"]),
                 "ingested_at": pd.Timestamp(payload["fetched_at"]),
                 "is_act": item["isAct"],
@@ -378,20 +366,30 @@ def flatten_bills(
 def build_tables(
     cache_dir: Path = CACHE_DIR, processed_dir: Path = PROCESSED_DIR
 ) -> dict[str, pd.DataFrame]:
-    """Flatten the cache into ``bills``, ``stage_sittings`` (government bills only) and
-    ``all_stage_sittings`` (every bill type, for the calendar) parquet files."""
+    """Flatten the cache into parquet tables:
+
+    - ``bills``: government bills (DATA_CONTRACT §3.1)
+    - ``stage_sittings``: government-bill sittings that have happened (§3.2)
+    - ``all_stage_sittings``: past sittings of every bill type (input to the calendar)
+    - ``scheduled_sittings``: future-dated sittings of every bill type (live forecasts only)
+    - ``sessions``, ``parliaments``, ``sitting_days``: calendar tables (§2.1, §2.2, §2.4)
+    """
     gov_type = settings.government_bill_type_id
     payloads = load_cached_bills(cache_dir)
-    all_sittings = flatten_stage_sittings(payloads)
+    all_sittings, scheduled = split_scheduled(flatten_stage_sittings(payloads))
     gov_payloads = [p for p in payloads if p["list_item"]["billTypeId"] == gov_type]
     gov_sittings = all_sittings[all_sittings["bill_type_id"] == gov_type].reset_index(drop=True)
-    sessions = session_bounds(all_sittings)
+    sessions = calendar.sessions(all_sittings)
     bills = flatten_bills(gov_payloads, gov_sittings, sessions)
 
     tables = {
         "bills": bills,
         "stage_sittings": gov_sittings,
         "all_stage_sittings": all_sittings,
+        "scheduled_sittings": scheduled,
+        "sessions": sessions,
+        "parliaments": calendar.parliaments(),
+        "sitting_days": calendar.sitting_days(all_sittings),
     }
     processed_dir.mkdir(parents=True, exist_ok=True)
     for name, df in tables.items():
