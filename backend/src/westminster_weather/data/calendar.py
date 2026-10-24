@@ -1,34 +1,18 @@
 """Parliaments, sessions and the sitting-day calendar (BUILD_PLAN task 2, MODEL_SPEC §3).
 
 Sitting days use the MODEL_SPEC §3 fallback: every date on which any bill of any type had a
-stage sitting. Sessions are estimated from those dates, then corrected by
-``sessions_override.csv``.
+stage sitting. Sessions are estimated from those dates, then corrected by the
+``session_overrides`` table in Neon Lakebase Postgres.
 """
 
 from __future__ import annotations
 
 from datetime import date, timedelta
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-OVERRIDES_PATH = Path(__file__).with_name("sessions_override.csv")
-
-# Parliaments covering the Bills API data (sessions 18 onwards). ``dissolution_date`` and
-# ``election_date`` are those that ended the Parliament.
-PARLIAMENTS = pd.DataFrame(
-    [
-        (1, date(2001, 6, 13), date(2005, 4, 11), date(2005, 5, 5)),
-        (2, date(2005, 5, 11), date(2010, 4, 12), date(2010, 5, 6)),
-        (3, date(2010, 5, 18), date(2015, 3, 30), date(2015, 5, 7)),
-        (4, date(2015, 5, 18), date(2017, 5, 3), date(2017, 6, 8)),
-        (5, date(2017, 6, 13), date(2019, 11, 6), date(2019, 12, 12)),
-        (6, date(2019, 12, 17), date(2024, 5, 30), date(2024, 7, 4)),
-        (7, date(2024, 7, 9), None, None),
-    ],
-    columns=["parliament_id", "first_meeting_date", "dissolution_date", "election_date"],
-)
+from westminster_weather.db import fetch_parliaments_df, fetch_session_overrides_df
 
 # A session ending this close before a dissolution died because of the election, not the
 # normal end of a session (e.g. the wash-up prorogations of 2010, 2015, 2017 and 2024).
@@ -45,13 +29,13 @@ FUTURE_SITTING_WEEKDAYS = (0, 1, 2, 3)  # Monday to Thursday
 
 
 def parliaments() -> pd.DataFrame:
-    """The ``parliaments`` reference table (DATA_CONTRACT §2.2)."""
-    return PARLIAMENTS.copy()
+    """Load the ``parliaments`` reference table from Neon Lakebase Postgres (DATA_CONTRACT §2.2)."""
+    return fetch_parliaments_df()
 
 
 def dissolution_gaps(parls: pd.DataFrame | None = None) -> list[tuple[date, date]]:
     """Periods with no Parliament: (day after dissolution, day before the next first meeting)."""
-    parls = PARLIAMENTS if parls is None else parls
+    parls = parliaments() if parls is None else parls
     gaps = []
     for (_, row), (_, nxt) in zip(parls.iterrows(), parls.iloc[1:].iterrows(), strict=False):
         if row["dissolution_date"] is not None:
@@ -62,6 +46,7 @@ def dissolution_gaps(parls: pd.DataFrame | None = None) -> list[tuple[date, date
                 )
             )
     return gaps
+
 
 
 def in_dissolution_gap(d: date, gaps: list[tuple[date, date]]) -> bool:
@@ -129,11 +114,9 @@ def _end_type(end: date, parls: pd.DataFrame) -> str:
     return "dissolution" if near else "prorogation"
 
 
-def load_overrides(path: Path = OVERRIDES_PATH) -> pd.DataFrame:
-    df = pd.read_csv(path, dtype={"end_type": "string"})
-    for col in ("start_date", "end_date"):
-        df[col] = pd.to_datetime(df[col]).dt.date
-    return df
+def load_overrides() -> pd.DataFrame:
+    """Load the ``session_overrides`` table from Neon Lakebase Postgres via the DB adapter."""
+    return fetch_session_overrides_df()
 
 
 def sessions(
@@ -148,8 +131,9 @@ def sessions(
     ``DISSOLUTION_PROXIMITY_DAYS`` before a dissolution, otherwise ``'prorogation'``.
     The latest session is current: ``end_date`` and ``end_type`` are NULL.
     """
-    parls = PARLIAMENTS if parls is None else parls
+    parls = parliaments() if parls is None else parls
     overrides = load_overrides() if overrides is None else overrides
+
     gaps = dissolution_gaps(parls)
     df = all_sittings.dropna(subset=["event_date"])
     df = df[[not in_dissolution_gap(d, gaps) for d in df["event_date"]]]

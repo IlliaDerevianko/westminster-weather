@@ -57,10 +57,16 @@ def test_overrides_and_dissolution_gap():
     assert sess.loc[38, "start_date"] == date(2023, 11, 8)
 
 
-def test_override_file_sets_2023_24_session():
+def test_override_db_adapter_sets_2023_24_session():
     overrides = calendar.load_overrides().set_index("session_id")
     assert overrides.loc[38, "end_date"] == date(2024, 5, 24)
     assert overrides.loc[38, "end_type"] == "dissolution"
+
+    parls = calendar.parliaments().set_index("parliament_id")
+    assert len(parls) == 7
+    assert parls.loc[6, "dissolution_date"] == date(2024, 5, 30)
+    assert parls.loc[7, "first_meeting_date"] == date(2024, 7, 9)
+
 
 
 def test_sitting_days_count_unassigned_for_both_houses():
