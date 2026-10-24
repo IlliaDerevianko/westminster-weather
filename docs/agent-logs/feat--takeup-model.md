@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 23:14 — feat(takeup): evaluation, baselines and charts
+
+- **What:** `takeup/evaluate.py`: time-split backtest (cuts 2019-01-01 and 2022-01-01; training only on signals visible at the cut, asserted), baselines B0 / B1, AUC and Brier at 26 / 52 weeks, 5-bin calibration, 80% window coverage, concordance, verdict accuracy, parameter table; 4 charts + `metrics.json` in `backend/reports/takeup/`; generator for `docs/model/TAKEUP_EVALUATION.md`; `save_run` to `takeup_runs` / `takeup_forecasts` (refuses production); `run_evaluation(write=False)`.
+- **Why:** task 9.
+- **Checks:** `pytest tests/takeup/test_takeup_evaluate.py`: 12 passed (synthetic data with known parameters, all recovered within 2.5 SE); `ruff`: clean.
+- **Notes:** real run waits for the NLP ideas. Synthetic: 52-week AUC 0.65 vs B1 0.59 (2019 cut); B1 is competitive at the 2022 cut. At-trigger forecasts can't see later events, so early timing ranks weakly by design.
+
 ## 2026-10-24 23:02 — feat(takeup): raw-source loaders and migrate / load-raw / db-status commands
 
 - **What:** `takeup/loaders.py` builds `source_documents` (written statements, de-duplicated Hansard contributions with `matched_phrases`, HTML stripped) and `member_government_posts` from the cache, with idempotent upserts; `cli.py` adds `migrate`, `load-raw` and `db-status` (each with an offline `--dry-run`); `db.py` upserts on a given engine and refuses production.
