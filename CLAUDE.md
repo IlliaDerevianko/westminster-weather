@@ -34,3 +34,14 @@ Never work directly on `main`. Always create and switch to a branch named accord
   3. Push the branch to `origin` (`git push -u origin <type>/<short-description>`).
   4. Open a Pull Request targeting `main` (`gh pr create --base main`).
   5. Merge to `main` exclusively via the Pull Request (`gh pr merge`).
+
+### 3. Small Commits, Made Without Being Asked
+- Commit after every logical unit of work (one function, fix, test file or doc section), **even if the user has not asked you to commit**. Do not batch a whole task into one commit.
+- One concern per commit; run `uv run ruff check .` and `uv run pytest` (from `backend/`) first when code changed.
+- Commit automatically, but **push or open a PR only when asked**. Never commit to `main`.
+
+### 4. Agent Log on Every Commit
+- Every commit must add an entry to `docs/agent-logs/<branch-name>.md` (`/` → `--`, e.g. `docs/agent-logs/feat--passage-model.md`), staged in the **same commit**, newest entry first.
+- Entry: `## YYYY-MM-DD HH:MM — <commit summary>` followed by **What**, **Why**, **Checks** (commands and results) and optional **Notes**.
+- Full rules and the entry template: [`AGENTS.md`](./AGENTS.md) sections 3–4.
+
