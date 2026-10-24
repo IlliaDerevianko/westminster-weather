@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-24T22:37:34.031520+00:00",
-  "code_version": "6607c34a28432172e0ee2dd6c727d759c8911874",
+  "generated_at": "2026-10-24T22:55:52.905399+00:00",
+  "code_version": "a1d8c314a957e16f472d403d1951c405531b1bec",
   "backtests": [
     {
       "cut": "2019-01-01",
@@ -190,6 +190,7 @@
           "c_index": 0.5
         }
       },
+      "n_bills_known_ever": 72,
       "verdicts": {
         "known_after_weeks": 104,
         "n": 244,
@@ -299,6 +300,411 @@
         "n_bill": 53,
         "auc": 0.531153124880401,
         "brier": 0.09109025385550365
+      },
+      "hazard": {
+        "horizons": {
+          "26": {
+            "model": {
+              "n": 472,
+              "n_bill": 38,
+              "auc": 0.5582403589619209,
+              "brier": 0.07410226635308832
+            },
+            "calibration": [
+              {
+                "bin": "0%-20%",
+                "lo": 0.0,
+                "hi": 0.2,
+                "n": 472,
+                "mean_predicted": 0.07361328510853479,
+                "observed": 0.08050847457627118
+              },
+              {
+                "bin": "20%-40%",
+                "lo": 0.2,
+                "hi": 0.4,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              },
+              {
+                "bin": "40%-60%",
+                "lo": 0.4,
+                "hi": 0.6000000000000001,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              },
+              {
+                "bin": "60%-80%",
+                "lo": 0.6000000000000001,
+                "hi": 0.8,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              },
+              {
+                "bin": "80%-100%",
+                "lo": 0.8,
+                "hi": 1.0,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              }
+            ]
+          },
+          "52": {
+            "model": {
+              "n": 390,
+              "n_bill": 50,
+              "auc": 0.5229117647058823,
+              "brier": 0.11270444210297716
+            },
+            "calibration": [
+              {
+                "bin": "0%-20%",
+                "lo": 0.0,
+                "hi": 0.2,
+                "n": 377,
+                "mean_predicted": 0.10933851532121094,
+                "observed": 0.11936339522546419
+              },
+              {
+                "bin": "20%-40%",
+                "lo": 0.2,
+                "hi": 0.4,
+                "n": 13,
+                "mean_predicted": 0.2185425999047548,
+                "observed": 0.38461538461538464
+              },
+              {
+                "bin": "40%-60%",
+                "lo": 0.4,
+                "hi": 0.6000000000000001,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              },
+              {
+                "bin": "60%-80%",
+                "lo": 0.6000000000000001,
+                "hi": 0.8,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              },
+              {
+                "bin": "80%-100%",
+                "lo": 0.8,
+                "hi": 1.0,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              }
+            ]
+          }
+        },
+        "timing_window": {
+          "n": 72,
+          "coverage": 0.7361111111111112
+        },
+        "concordance": {
+          "all_ideas_p52": {
+            "n": 538,
+            "n_bill": 72,
+            "c_index": 0.53647205150717
+          },
+          "bills_t50": {
+            "n": 72,
+            "n_bill": 72,
+            "c_index": 0.5691467852810351
+          }
+        },
+        "verdicts": {
+          "known_after_weeks": 104,
+          "n": 244,
+          "n_likely": 0,
+          "likely_accuracy": null,
+          "n_unlikely": 164,
+          "unlikely_accuracy": 0.75,
+          "n_uncertain": 80,
+          "share_uncertain": 0.32786885245901637
+        },
+        "C": 0.3,
+        "validation": [
+          {
+            "C": 0.003,
+            "val_logloss": 0.007664246571176453
+          },
+          {
+            "C": 0.01,
+            "val_logloss": 0.007404958054951759
+          },
+          {
+            "C": 0.03,
+            "val_logloss": 0.007243304919012307
+          },
+          {
+            "C": 0.1,
+            "val_logloss": 0.007169986195087656
+          },
+          {
+            "C": 0.3,
+            "val_logloss": 0.007155592473276255
+          },
+          {
+            "C": 1.0,
+            "val_logloss": 0.007161802604198096
+          },
+          {
+            "C": 3.0,
+            "val_logloss": 0.007168040038150676
+          }
+        ],
+        "n_rows": 43406,
+        "n_events": 75,
+        "features": [
+          "since_5+",
+          "since_13+",
+          "since_27+",
+          "since_53+",
+          "since_105+",
+          "log_weeks_since_trigger",
+          "gap_5+",
+          "gap_13+",
+          "gap_27+",
+          "gap_53+",
+          "recent_mentions_26w",
+          "log1p_mentions",
+          "max_firmness",
+          "any_firm",
+          "years_since_election",
+          "months_into_session",
+          "x_new_parliament",
+          "z_src_hansard"
+        ],
+        "parameters": [
+          {
+            "parameter": "intercept",
+            "estimate": -6.886990077872428,
+            "std_err": 0.16593946141683194
+          },
+          {
+            "parameter": "since_5+",
+            "estimate": 0.09978043733608022,
+            "std_err": 0.5926218241639017
+          },
+          {
+            "parameter": "since_13+",
+            "estimate": 0.1229576455012662,
+            "std_err": 0.6618890101032604
+          },
+          {
+            "parameter": "since_27+",
+            "estimate": 0.23421981185881338,
+            "std_err": 0.5984458490772707
+          },
+          {
+            "parameter": "since_53+",
+            "estimate": -0.6825189778156774,
+            "std_err": 0.6634778177876421
+          },
+          {
+            "parameter": "since_105+",
+            "estimate": 0.2694278856556116,
+            "std_err": 0.7405926003581456
+          },
+          {
+            "parameter": "log_weeks_since_trigger",
+            "estimate": -0.4121750472162519,
+            "std_err": 0.20321669515135163
+          },
+          {
+            "parameter": "gap_5+",
+            "estimate": -1.0745749602148889,
+            "std_err": 0.5925746591289812
+          },
+          {
+            "parameter": "gap_13+",
+            "estimate": -0.4430693756648566,
+            "std_err": 0.5709301197824646
+          },
+          {
+            "parameter": "gap_27+",
+            "estimate": -0.6404463937016251,
+            "std_err": 0.638792391408909
+          },
+          {
+            "parameter": "gap_53+",
+            "estimate": -1.027016462500371,
+            "std_err": 0.6687025859098368
+          },
+          {
+            "parameter": "recent_mentions_26w",
+            "estimate": -0.34924199757651186,
+            "std_err": 0.37710136929916455
+          },
+          {
+            "parameter": "log1p_mentions",
+            "estimate": 3.336713918209767,
+            "std_err": 0.5541923139851199
+          },
+          {
+            "parameter": "max_firmness",
+            "estimate": -0.2701031140952361,
+            "std_err": 0.40378749032047573
+          },
+          {
+            "parameter": "any_firm",
+            "estimate": 0.9420979397049708,
+            "std_err": 0.5442418552883549
+          },
+          {
+            "parameter": "years_since_election",
+            "estimate": -0.023470677516865556,
+            "std_err": 0.09744498950659738
+          },
+          {
+            "parameter": "months_into_session",
+            "estimate": -0.04166656477159407,
+            "std_err": 0.025010986278333355
+          },
+          {
+            "parameter": "x_new_parliament",
+            "estimate": -0.19194867091907286,
+            "std_err": 0.4271028095154011
+          },
+          {
+            "parameter": "z_src_hansard",
+            "estimate": -0.35842584163139357,
+            "std_err": 0.44589595168790414
+          }
+        ],
+        "later_as_of": {
+          "H": 52,
+          "points": [
+            {
+              "as_of": "2020-01-01",
+              "n": 43
+            },
+            {
+              "as_of": "2021-01-01",
+              "n": 84
+            },
+            {
+              "as_of": "2022-01-01",
+              "n": 159
+            },
+            {
+              "as_of": "2023-01-01",
+              "n": 220
+            },
+            {
+              "as_of": "2024-01-01",
+              "n": 6
+            },
+            {
+              "as_of": "2025-01-01",
+              "n": 34
+            }
+          ],
+          "n": 546,
+          "n_bill": 53,
+          "auc": 0.5275938612269891,
+          "brier": 0.09130330834238548
+        }
+      },
+      "comparison": {
+        "26": {
+          "cure": {
+            "n": 472,
+            "n_bill": 38,
+            "auc": 0.5997453310696095,
+            "brier": 0.07453288841234855
+          },
+          "b0": {
+            "n": 472,
+            "n_bill": 38,
+            "auc": 0.5,
+            "brier": 0.07411602061552208
+          },
+          "b1": {
+            "n": 472,
+            "n_bill": 38,
+            "auc": 0.6214528256124181,
+            "brier": 0.07285208764777139
+          },
+          "hazard": {
+            "n": 472,
+            "n_bill": 38,
+            "auc": 0.5582403589619209,
+            "brier": 0.07410226635308832
+          }
+        },
+        "52": {
+          "cure": {
+            "n": 390,
+            "n_bill": 50,
+            "auc": 0.5707058823529412,
+            "brier": 0.11341543447116946
+          },
+          "b0": {
+            "n": 390,
+            "n_bill": 50,
+            "auc": 0.5,
+            "brier": 0.11176857840834686
+          },
+          "b1": {
+            "n": 390,
+            "n_bill": 50,
+            "auc": 0.6288235294117648,
+            "brier": 0.10890780331354606
+          },
+          "hazard": {
+            "n": 390,
+            "n_bill": 50,
+            "auc": 0.5229117647058823,
+            "brier": 0.11270444210297716
+          }
+        }
+      },
+      "timing_windows": {
+        "cure": {
+          "raw": {
+            "n": 72,
+            "coverage": 0.375
+          },
+          "cqr": {
+            "n": 72,
+            "coverage": 0.375
+          },
+          "calibration": {
+            "alpha": 0.2,
+            "n_calibration": 6,
+            "q": 0.0,
+            "raw_coverage_on_calibration": 0.16666666666666666
+          },
+          "median_width_raw": 221.0,
+          "median_width_cqr": 221.0
+        },
+        "hazard": {
+          "raw": {
+            "n": 72,
+            "coverage": 0.7361111111111112
+          },
+          "cqr": {
+            "n": 72,
+            "coverage": 0.7361111111111112
+          },
+          "calibration": {
+            "alpha": 0.2,
+            "n_calibration": 6,
+            "q": 0.0,
+            "raw_coverage_on_calibration": 0.6666666666666666
+          },
+          "median_width_raw": 205.5,
+          "median_width_cqr": 205.5
+        }
       }
     },
     {
@@ -491,6 +897,7 @@
           "c_index": 0.5
         }
       },
+      "n_bills_known_ever": 32,
       "verdicts": {
         "known_after_weeks": 104,
         "n": 73,
@@ -598,6 +1005,405 @@
         "n_bill": 14,
         "auc": 0.6006493506493507,
         "brier": 0.10690967427856106
+      },
+      "hazard": {
+        "horizons": {
+          "26": {
+            "model": {
+              "n": 301,
+              "n_bill": 21,
+              "auc": 0.6262755102040817,
+              "brier": 0.06414698971191785
+            },
+            "calibration": [
+              {
+                "bin": "0%-20%",
+                "lo": 0.0,
+                "hi": 0.2,
+                "n": 301,
+                "mean_predicted": 0.061543292923919565,
+                "observed": 0.06976744186046512
+              },
+              {
+                "bin": "20%-40%",
+                "lo": 0.2,
+                "hi": 0.4,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              },
+              {
+                "bin": "40%-60%",
+                "lo": 0.4,
+                "hi": 0.6000000000000001,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              },
+              {
+                "bin": "60%-80%",
+                "lo": 0.6000000000000001,
+                "hi": 0.8,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              },
+              {
+                "bin": "80%-100%",
+                "lo": 0.8,
+                "hi": 1.0,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              }
+            ]
+          },
+          "52": {
+            "model": {
+              "n": 219,
+              "n_bill": 28,
+              "auc": 0.5900336574420344,
+              "brier": 0.11058711890267209
+            },
+            "calibration": [
+              {
+                "bin": "0%-20%",
+                "lo": 0.0,
+                "hi": 0.2,
+                "n": 219,
+                "mean_predicted": 0.1083554070844255,
+                "observed": 0.1278538812785388
+              },
+              {
+                "bin": "20%-40%",
+                "lo": 0.2,
+                "hi": 0.4,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              },
+              {
+                "bin": "40%-60%",
+                "lo": 0.4,
+                "hi": 0.6000000000000001,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              },
+              {
+                "bin": "60%-80%",
+                "lo": 0.6000000000000001,
+                "hi": 0.8,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              },
+              {
+                "bin": "80%-100%",
+                "lo": 0.8,
+                "hi": 1.0,
+                "n": 0,
+                "mean_predicted": null,
+                "observed": null
+              }
+            ]
+          }
+        },
+        "timing_window": {
+          "n": 32,
+          "coverage": 0.6875
+        },
+        "concordance": {
+          "all_ideas_p52": {
+            "n": 367,
+            "n_bill": 32,
+            "c_index": 0.6048246569374864
+          },
+          "bills_t50": {
+            "n": 32,
+            "n_bill": 32,
+            "c_index": 0.5852631578947368
+          }
+        },
+        "verdicts": {
+          "known_after_weeks": 104,
+          "n": 73,
+          "n_likely": 0,
+          "likely_accuracy": null,
+          "n_unlikely": 47,
+          "unlikely_accuracy": 0.6595744680851063,
+          "n_uncertain": 26,
+          "share_uncertain": 0.3561643835616438
+        },
+        "C": 0.03,
+        "validation": [
+          {
+            "C": 0.003,
+            "val_logloss": 0.014989635576826765
+          },
+          {
+            "C": 0.01,
+            "val_logloss": 0.014458682545039713
+          },
+          {
+            "C": 0.03,
+            "val_logloss": 0.014343249287722695
+          },
+          {
+            "C": 0.1,
+            "val_logloss": 0.014428114212146684
+          },
+          {
+            "C": 0.3,
+            "val_logloss": 0.01460067183135446
+          },
+          {
+            "C": 1.0,
+            "val_logloss": 0.014839875188468094
+          },
+          {
+            "C": 3.0,
+            "val_logloss": 0.01507704007594224
+          }
+        ],
+        "n_rows": 63616,
+        "n_events": 118,
+        "features": [
+          "since_5+",
+          "since_13+",
+          "since_27+",
+          "since_53+",
+          "since_105+",
+          "log_weeks_since_trigger",
+          "gap_5+",
+          "gap_13+",
+          "gap_27+",
+          "gap_53+",
+          "recent_mentions_26w",
+          "log1p_mentions",
+          "max_firmness",
+          "any_firm",
+          "years_since_election",
+          "months_into_session",
+          "x_new_parliament",
+          "z_src_hansard",
+          "z_dept_business_energy_and_industrial_strategy"
+        ],
+        "parameters": [
+          {
+            "parameter": "intercept",
+            "estimate": -6.762192280812682,
+            "std_err": 0.12453536602951795
+          },
+          {
+            "parameter": "since_5+",
+            "estimate": -0.3743312801442421,
+            "std_err": 0.37748604882416836
+          },
+          {
+            "parameter": "since_13+",
+            "estimate": -0.6696920424369773,
+            "std_err": 0.34202370938075893
+          },
+          {
+            "parameter": "since_27+",
+            "estimate": -0.11144251633027065,
+            "std_err": 0.2900256609767817
+          },
+          {
+            "parameter": "since_53+",
+            "estimate": -0.4326992892342647,
+            "std_err": 0.26841398538038364
+          },
+          {
+            "parameter": "since_105+",
+            "estimate": 0.1337482878587196,
+            "std_err": 0.2760693785791543
+          },
+          {
+            "parameter": "log_weeks_since_trigger",
+            "estimate": -0.32912626357276964,
+            "std_err": 0.09198136649775794
+          },
+          {
+            "parameter": "gap_5+",
+            "estimate": -0.3343323279484284,
+            "std_err": 0.33755067658937
+          },
+          {
+            "parameter": "gap_13+",
+            "estimate": 0.09425960947697579,
+            "std_err": 0.30049118668699226
+          },
+          {
+            "parameter": "gap_27+",
+            "estimate": -0.09345249979946679,
+            "std_err": 0.309353453228691
+          },
+          {
+            "parameter": "gap_53+",
+            "estimate": -0.7965975471768117,
+            "std_err": 0.2808628556987153
+          },
+          {
+            "parameter": "recent_mentions_26w",
+            "estimate": 0.257828637633841,
+            "std_err": 0.17485286794682584
+          },
+          {
+            "parameter": "log1p_mentions",
+            "estimate": 2.3455385185672823,
+            "std_err": 0.3848611865874773
+          },
+          {
+            "parameter": "max_firmness",
+            "estimate": 0.11377836394251997,
+            "std_err": 0.17506409214596028
+          },
+          {
+            "parameter": "any_firm",
+            "estimate": 0.35234485944569516,
+            "std_err": 0.24396376367566794
+          },
+          {
+            "parameter": "years_since_election",
+            "estimate": 0.004655228970437851,
+            "std_err": 0.06801104006423166
+          },
+          {
+            "parameter": "months_into_session",
+            "estimate": -0.024456932786844684,
+            "std_err": 0.013759143442326408
+          },
+          {
+            "parameter": "x_new_parliament",
+            "estimate": 0.0202338107404224,
+            "std_err": 0.23631724365555723
+          },
+          {
+            "parameter": "z_src_hansard",
+            "estimate": -0.39017098733322125,
+            "std_err": 0.23658076921010682
+          },
+          {
+            "parameter": "z_dept_business_energy_and_industrial_strategy",
+            "estimate": 0.05099161941466861,
+            "std_err": 0.5120967520564297
+          }
+        ],
+        "later_as_of": {
+          "H": 52,
+          "points": [
+            {
+              "as_of": "2023-01-01",
+              "n": 75
+            },
+            {
+              "as_of": "2024-01-01",
+              "n": 4
+            },
+            {
+              "as_of": "2025-01-01",
+              "n": 34
+            }
+          ],
+          "n": 113,
+          "n_bill": 14,
+          "auc": 0.6222943722943723,
+          "brier": 0.10335807394197605
+        }
+      },
+      "comparison": {
+        "26": {
+          "cure": {
+            "n": 301,
+            "n_bill": 21,
+            "auc": 0.5460034013605441,
+            "brier": 0.06503107482827179
+          },
+          "b0": {
+            "n": 301,
+            "n_bill": 21,
+            "auc": 0.5,
+            "brier": 0.06503127740125546
+          },
+          "b1": {
+            "n": 301,
+            "n_bill": 21,
+            "auc": 0.6261904761904762,
+            "brier": 0.0640193099899962
+          },
+          "hazard": {
+            "n": 301,
+            "n_bill": 21,
+            "auc": 0.6262755102040817,
+            "brier": 0.06414698971191785
+          }
+        },
+        "52": {
+          "cure": {
+            "n": 219,
+            "n_bill": 28,
+            "auc": 0.5339379207180255,
+            "brier": 0.11360983686419296
+          },
+          "b0": {
+            "n": 219,
+            "n_bill": 28,
+            "auc": 0.5,
+            "brier": 0.1115692766164278
+          },
+          "b1": {
+            "n": 219,
+            "n_bill": 28,
+            "auc": 0.631731488406881,
+            "brier": 0.1082098743110373
+          },
+          "hazard": {
+            "n": 219,
+            "n_bill": 28,
+            "auc": 0.5900336574420344,
+            "brier": 0.11058711890267209
+          }
+        }
+      },
+      "timing_windows": {
+        "cure": {
+          "raw": {
+            "n": 32,
+            "coverage": 0.21875
+          },
+          "cqr": {
+            "n": 32,
+            "coverage": 0.71875
+          },
+          "calibration": {
+            "alpha": 0.2,
+            "n_calibration": 15,
+            "q": 0.15555555555555556,
+            "raw_coverage_on_calibration": 0.13333333333333333
+          },
+          "median_width_raw": 221.0,
+          "median_width_cqr": 256.0
+        },
+        "hazard": {
+          "raw": {
+            "n": 32,
+            "coverage": 0.6875
+          },
+          "cqr": {
+            "n": 32,
+            "coverage": 0.8125
+          },
+          "calibration": {
+            "alpha": 0.2,
+            "n_calibration": 15,
+            "q": 0.009259259259259259,
+            "raw_coverage_on_calibration": 0.4666666666666667
+          },
+          "median_width_raw": 214.0,
+          "median_width_cqr": 218.0
+        }
       }
     }
   ],
@@ -720,13 +1526,314 @@
     ],
     "n_forecasts": 817
   },
+  "hazard_full_fit": {
+    "C": 0.01,
+    "validation": [
+      {
+        "C": 0.003,
+        "val_logloss": 0.014466240134952336
+      },
+      {
+        "C": 0.01,
+        "val_logloss": 0.01445085488702179
+      },
+      {
+        "C": 0.03,
+        "val_logloss": 0.014506038642964353
+      },
+      {
+        "C": 0.1,
+        "val_logloss": 0.014564559536317629
+      },
+      {
+        "C": 0.3,
+        "val_logloss": 0.014596502641332724
+      },
+      {
+        "C": 1.0,
+        "val_logloss": 0.014613017833836103
+      },
+      {
+        "C": 3.0,
+        "val_logloss": 0.014618679432774307
+      }
+    ],
+    "n_rows": 95655,
+    "n_events": 168,
+    "features": [
+      "since_5+",
+      "since_13+",
+      "since_27+",
+      "since_53+",
+      "since_105+",
+      "log_weeks_since_trigger",
+      "gap_5+",
+      "gap_13+",
+      "gap_27+",
+      "gap_53+",
+      "recent_mentions_26w",
+      "log1p_mentions",
+      "max_firmness",
+      "any_firm",
+      "years_since_election",
+      "months_into_session",
+      "x_new_parliament",
+      "z_src_hansard",
+      "z_dept_treasury",
+      "z_dept_home_office",
+      "z_dept_ministry_of_housing_communities_and_local_government",
+      "z_dept_business_energy_and_industrial_strategy",
+      "z_dept_ministry_of_justice"
+    ],
+    "parameters": [
+      {
+        "parameter": "intercept",
+        "estimate": -6.699702520712008,
+        "std_err": 0.09587810140501067
+      },
+      {
+        "parameter": "since_5+",
+        "estimate": -0.2573933952637303,
+        "std_err": 0.2680986223032665
+      },
+      {
+        "parameter": "since_13+",
+        "estimate": -0.43927673282608787,
+        "std_err": 0.2260500058408064
+      },
+      {
+        "parameter": "since_27+",
+        "estimate": -0.10556881200170984,
+        "std_err": 0.1932990413333517
+      },
+      {
+        "parameter": "since_53+",
+        "estimate": -0.29647418013956917,
+        "std_err": 0.17253117005163607
+      },
+      {
+        "parameter": "since_105+",
+        "estimate": 0.04390200287192032,
+        "std_err": 0.1677137672249506
+      },
+      {
+        "parameter": "log_weeks_since_trigger",
+        "estimate": -0.2655297687836758,
+        "std_err": 0.06119573603800968
+      },
+      {
+        "parameter": "gap_5+",
+        "estimate": -0.32433044713855913,
+        "std_err": 0.23971512572491346
+      },
+      {
+        "parameter": "gap_13+",
+        "estimate": 0.10642035006261458,
+        "std_err": 0.2040739220532368
+      },
+      {
+        "parameter": "gap_27+",
+        "estimate": -0.05284521366621015,
+        "std_err": 0.20112905998789105
+      },
+      {
+        "parameter": "gap_53+",
+        "estimate": -0.5426099411384441,
+        "std_err": 0.1713323646516508
+      },
+      {
+        "parameter": "recent_mentions_26w",
+        "estimate": 0.3300412058482322,
+        "std_err": 0.11404517994875703
+      },
+      {
+        "parameter": "log1p_mentions",
+        "estimate": 1.7137618233874186,
+        "std_err": 0.2522808125078583
+      },
+      {
+        "parameter": "max_firmness",
+        "estimate": 0.10952324117737013,
+        "std_err": 0.10173864384954098
+      },
+      {
+        "parameter": "any_firm",
+        "estimate": 0.2293634941769495,
+        "std_err": 0.1541238820970746
+      },
+      {
+        "parameter": "years_since_election",
+        "estimate": -0.06027102638374822,
+        "std_err": 0.04905154108120353
+      },
+      {
+        "parameter": "months_into_session",
+        "estimate": -0.02383918900662686,
+        "std_err": 0.01052674949699067
+      },
+      {
+        "parameter": "x_new_parliament",
+        "estimate": 0.04958746087672044,
+        "std_err": 0.16066764073299633
+      },
+      {
+        "parameter": "z_src_hansard",
+        "estimate": -0.293331034743557,
+        "std_err": 0.17142471243644467
+      },
+      {
+        "parameter": "z_dept_treasury",
+        "estimate": -0.2272066224518017,
+        "std_err": 0.33994045787881405
+      },
+      {
+        "parameter": "z_dept_home_office",
+        "estimate": 0.28688836092391223,
+        "std_err": 0.41668330269236636
+      },
+      {
+        "parameter": "z_dept_ministry_of_housing_communities_and_local_government",
+        "estimate": -0.3610122091375139,
+        "std_err": 0.4165327517914969
+      },
+      {
+        "parameter": "z_dept_business_energy_and_industrial_strategy",
+        "estimate": 0.2565086888846779,
+        "std_err": 0.3656465543464444
+      },
+      {
+        "parameter": "z_dept_ministry_of_justice",
+        "estimate": 0.3376082199602473,
+        "std_err": 0.4779613899736522
+      }
+    ]
+  },
+  "model_comparison": {
+    "rows": [
+      {
+        "cut": "2019-01-01",
+        "H": 26,
+        "cure_auc": 0.5997453310696095,
+        "cure_brier": 0.07453288841234855,
+        "hazard_auc": 0.5582403589619209,
+        "hazard_brier": 0.07410226635308832,
+        "b0_auc": 0.5,
+        "b0_brier": 0.07411602061552208,
+        "b1_auc": 0.6214528256124181,
+        "b1_brier": 0.07285208764777139,
+        "n": 472,
+        "n_bill": 38
+      },
+      {
+        "cut": "2019-01-01",
+        "H": 52,
+        "cure_auc": 0.5707058823529412,
+        "cure_brier": 0.11341543447116946,
+        "hazard_auc": 0.5229117647058823,
+        "hazard_brier": 0.11270444210297716,
+        "b0_auc": 0.5,
+        "b0_brier": 0.11176857840834686,
+        "b1_auc": 0.6288235294117648,
+        "b1_brier": 0.10890780331354606,
+        "n": 390,
+        "n_bill": 50
+      },
+      {
+        "cut": "2022-01-01",
+        "H": 26,
+        "cure_auc": 0.5460034013605441,
+        "cure_brier": 0.06503107482827179,
+        "hazard_auc": 0.6262755102040817,
+        "hazard_brier": 0.06414698971191785,
+        "b0_auc": 0.5,
+        "b0_brier": 0.06503127740125546,
+        "b1_auc": 0.6261904761904762,
+        "b1_brier": 0.0640193099899962,
+        "n": 301,
+        "n_bill": 21
+      },
+      {
+        "cut": "2022-01-01",
+        "H": 52,
+        "cure_auc": 0.5339379207180255,
+        "cure_brier": 0.11360983686419296,
+        "hazard_auc": 0.5900336574420344,
+        "hazard_brier": 0.11058711890267209,
+        "b0_auc": 0.5,
+        "b0_brier": 0.1115692766164278,
+        "b1_auc": 0.631731488406881,
+        "b1_brier": 0.1082098743110373,
+        "n": 219,
+        "n_bill": 28
+      }
+    ],
+    "windows": [
+      {
+        "cut": "2019-01-01",
+        "model": "cure",
+        "n": 72,
+        "raw": 0.375,
+        "cqr": 0.375,
+        "q": 0.0,
+        "n_calibration": 6,
+        "median_width_raw": 221.0,
+        "median_width_cqr": 221.0
+      },
+      {
+        "cut": "2019-01-01",
+        "model": "hazard",
+        "n": 72,
+        "raw": 0.7361111111111112,
+        "cqr": 0.7361111111111112,
+        "q": 0.0,
+        "n_calibration": 6,
+        "median_width_raw": 205.5,
+        "median_width_cqr": 205.5
+      },
+      {
+        "cut": "2022-01-01",
+        "model": "cure",
+        "n": 32,
+        "raw": 0.21875,
+        "cqr": 0.71875,
+        "q": 0.15555555555555556,
+        "n_calibration": 15,
+        "median_width_raw": 221.0,
+        "median_width_cqr": 256.0
+      },
+      {
+        "cut": "2022-01-01",
+        "model": "hazard",
+        "n": 32,
+        "raw": 0.6875,
+        "cqr": 0.8125,
+        "q": 0.009259259259259259,
+        "n_calibration": 15,
+        "median_width_raw": 214.0,
+        "median_width_cqr": 218.0
+      }
+    ],
+    "brier_wins": {
+      "hazard_vs_cure": 4,
+      "hazard_vs_b1": 0,
+      "cure_vs_b1": 0,
+      "n_comparisons": 4
+    },
+    "recommendation": "Hazard beats the cure model on Brier in 4/4 split-horizons and B1 in 0/4 (cure beats B1 in 0/4); mean AUC hazard 0.574 vs B1 0.627; Brier gain over the cure model +0.0004 to +0.0030 (small). Recommendation: serve the hazard model in place of the cure model (with CQR-calibrated windows), but present its probabilities as close to the base rate: it does not reliably beat the first-source baseline B1."
+  },
   "weak_spots": [
     "Split 2019-01-01, 26 weeks: model Brier 0.075 is no better than B1 (0.073).",
     "Split 2019-01-01, 52 weeks: model Brier 0.113 is no better than B1 (0.109).",
     "Split 2019-01-01: 80% timing window covers 38% of bills.",
+    "Split 2019-01-01, 26 weeks: hazard model Brier 0.074 is no better than B1 (0.073).",
+    "Split 2019-01-01, 52 weeks: hazard model Brier 0.113 is no better than B1 (0.109).",
+    "Split 2019-01-01: only 6 calibration bills for the cure model's window, so CQR made no adjustment.",
+    "Split 2019-01-01: only 6 calibration bills for the hazard model's window, so CQR made no adjustment.",
     "Split 2022-01-01, 26 weeks: model Brier 0.065 is no better than B1 (0.064).",
     "Split 2022-01-01, 52 weeks: model Brier 0.114 is no better than B1 (0.108).",
-    "Split 2022-01-01: 80% timing window covers 22% of bills."
+    "Split 2022-01-01: 80% timing window covers 22% of bills.",
+    "Split 2022-01-01, 26 weeks: hazard model Brier 0.064 is no better than B1 (0.064).",
+    "Split 2022-01-01, 52 weeks: hazard model Brier 0.111 is no better than B1 (0.108)."
   ],
   "charts": {
     "calibration": "/Users/romangalperin/Desktop/oxhack_mult/westminster-weather/backend/reports/takeup/calibration.png",

@@ -829,3 +829,35 @@ def test_load_reference_tables_is_read_only(tmp_path, monkeypatch):
     assert len(out["parliaments"]) == len(app_db.DEFAULT_PARLIAMENTS)
     with sa.create_engine(f"sqlite:///{tmp_path / 'prod.db'}").connect() as conn:
         assert conn.execute(sa.text("SELECT COUNT(*) FROM parliaments")).scalar_one() == 0
+
+
+# ------------------------------------------------------------- mention timeline
+
+
+@pytest.mark.parametrize("as_of", AS_OFS)
+def test_mention_timeline_nothing_after_as_of_and_matches_grouping(synthetic, as_of):
+    td = TakeupData(synthetic)
+    tl = td.mention_timeline(as_of)
+    sig = td.get_takeup_signals(as_of, min_positive=0)
+    assert not (pd.to_datetime(tl["event_date"]) > pd.Timestamp(as_of)).any()
+    # deleting the future changes nothing
+    past = TakeupData(_truncate(synthetic, as_of)).mention_timeline(as_of)
+    pd.testing.assert_frame_equal(tl, past)
+    # same signal ids as the signal rows (plus signals dropped for an existing bill)
+    ids = set(tl["signal_id"])
+    assert set(sig["signal_id"].astype(str)) <= ids
+    assert ids - set(sig["signal_id"].astype(str)) <= set(td.dropped_signals)
+    # each signal's earliest mention is its trigger (unless moved back to a first reading)
+    first = tl.groupby("signal_id")["event_date"].min()
+    for r in sig.itertuples():
+        f = first[str(r.signal_id)]
+        assert f == r.signal_date or (pd.notna(r.bill_date) and r.signal_date == r.bill_date)
+
+
+def test_mention_timeline_merges_after_first_reading(synthetic):
+    td = TakeupData(synthetic)
+    for as_of in AS_OFS:
+        tl = td.mention_timeline(as_of)
+        sig = td.get_takeup_signals(as_of, min_positive=0)
+        merged = sig[sig["signal_id"] == sig["idea_id"]]["signal_id"].astype(str)
+        assert not tl["signal_id"].str.contains(":").loc[tl["signal_id"].isin(merged)].any()

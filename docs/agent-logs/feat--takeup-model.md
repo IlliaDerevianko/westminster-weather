@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 23:57 — feat(takeup): discrete-time hazard model with recency features and conformal windows
+
+- **What:** `takeup/hazard.py` (one row per signal-week; recency features: weeks since last mention, mentions in last 26 weeks, cumulative mentions, max firmness; L2 logistic; forecasts assume no new mentions), `takeup/conformal.py` (CQR-style widening of the 80% timing window on a held-out period), `signals.mention_timeline(as_of)`; `evaluate.py` compares cure vs hazard vs B0/B1 on identical splits; report and charts regenerated.
+- **Why:** option A chosen by Roman after the cure model failed to beat baseline B1.
+- **Checks:** `pytest tests/takeup`: 200 passed; `ruff`: clean. Real backtest: hazard Brier ≤ cure in 4/4 split-horizons (tiny margins), neither beats B1 (52-week AUC: hazard 0.52/0.59, cure 0.57/0.53, B1 0.63/0.63); 80% window coverage hazard 74%/81% (CQR) vs cure 38%/72%, but windows are ~4 years wide.
+- **Notes:** at the trigger the hazard model only knows the first mention, which limits ranking; API and saved runs still serve the cure model (decision pending).
+
 ## 2026-10-24 23:39 — docs(model): first real take-up evaluation report and charts
 
 - **What:** `docs/model/TAKEUP_EVALUATION.md`, `backend/reports/takeup/` (metrics.json, calibration, pi_now curves, time-to-bill, feature effects) from the first real run on 985 ideas.

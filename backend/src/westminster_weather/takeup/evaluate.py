@@ -36,6 +36,8 @@ import pandas as pd
 from sklearn.metrics import roc_auc_score
 
 from westminster_weather.takeup import model as tm
+from westminster_weather.takeup.conformal import CQRCalibrator
+from westminster_weather.takeup.hazard import HazardModel, timeline_from_signals
 
 log = logging.getLogger(__name__)
 
@@ -44,6 +46,8 @@ REPORT_DIR = BACKEND_DIR / "reports" / "takeup"
 DOC_PATH = BACKEND_DIR.parent / "docs" / "model" / "TAKEUP_EVALUATION.md"
 
 SPLITS = (date(2019, 1, 1), date(2022, 1, 1))
+CALIBRATION_YEARS = 2  # CQR calibration window: triggers in the last 2 years before the cut
+MODEL_NAMES = ("cure", "hazard")
 HORIZONS = (26, 52)
 VERDICT_WEEKS = 104  # an idea silent this long counts as 'not taken up' for verdict accuracy
 CALIBRATION_BINS = 5
@@ -291,10 +295,18 @@ def backtest(
     end: Any,
     horizons: Sequence[int] = HORIZONS,
     later_points: bool = True,
+    hazard: bool = True,
+    calibrate: bool = True,
 ) -> dict[str, Any]:
     """Fit on ideas triggered before ``cut`` (seen as of ``cut``), test on ideas triggered in
     ``[cut, end)`` (outcomes as of ``end``). Returns the model, the per-idea test table and
-    the metrics."""
+    the metrics.
+
+    ``hazard``: also fit the hazard model (``takeup.hazard``) on the same training signals and
+    score it on the same test rows (``metrics['hazard']``, columns ``hz_*``) and add a
+    side-by-side ``metrics['comparison']``. ``calibrate``: CQR-calibrate both models' 80%
+    timing windows on ideas triggered in the ``CALIBRATION_YEARS`` before the cut
+    (``metrics['timing_windows']``, columns ``cqr_*`` / ``hz_cqr_*``)."""
     cut, end = pd.Timestamp(cut).normalize(), pd.Timestamp(end).normalize()
     if not cut < end:
         raise ValueError("cut must be before end")
@@ -375,6 +387,7 @@ def backtest(
         ),
     }
     known_ever = bills | (table["weeks_observed"].to_numpy() >= VERDICT_WEEKS)
+    metrics["n_bills_known_ever"] = int(bills[known_ever].sum())
     metrics["verdicts"] = {
         "known_after_weeks": VERDICT_WEEKS,
         **verdict_accuracy(table.loc[known_ever, "verdict"], bills[known_ever].astype(int)),
@@ -382,14 +395,233 @@ def backtest(
     metrics["parameters"] = _parameter_records(model)
     if later_points:
         metrics["later_as_of"] = _later_points(model, td, features, wp, cut, end, full)
+
+    hz = None
+    if hazard:
+        hz = fit_hazard(td, train, cut, wp)
+        hp = hz.predict_frame(test, _timeline(td, end, test), td.sitting_dates(end), wp)
+        for key in ("pi", "pi_now_lo", "pi_now_hi", "verdict", "p26", "p52", "t_10", "t_50"):
+            table[f"hz_{key}"] = hp[key].to_numpy()
+        table["hz_t_90"] = hp["t_90"].to_numpy()
+        metrics["hazard"] = _scored_block(table, "hz_", d_test, test, horizons)
+        metrics["hazard"].update(_hazard_summary(hz))
+        if later_points:
+            metrics["hazard"]["later_as_of"] = _later_points(
+                model,
+                td,
+                features,
+                wp,
+                cut,
+                end,
+                full,
+                forecast_fn=lambda a: hazard_forecasts_at(hz, td, a, features, wp, since=cut),
+            )
+        metrics["comparison"] = comparison(metrics)
+
+    if calibrate:
+        cals = calibrate_windows(td, cut, with_hazard=hazard)
+        windows: dict[str, Any] = {}
+        for name, prefix in (("cure", ""), ("hazard", "hz_")):
+            if name not in cals or f"{prefix}t_10" not in table:
+                continue
+            lo, hi = cals[name].apply(table[f"{prefix}t_10"], table[f"{prefix}t_90"], s=0)
+            table[f"{prefix}cqr_t_10"], table[f"{prefix}cqr_t_90"] = lo, hi
+            windows[name] = {
+                "raw": window_coverage(
+                    table.loc[bills, "t"],
+                    table.loc[bills, f"{prefix}t_10"],
+                    table.loc[bills, f"{prefix}t_90"],
+                ),
+                "cqr": window_coverage(
+                    table.loc[bills, "t"],
+                    table.loc[bills, f"{prefix}cqr_t_10"],
+                    table.loc[bills, f"{prefix}cqr_t_90"],
+                ),
+                "calibration": cals[name].summary(),
+                "median_width_raw": _median_width(table.loc[bills], prefix),
+                "median_width_cqr": _median_width(table.loc[bills], f"{prefix}cqr_"),
+            }
+        metrics["timing_windows"] = windows
     return {
         "cut": cut,
         "end": end,
         "model": model,
+        "hazard_model": hz,
         "train": train,
         "test": table,
         "metrics": metrics,
     }
+
+
+# ------------------------------------------------------------------- hazard model
+
+
+def _timeline(td: SignalSource, as_of: Any, signals: pd.DataFrame) -> pd.DataFrame:
+    """``td.mention_timeline(as_of)`` if the source has one, else derived from the rows."""
+    fn = getattr(td, "mention_timeline", None)
+    return fn(as_of) if callable(fn) else timeline_from_signals(signals)
+
+
+def fit_hazard(
+    td: SignalSource, train: pd.DataFrame, cut: Any, wp: pd.Series | None = None
+) -> HazardModel:
+    """Hazard model on the training signals at ``cut`` (the same rows as the cure model)."""
+    cut = pd.Timestamp(cut).normalize()
+    wp = td.week_probability(cut) if wp is None else wp
+    return HazardModel().fit(
+        train,
+        _timeline(td, cut, train),
+        td.sitting_dates(cut),
+        cut,
+        wp,
+        elections=getattr(td, "elections", ()) or (),
+        session_starts=getattr(td, "_session_starts", ()) or (),
+    )
+
+
+def hazard_forecasts_at(
+    hz: HazardModel,
+    td: SignalSource,
+    as_of: Any,
+    features: list[str],
+    week_probability: pd.Series | None = None,
+    since: Any = None,
+) -> pd.DataFrame:
+    """As ``forecasts_at``, for the hazard model (mention timeline as of ``as_of``)."""
+    as_of = pd.Timestamp(as_of).normalize()
+    df = td.get_takeup_signals(as_of, features=features)
+    df = df[df["bill_date"].isna()]
+    if since is not None:
+        df = df[df["signal_date"] >= pd.Timestamp(since)]
+    df = df.reset_index(drop=True)
+    if df.empty:
+        return pd.DataFrame()
+    wp = td.week_probability(as_of) if week_probability is None else week_probability
+    preds = hz.predict_frame(
+        df, _timeline(td, as_of, df), td.sitting_dates(as_of), wp, as_of=as_of
+    ).drop(columns=["signal_id", "as_of"])
+    meta = pd.DataFrame(
+        {
+            "signal_id": df["signal_id"].astype(str),
+            "idea_id": df["idea_id"].astype(str) if "idea_id" in df else df["signal_id"],
+            "signal_date": df["signal_date"],
+            "data_end": df["data_end"] if "data_end" in df else as_of,
+            "as_of": as_of.date(),
+        }
+    )
+    return pd.concat([meta, preds], axis=1)
+
+
+def _scored_block(
+    table: pd.DataFrame,
+    prefix: str,
+    d_test: dict[str, Any],
+    test: pd.DataFrame,
+    horizons: Sequence[int],
+) -> dict[str, Any]:
+    """Metrics for one model's ``{prefix}*`` columns of the backtest table."""
+    out: dict[str, Any] = {"horizons": {}}
+    for H in horizons:
+        known, y = outcome_labels(d_test, H)
+        p = table[f"{prefix}p{H}"].to_numpy(float)
+        out["horizons"][str(H)] = {
+            "model": binary_metrics(y[known], p[known]),
+            "calibration": calibration_table(y[known], p[known]),
+        }
+    bills = table["bill"].to_numpy()
+    out["timing_window"] = window_coverage(
+        table.loc[bills, "t"], table.loc[bills, f"{prefix}t_10"], table.loc[bills, f"{prefix}t_90"]
+    )
+    out["concordance"] = {
+        "all_ideas_p52": concordance(table["t"], 1 - table[f"{prefix}p52"], bills.astype(int)),
+        "bills_t50": concordance(
+            table.loc[bills, "t"],
+            table.loc[bills, f"{prefix}t_50"].astype(float).fillna(tm.T_MAX + 1),
+            np.ones(int(bills.sum()), dtype=int),
+        ),
+    }
+    known_ever = bills | (table["weeks_observed"].to_numpy() >= VERDICT_WEEKS)
+    out["verdicts"] = {
+        "known_after_weeks": VERDICT_WEEKS,
+        **verdict_accuracy(
+            table.loc[known_ever, f"{prefix}verdict"], bills[known_ever].astype(int)
+        ),
+    }
+    return out
+
+
+def _hazard_summary(hz: HazardModel) -> dict[str, Any]:
+    return {
+        "C": hz.C,
+        "validation": hz.validation,
+        "n_rows": hz.n_rows,
+        "n_events": hz.n_events,
+        "features": list(hz.feature_names),
+        "parameters": _parameter_records(hz),
+    }
+
+
+def _median_width(rows: pd.DataFrame, prefix: str) -> float | None:
+    lo = rows[f"{prefix}t_10"].astype(float).fillna(tm.T_MAX + 1)
+    hi = rows[f"{prefix}t_90"].astype(float).fillna(tm.T_MAX + 1)
+    return float(np.median(hi - lo)) if len(rows) else None
+
+
+def comparison(metrics: dict[str, Any]) -> dict[str, Any]:
+    """Side-by-side AUC / Brier of cure, hazard, B0 and B1 per horizon (same test rows)."""
+    out = {}
+    for H, h in metrics["horizons"].items():
+        row = {"cure": h["model"], "b0": h["b0"], "b1": h["b1"]}
+        if "hazard" in metrics:
+            row["hazard"] = metrics["hazard"]["horizons"][H]["model"]
+        out[H] = row
+    return out
+
+
+def calibrate_windows(
+    td: SignalSource, cut: Any, years: int = CALIBRATION_YEARS, with_hazard: bool = True
+) -> dict[str, CQRCalibrator]:
+    """CQR calibrators for each model's 80% window, from ideas with a bill triggered in
+    ``[cut - years, cut)`` (bills seen by ``cut``), predicted at their triggers by models fitted
+    only on data visible at ``cut - years`` (so the calibration ideas are out of sample).
+    Empty if there is too little data."""
+    cut = pd.Timestamp(cut).normalize()
+    cal_cut = cut - pd.DateOffset(years=years)
+    train = td.get_takeup_signals(cal_cut)
+    train = train[train["signal_date"] < cal_cut].reset_index(drop=True)
+    if train.empty:
+        return {}
+    features = feature_columns(train)
+    wp = td.week_probability(cal_cut)
+    rows = td.get_takeup_signals(cut, features=features)
+    cal = rows[(rows["signal_date"] >= cal_cut) & (rows["signal_date"] < cut)]
+    cal = cal.reset_index(drop=True)
+    if cal.empty:
+        return {}
+    d_cal = tm.prepare(cal, td.sitting_dates(cut), td.week_probability(cut), data_end=cut)
+    bills = d_cal["delta"] == 1
+    if not bills.any():
+        return {}
+    out: dict[str, CQRCalibrator] = {}
+    try:
+        d_train = tm.prepare(
+            train, td.sitting_dates(cal_cut), wp, data_end=cal_cut, calendar_end=cal_cut
+        )
+        cure = tm.TakeUpModel().fit(d_train, hessian=False)
+        p = predict_at_trigger(cure, cal, td.sitting_dates(cut), wp)
+        out["cure"] = CQRCalibrator().fit(d_cal["t"][bills], p["t_10"][bills], p["t_90"][bills])
+    except (ValueError, np.linalg.LinAlgError) as exc:
+        log.warning("cure calibration at %s failed: %s", cal_cut.date(), exc)
+    if with_hazard:
+        try:
+            hz = fit_hazard(td, train, cal_cut, wp)
+            hp = hz.predict_frame(cal, _timeline(td, cut, cal), td.sitting_dates(cut), wp)
+            out["hazard"] = CQRCalibrator().fit(
+                d_cal["t"][bills], hp["t_10"][bills], hp["t_90"][bills]
+            )
+        except ValueError as exc:
+            log.warning("hazard calibration at %s failed: %s", cal_cut.date(), exc)
+    return out
 
 
 def _later_points(
@@ -401,9 +633,11 @@ def _later_points(
     end: pd.Timestamp,
     full: pd.DataFrame,
     H: int = 52,
+    forecast_fn: Any = None,
 ) -> dict[str, Any]:
     """p52 made at each 1 January after the cut (for test ideas still silent then), scored on
-    whether a bill came within 52 weeks of that date."""
+    whether a bill came within 52 weeks of that date. ``forecast_fn(as_of)`` replaces the cure
+    model's ``forecasts_at`` (e.g. for the hazard model)."""
     by_sid = full.drop_duplicates("signal_id").set_index("signal_id")
     by_idea = full.drop_duplicates("idea_id").set_index("idea_id") if "idea_id" in full else None
     ys, ps, points = [], [], []
@@ -411,7 +645,10 @@ def _later_points(
     while pd.Timestamp(year, 1, 1) + pd.Timedelta(weeks=H) <= end:
         as_of = pd.Timestamp(year, 1, 1)
         year += 1
-        f = forecasts_at(model, td, as_of, features, wp, since=cut)
+        if forecast_fn is not None:
+            f = forecast_fn(as_of)
+        else:
+            f = forecasts_at(model, td, as_of, features, wp, since=cut)
         if f.empty:
             continue
         f = f[pd.to_datetime(f["data_end"]) >= as_of]  # not censored by a dissolution
@@ -433,7 +670,7 @@ def _later_points(
     return {"H": H, "points": points, **binary_metrics(ys, ps)}
 
 
-def _parameter_records(model: tm.TakeUpModel) -> list[dict[str, Any]]:
+def _parameter_records(model: tm.TakeUpModel | HazardModel) -> list[dict[str, Any]]:
     tab = model.parameter_table()
     return [
         {
@@ -495,9 +732,18 @@ def plot_calibration(backtests: list[dict[str, Any]], path: Path, H: int = 52) -
         x = [r["mean_predicted"] for r in rows]
         y = [r["observed"] for r in rows]
         size = [20 + 4 * np.sqrt(r["n"]) * 4 for r in rows]
-        label = f"trained before {bt['metrics']['cut'][:4]}"
+        label = f"cure, trained before {bt['metrics']['cut'][:4]}"
         ax.plot(x, y, color=color, linewidth=2, label=label)
         ax.scatter(x, y, s=size, color=color, edgecolor="white", linewidth=2, zorder=3)
+        hz = bt["metrics"].get("hazard")
+        if hz:
+            rows = [r for r in hz["horizons"][str(H)]["calibration"] if r["n"]]
+            x = [r["mean_predicted"] for r in rows]
+            y = [r["observed"] for r in rows]
+            size = [20 + 4 * np.sqrt(r["n"]) * 4 for r in rows]
+            label = f"hazard, trained before {bt['metrics']['cut'][:4]}"
+            ax.plot(x, y, color=color, linewidth=2, linestyle=":", label=label)
+            ax.scatter(x, y, s=size, color=color, marker="s", edgecolor="white", zorder=3)
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     _style(
@@ -746,6 +992,7 @@ def write_report(metrics: dict[str, Any], path: Path = DOC_PATH) -> Path:
             )
         lines.append("")
 
+    lines += _comparison_lines(metrics)
     lines += [
         "## Parameters (fit on all ideas)",
         "",
@@ -782,6 +1029,180 @@ def write_report(metrics: dict[str, Any], path: Path = DOC_PATH) -> Path:
     return path
 
 
+def model_comparison(metrics: dict[str, Any]) -> dict[str, Any]:
+    """Per split and horizon: AUC / Brier of each model and baseline on the same test rows,
+    timing-window coverage raw and CQR, verdicts; plus counts of wins and a recommendation."""
+    rows, windows, wins = [], [], {"hazard_vs_cure": 0, "hazard_vs_b1": 0, "cure_vs_b1": 0}
+    n_cmp = 0
+    for bt in metrics["backtests"]:
+        for H, c in (bt.get("comparison") or {}).items():
+            row = {"cut": bt["cut"], "H": int(H)}
+            for name in ("cure", "hazard", "b0", "b1"):
+                if name in c:
+                    row[f"{name}_auc"], row[f"{name}_brier"] = c[name]["auc"], c[name]["brier"]
+            row["n"], row["n_bill"] = c["cure"]["n"], c["cure"]["n_bill"]
+            rows.append(row)
+            if row.get("hazard_brier") is None:
+                continue
+            n_cmp += 1
+            wins["hazard_vs_cure"] += row["hazard_brier"] < row["cure_brier"]
+            wins["hazard_vs_b1"] += row["hazard_brier"] < row["b1_brier"]
+            wins["cure_vs_b1"] += row["cure_brier"] < row["b1_brier"]
+        for name, w in (bt.get("timing_windows") or {}).items():
+            windows.append(
+                {
+                    "cut": bt["cut"],
+                    "model": name,
+                    "n": w["raw"]["n"],
+                    "raw": w["raw"]["coverage"],
+                    "cqr": w["cqr"]["coverage"],
+                    "q": w["calibration"]["q"],
+                    "n_calibration": w["calibration"]["n_calibration"],
+                    "median_width_raw": w["median_width_raw"],
+                    "median_width_cqr": w["median_width_cqr"],
+                }
+            )
+    return {
+        "rows": rows,
+        "windows": windows,
+        "brier_wins": {**wins, "n_comparisons": n_cmp},
+        "recommendation": recommendation(rows, wins, n_cmp),
+    }
+
+
+def recommendation(rows: list[dict[str, Any]], wins: dict[str, int], n: int) -> str:
+    """Which model to serve, from Brier wins over the cure model and over B1."""
+    if not n:
+        return "Only the cure model was evaluated; no comparison available."
+    hz_auc = [r["hazard_auc"] for r in rows if r.get("hazard_auc") is not None]
+    b1_auc = [r["b1_auc"] for r in rows if r.get("b1_auc") is not None]
+    mean = lambda v: float(np.mean(v)) if v else float("nan")  # noqa: E731
+    gains = [r["cure_brier"] - r["hazard_brier"] for r in rows if r.get("hazard_brier") is not None]
+    beats_cure = wins["hazard_vs_cure"] * 2 > n
+    beats_b1 = wins["hazard_vs_b1"] * 2 > n
+    text = (
+        f"Hazard beats the cure model on Brier in {wins['hazard_vs_cure']}/{n} split-horizons "
+        f"and B1 in {wins['hazard_vs_b1']}/{n} (cure beats B1 in {wins['cure_vs_b1']}/{n}); "
+        f"mean AUC hazard {mean(hz_auc):.3f} vs B1 {mean(b1_auc):.3f}; Brier gain over the cure "
+        f"model {min(gains):+.4f} to {max(gains):+.4f} (small). "
+    )
+    if beats_cure and beats_b1:
+        return text + "Recommendation: serve the hazard model (with CQR-calibrated windows)."
+    if beats_cure:
+        return text + (
+            "Recommendation: serve the hazard model in place of the cure model (with "
+            "CQR-calibrated windows), but present its probabilities as close to the base rate: "
+            "it does not reliably beat the first-source baseline B1."
+        )
+    return text + (
+        "Recommendation: keep serving the cure model (with CQR-calibrated windows); the hazard "
+        "model is not better on these splits."
+    )
+
+
+def _comparison_lines(metrics: dict[str, Any]) -> list[str]:
+    """Markdown for the three-model comparison (cure, hazard, baselines) and CQR windows."""
+    mc = metrics.get("model_comparison") or {}
+    if not mc.get("rows"):
+        return []
+    lines = [
+        "## Model comparison: cure model vs hazard model A vs baselines",
+        "",
+        "Same splits, same test ideas, same outcome labels. The hazard model (`takeup/hazard.py`) "
+        "is a discrete-time logistic hazard with one row per idea and sitting week, using "
+        "recency features known at the start of each week (weeks since the last mention, "
+        "mentions in the last 26 weeks, cumulative mentions, firmness so far, weeks since the "
+        "trigger, source, department, election / session timing). At the trigger it knows "
+        "only the trigger-day mention(s); after that its forecasts assume no new mentions.",
+        "",
+        "| Split | Horizon | n | bills | Cure AUC | Hazard AUC | B1 AUC | Cure Brier | "
+        "Hazard Brier | B0 Brier | B1 Brier |",
+        "|---|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    for r in mc["rows"]:
+        lines.append(
+            f"| {r['cut'][:4]} | {r['H']} wk | {r['n']} | {r['n_bill']} | "
+            f"{_num(r.get('cure_auc'))} | {_num(r.get('hazard_auc'))} | {_num(r.get('b1_auc'))} | "
+            f"{_num(r.get('cure_brier'))} | {_num(r.get('hazard_brier'))} | "
+            f"{_num(r.get('b0_brier'))} | {_num(r.get('b1_brier'))} |"
+        )
+    lines += ["", "Later forecasts (each 1 January, ideas still silent; bill within 52 weeks):", ""]
+    lines += ["| Split | n | Cure AUC | Hazard AUC | Cure Brier | Hazard Brier |"]
+    lines += ["|---|---|---|---|---|---|"]
+    for bt in metrics["backtests"]:
+        lc, lh = bt.get("later_as_of") or {}, (bt.get("hazard") or {}).get("later_as_of") or {}
+        if lc or lh:
+            lines.append(
+                f"| {bt['cut'][:4]} | {lc.get('n', lh.get('n'))} | {_num(lc.get('auc'))} | "
+                f"{_num(lh.get('auc'))} | {_num(lc.get('brier'))} | {_num(lh.get('brier'))} |"
+            )
+    lines += [
+        "",
+        "Verdicts (ideas with a bill or silent 104+ weeks; 'unlikely' accuracy should be "
+        "compared with the share of these ideas that never got a bill):",
+        "",
+    ]
+    lines += ["| Split | Model | n | likely (correct) | unlikely (correct) | uncertain |"]
+    lines += ["|---|---|---|---|---|---|"]
+    for bt in metrics["backtests"]:
+        for name, v in (
+            ("cure", bt["verdicts"]),
+            ("hazard", (bt.get("hazard") or {}).get("verdicts")),
+        ):
+            if v:
+                no_bill = (
+                    1 - bt["n_bills_known_ever"] / v["n"] if "n_bills_known_ever" in bt else None
+                )
+                lines.append(
+                    f"| {bt['cut'][:4]} | {name} | {v['n']} ({_pct(no_bill)} no bill) | "
+                    f"{v['n_likely']} "
+                    f"({_pct(v['likely_accuracy'])}) | {v['n_unlikely']} "
+                    f"({_pct(v['unlikely_accuracy'])}) | {_pct(v['share_uncertain'])} |"
+                )
+    if mc.get("windows"):
+        lines += [
+            "",
+            "### 80% timing windows: raw vs CQR-calibrated",
+            "",
+            f"Calibration (`takeup/conformal.py`): models refitted on data visible "
+            f"{CALIBRATION_YEARS} years before each cut predict the ideas with a bill triggered "
+            "in those 2 years; the scale-normalised conformity score max((t_10 - t)/w, "
+            "(t - t_90)/w), w = t_90 - t_10, gives the finite-sample quantile q, and test "
+            "windows become [t_10 - q w, t_90 + q w]. The 80% guarantee is approximate: the "
+            "calibration ideas are earlier than the test ideas (drift) and only include bills "
+            "that came before the cut (right truncation favours fast bills). Coverage must be "
+            "read with the median width: windows of around four years cover many bills cheaply, "
+            "so the timing forecasts remain vague.",
+            "",
+            "| Split | Model | bills | raw coverage | CQR coverage | q | calibration bills | "
+            "median width raw | median width CQR |",
+            "|---|---|---|---|---|---|---|---|---|",
+        ]
+        for w in mc["windows"]:
+            lines.append(
+                f"| {w['cut'][:4]} | {w['model']} | {w['n']} | {_pct(w['raw'])} | "
+                f"{_pct(w['cqr'])} | {_num(w['q'], 2)} | {w['n_calibration']} | "
+                f"{_num(w['median_width_raw'], 0)} wk | {_num(w['median_width_cqr'], 0)} wk |"
+            )
+    hz = metrics.get("hazard_full_fit")
+    if hz:
+        lines += [
+            "",
+            f"### Hazard model coefficients (fit on all ideas, C = {hz['C']}, "
+            f"{hz['n_rows']} idea-weeks, {hz['n_events']} bills)",
+            "",
+            "Log-odds of a first reading in a sitting week, per unit of the feature "
+            "(bins: relative to weeks 1-4 since the trigger / 0-4 weeks since the last mention).",
+            "",
+            "| Feature | Estimate | Std. error |",
+            "|---|---|---|",
+        ]
+        for p in hz["parameters"]:
+            lines.append(f"| `{p['parameter']}` | {p['estimate']:.3f} | {_num(p['std_err'])} |")
+    lines += ["", f"**{mc['recommendation']}**", ""]
+    return lines
+
+
 def weak_spots(metrics: dict[str, Any]) -> list[str]:
     """Automatic notes on where the model is no better than the baselines."""
     notes = []
@@ -798,6 +1219,21 @@ def weak_spots(metrics: dict[str, Any]) -> list[str]:
         cov = bt["timing_window"]["coverage"]
         if cov is not None and abs(cov - 0.8) > 0.1:
             notes.append(f"Split {bt['cut']}: 80% timing window covers {cov:.0%} of bills.")
+        for H, c in (bt.get("comparison") or {}).items():
+            hz, b1 = c.get("hazard"), c["b1"]
+            if hz and hz["brier"] is not None and b1["brier"] is not None:
+                if hz["brier"] >= b1["brier"]:
+                    notes.append(
+                        f"Split {bt['cut']}, {H} weeks: hazard model Brier {hz['brier']:.3f} is "
+                        f"no better than B1 ({b1['brier']:.3f})."
+                    )
+        for name, w in (bt.get("timing_windows") or {}).items():
+            n_cal = w["calibration"]["n_calibration"]
+            if n_cal < 10:
+                notes.append(
+                    f"Split {bt['cut']}: only {n_cal} calibration bills for the {name} model's "
+                    "window, so CQR made no adjustment."
+                )
     return notes
 
 
@@ -903,8 +1339,13 @@ def run_evaluation(
     out_dir: Path = REPORT_DIR,
     doc_path: Path | None = DOC_PATH,
     engine: Any = None,
+    hazard: bool = True,
 ) -> dict[str, Any]:
     """Backtests for ``splits``, a fit on all ideas, charts, metrics.json and the report.
+
+    ``hazard``: also run the hazard model and CQR window calibration in every split (see
+    ``backtest``) and add ``model_comparison`` with a recommendation. The forecasts saved with
+    ``write=True`` are still the cure model's.
 
     ``write=True`` also saves the full-fit run and its forecasts at ``end`` to the take-up
     database (``engine``, default ``takeup.db.get_takeup_engine()``). Returns the metrics,
@@ -921,11 +1362,12 @@ def run_evaluation(
     backtests = []
     for cut in splits:
         try:
-            backtests.append(backtest(td, cut, end))
+            backtests.append(backtest(td, cut, end, hazard=hazard, calibrate=hazard))
         except ValueError as exc:
             log.warning("skipping split %s: %s", cut, exc)
     full = fit_all(td, end)
     d = full["prepared"]
+    hz_full = fit_hazard(td, full["signals"], end) if hazard else None
     metrics: dict[str, Any] = {
         "generated_at": datetime.now(UTC).isoformat(),
         "code_version": code_version(),
@@ -941,6 +1383,9 @@ def run_evaluation(
             "n_forecasts": len(full["forecasts"]),
         },
     }
+    if hz_full is not None:
+        metrics["hazard_full_fit"] = _hazard_summary(hz_full)
+    metrics["model_comparison"] = model_comparison(metrics)
     metrics["weak_spots"] = weak_spots(metrics)
     metrics["charts"] = make_charts(backtests, full, Path(out_dir)) if backtests else {}
     metrics = _jsonable(metrics)

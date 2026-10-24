@@ -1,6 +1,6 @@
 # Take-up model: evaluation
 
-Generated 2026-10-24 by `takeup/evaluate.py` (code 6607c34a28). Charts and `metrics.json` are in `backend/reports/takeup/`.
+Generated 2026-10-24 by `takeup/evaluate.py` (code a1d8c314a9). Charts and `metrics.json` are in `backend/reports/takeup/`.
 
 The question: when a minister commits to legislate on something, will a Government Bill on it get a first reading, and when? See `TAKEUP_PLAN.md` for the model.
 
@@ -65,6 +65,77 @@ Calibration, bill within 52 weeks:
 - Verdicts (ideas with a bill or silent for 104+ weeks, n = 73): 'likely' 25 (32% got a bill), 'unlikely' 5 (100% did not), 'uncertain' 59%.
 - Forecasts on later 1 Januaries for still-silent ideas (n = 113): AUC 0.601, Brier 0.107 for a bill within 52 weeks.
 
+## Model comparison: cure model vs hazard model A vs baselines
+
+Same splits, same test ideas, same outcome labels. The hazard model (`takeup/hazard.py`) is a discrete-time logistic hazard with one row per idea and sitting week, using recency features known at the start of each week (weeks since the last mention, mentions in the last 26 weeks, cumulative mentions, firmness so far, weeks since the trigger, source, department, election / session timing). At the trigger it knows only the trigger-day mention(s); after that its forecasts assume no new mentions.
+
+| Split | Horizon | n | bills | Cure AUC | Hazard AUC | B1 AUC | Cure Brier | Hazard Brier | B0 Brier | B1 Brier |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 2019 | 26 wk | 472 | 38 | 0.600 | 0.558 | 0.621 | 0.075 | 0.074 | 0.074 | 0.073 |
+| 2019 | 52 wk | 390 | 50 | 0.571 | 0.523 | 0.629 | 0.113 | 0.113 | 0.112 | 0.109 |
+| 2022 | 26 wk | 301 | 21 | 0.546 | 0.626 | 0.626 | 0.065 | 0.064 | 0.065 | 0.064 |
+| 2022 | 52 wk | 219 | 28 | 0.534 | 0.590 | 0.632 | 0.114 | 0.111 | 0.112 | 0.108 |
+
+Later forecasts (each 1 January, ideas still silent; bill within 52 weeks):
+
+| Split | n | Cure AUC | Hazard AUC | Cure Brier | Hazard Brier |
+|---|---|---|---|---|---|
+| 2019 | 546 | 0.531 | 0.528 | 0.091 | 0.091 |
+| 2022 | 113 | 0.601 | 0.622 | 0.107 | 0.103 |
+
+Verdicts (ideas with a bill or silent 104+ weeks; 'unlikely' accuracy should be compared with the share of these ideas that never got a bill):
+
+| Split | Model | n | likely (correct) | unlikely (correct) | uncertain |
+|---|---|---|---|---|---|
+| 2019 | cure | 244 (70% no bill) | 0 (n/a) | 18 (83%) | 93% |
+| 2019 | hazard | 244 (70% no bill) | 0 (n/a) | 164 (75%) | 33% |
+| 2022 | cure | 73 (56% no bill) | 25 (32%) | 5 (100%) | 59% |
+| 2022 | hazard | 73 (56% no bill) | 0 (n/a) | 47 (66%) | 36% |
+
+### 80% timing windows: raw vs CQR-calibrated
+
+Calibration (`takeup/conformal.py`): models refitted on data visible 2 years before each cut predict the ideas with a bill triggered in those 2 years; the scale-normalised conformity score max((t_10 - t)/w, (t - t_90)/w), w = t_90 - t_10, gives the finite-sample quantile q, and test windows become [t_10 - q w, t_90 + q w]. The 80% guarantee is approximate: the calibration ideas are earlier than the test ideas (drift) and only include bills that came before the cut (right truncation favours fast bills). Coverage must be read with the median width: windows of around four years cover many bills cheaply, so the timing forecasts remain vague.
+
+| Split | Model | bills | raw coverage | CQR coverage | q | calibration bills | median width raw | median width CQR |
+|---|---|---|---|---|---|---|---|---|
+| 2019 | cure | 72 | 38% | 38% | 0.00 | 6 | 221 wk | 221 wk |
+| 2019 | hazard | 72 | 74% | 74% | 0.00 | 6 | 206 wk | 206 wk |
+| 2022 | cure | 32 | 22% | 72% | 0.16 | 15 | 221 wk | 256 wk |
+| 2022 | hazard | 32 | 69% | 81% | 0.01 | 15 | 214 wk | 218 wk |
+
+### Hazard model coefficients (fit on all ideas, C = 0.01, 95655 idea-weeks, 168 bills)
+
+Log-odds of a first reading in a sitting week, per unit of the feature (bins: relative to weeks 1-4 since the trigger / 0-4 weeks since the last mention).
+
+| Feature | Estimate | Std. error |
+|---|---|---|
+| `intercept` | -6.700 | 0.096 |
+| `since_5+` | -0.257 | 0.268 |
+| `since_13+` | -0.439 | 0.226 |
+| `since_27+` | -0.106 | 0.193 |
+| `since_53+` | -0.296 | 0.173 |
+| `since_105+` | 0.044 | 0.168 |
+| `log_weeks_since_trigger` | -0.266 | 0.061 |
+| `gap_5+` | -0.324 | 0.240 |
+| `gap_13+` | 0.106 | 0.204 |
+| `gap_27+` | -0.053 | 0.201 |
+| `gap_53+` | -0.543 | 0.171 |
+| `recent_mentions_26w` | 0.330 | 0.114 |
+| `log1p_mentions` | 1.714 | 0.252 |
+| `max_firmness` | 0.110 | 0.102 |
+| `any_firm` | 0.229 | 0.154 |
+| `years_since_election` | -0.060 | 0.049 |
+| `months_into_session` | -0.024 | 0.011 |
+| `x_new_parliament` | 0.050 | 0.161 |
+| `z_src_hansard` | -0.293 | 0.171 |
+| `z_dept_treasury` | -0.227 | 0.340 |
+| `z_dept_home_office` | 0.287 | 0.417 |
+| `z_dept_ministry_of_housing_communities_and_local_government` | -0.361 | 0.417 |
+| `z_dept_business_energy_and_industrial_strategy` | 0.257 | 0.366 |
+| `z_dept_ministry_of_justice` | 0.338 | 0.478 |
+
+**Hazard beats the cure model on Brier in 4/4 split-horizons and B1 in 0/4 (cure beats B1 in 0/4); mean AUC hazard 0.574 vs B1 0.627; Brier gain over the cure model +0.0004 to +0.0030 (small). Recommendation: serve the hazard model in place of the cure model (with CQR-calibrated windows), but present its probabilities as close to the base rate: it does not reliably beat the first-source baseline B1.**
+
 ## Parameters (fit on all ideas)
 
 | Parameter | Estimate | Std. error |
@@ -96,9 +167,15 @@ Calibration, bill within 52 weeks:
 - Split 2019-01-01, 26 weeks: model Brier 0.075 is no better than B1 (0.073).
 - Split 2019-01-01, 52 weeks: model Brier 0.113 is no better than B1 (0.109).
 - Split 2019-01-01: 80% timing window covers 38% of bills.
+- Split 2019-01-01, 26 weeks: hazard model Brier 0.074 is no better than B1 (0.073).
+- Split 2019-01-01, 52 weeks: hazard model Brier 0.113 is no better than B1 (0.109).
+- Split 2019-01-01: only 6 calibration bills for the cure model's window, so CQR made no adjustment.
+- Split 2019-01-01: only 6 calibration bills for the hazard model's window, so CQR made no adjustment.
 - Split 2022-01-01, 26 weeks: model Brier 0.065 is no better than B1 (0.064).
 - Split 2022-01-01, 52 weeks: model Brier 0.114 is no better than B1 (0.108).
 - Split 2022-01-01: 80% timing window covers 22% of bills.
+- Split 2022-01-01, 26 weeks: hazard model Brier 0.064 is no better than B1 (0.064).
+- Split 2022-01-01, 52 weeks: hazard model Brier 0.111 is no better than B1 (0.108).
 - King's Speech data is not used (decision of 2026-10-24); ideas come only from ministers' words in written statements and Hansard.
 - Commitments, topics and links come from rules-only NLP (phrase lexicon, TF-IDF grouping, title similarity); wrong groupings or links show up here as label noise.
 - An idea with no linked bill is treated as not (yet) taken up, so a missed link is counted as a failure of the idea.

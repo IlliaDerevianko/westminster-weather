@@ -320,6 +320,33 @@ class TakeupData:
         out = im.merge(nlp, on="mention_id", how="inner")
         return out[MENTION_COLUMNS]
 
+    def mention_timeline(self, as_of: date | str | pd.Timestamp) -> pd.DataFrame:
+        """Visible commitment mentions per signal, for recency features (hazard model).
+
+        One row per mention dated ``<= as_of``: ``signal_id, mention_id, event_date,
+        firmness, source``, sorted by signal and date. ``signal_id`` follows the grouping
+        rule of ``get_takeup_signals(as_of)``: the idea id once its linked bill's first reading
+        is ``<= as_of``, otherwise ``'<idea_id>:<group_id>'``. Signals that
+        ``get_takeup_signals`` drops (bill first read well before the commitment) still appear
+        here; callers join on the signal rows. Has no side effects on ``dropped_*``.
+        """
+        as_of = pd.Timestamp(as_of).normalize()
+        cols = ["signal_id", "mention_id", "event_date", "firmness", "source"]
+        m = self.visible_mentions(as_of)
+        if m.empty:
+            return pd.DataFrame(columns=cols)
+        links = self.tables["idea_bill_links"].dropna(subset=["bill_id"])
+        links = links.drop_duplicates("idea_id").set_index("idea_id")["bill_id"].astype("int64")
+        first_reading = m["idea_id"].map(links).map(self.first_readings)
+        merged = first_reading.notna() & (first_reading <= as_of)
+        m["signal_id"] = np.where(
+            merged, m["idea_id"], m["idea_id"].astype(str) + ":" + m["group_id"].astype(str)
+        )
+        m["signal_id"] = m["signal_id"].astype(str)
+        m["rank"] = m["source"].map(SOURCE_RANK).fillna(len(SOURCE_RANK))
+        m = m.sort_values(["signal_id", "event_date", "rank", "mention_id"])
+        return m[cols].reset_index(drop=True)
+
     def get_takeup_signals(
         self,
         as_of: date | str | pd.Timestamp,
