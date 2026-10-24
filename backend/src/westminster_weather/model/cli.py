@@ -6,6 +6,7 @@ uv run python -m westminster_weather.model.cli build [--as-of YYYY-MM-DD]
 uv run python -m westminster_weather.model.cli train [--as-of YYYY-MM-DD]
 uv run python -m westminster_weather.model.cli forecast --bill-id <BILL_ID> [--as-of YYYY-MM-DD]
 uv run python -m westminster_weather.model.cli forecast --examples
+uv run python -m westminster_weather.model.cli evaluate [--as-of YYYY-MM-DD]
 """
 
 from __future__ import annotations
@@ -303,6 +304,59 @@ def cmd_forecast(args: argparse.Namespace) -> None:
     print(f"\nChart saved: {chart}")
 
 
+def cmd_evaluate(args: argparse.Namespace) -> None:
+    import time
+
+    from westminster_weather.model import baseline, evaluate
+
+    started = time.perf_counter()
+    points = evaluate.backtest_points(args.as_of)
+    print(
+        f"Backtest: {len(points):,} forecasts for {points['bill_id'].nunique()} test bills "
+        f"({int(points['ra'].sum()):,} for bills that became law)"
+    )
+    results = evaluate.run_backtest(points, workers=args.workers)
+    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    results.to_parquet(PROCESSED_DIR / "backtest.parquet", index=False)
+    metrics = evaluate.score(results, baseline.fit())
+    mae = metrics["mae_days"]
+    print(f"Done in {time.perf_counter() - started:.0f} s\n")
+    print(
+        f"MAE of median Royal Assent date: model {mae['model']} days, "
+        f"B1 {mae['B1']}, B0 {mae['B0']}"
+    )
+    print(f"80% window coverage: {100 * metrics['coverage_p10_p90']:.0f}%")
+    print(
+        f"Brier passage: {metrics['brier_passage_probability']} "
+        f"(base rate {metrics['brier_passage_base_rate']}); "
+        f"before session end: {metrics['brier_ra_before_session_end']}"
+    )
+    print(f"Concordance index: {metrics['concordance_index']}")
+    print(
+        f"Mean forecast passage {metrics['mean_predicted_passage']} vs actual "
+        f"{metrics['actual_passage_rate']}"
+    )
+    print("\nMAE by stage the forecast was made from:")
+    print(pd.DataFrame(metrics["mae_days_by_start_state"]).T.to_string())
+    print("\nCalibration:")
+    print(pd.DataFrame(metrics["calibration"]).to_string(index=False))
+
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    import json
+
+    evaluate.save_metrics(metrics, REPORTS_DIR / "metrics.json")
+    report = evaluate.write_report(
+        json.loads((REPORTS_DIR / "metrics.json").read_text()), REPORTS_DIR / "EVALUATION.md"
+    )
+    print(f"Report saved: {report}")
+    for chart in (
+        evaluate.plot_mae_by_state(metrics, REPORTS_DIR / "mae_by_state.png"),
+        evaluate.plot_model_vs_baselines(metrics, REPORTS_DIR / "model_vs_baselines.png"),
+        evaluate.plot_calibration(metrics, REPORTS_DIR / "calibration.png"),
+    ):
+        print(f"Chart saved: {chart}")
+
+
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -335,6 +389,11 @@ def main(argv: list[str] | None = None) -> None:
     fc.add_argument("--as-of", type=date.fromisoformat, default=date.today())
     fc.add_argument("--examples", action="store_true", help="Three historical test bills")
     fc.set_defaults(func=cmd_forecast)
+
+    ev = sub.add_parser("evaluate", help="Backtest on test sessions, metrics and charts")
+    ev.add_argument("--as-of", type=date.fromisoformat, default=date.today())
+    ev.add_argument("--workers", type=int, default=6)
+    ev.set_defaults(func=cmd_evaluate)
 
     args = parser.parse_args(argv)
     args.func(args)

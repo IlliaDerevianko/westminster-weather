@@ -1,5 +1,12 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 22:58 — feat(model): backtest, metrics and evaluation report (task 10)
+
+- **What:** added `model/evaluate.py` (backtest points, parallel forecasts with train models, MAE/coverage/Brier/C-index, charts, EVALUATION.md generator), `cli evaluate`, `tests/model/test_evaluate.py`, `reports/EVALUATION.md`, `reports/mae_by_state.png`, `reports/model_vs_baselines.png`, `reports/calibration.png` and `metrics.json` (`backtest`).
+- **Why:** BUILD_PLAN task 10, MODEL_SPEC §7.
+- **Checks:** `ruff`: clean; `pytest`: 102 passed. Backtest: 1,281 forecasts for 222 test bills in 136 s. MAE model 73.1 days vs B1 82.8 vs B0 106.8 (beats B1). Coverage of 80% window 52%; Brier passage 0.104 vs base rate 0.054; C-index 0.772; mean forecast passage 80% vs actual 94%.
+- **Notes:** probabilities are too pessimistic, mainly because session-end risk is overstated (forecast 12.9% vs actual 1.3% of points) and test-era sessions are longer and bills slower than in training. Reported to Aleks for a decision before task 11.
+
 ## 2026-10-24 22:51 — Merge main into feat/passage-model-tasks-4-11
 
 - **What:** merged latest `main` (#16 ping-pong skipped/rounds on stage cards, #17 post-Royal-Assent ingestion from legislation.gov.uk with new interface functions `get_act_commencements` and `get_post_royal_assent_events`). No conflicts.
