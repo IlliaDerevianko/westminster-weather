@@ -301,20 +301,18 @@ export default function BillsDirectoryPage() {
 
                 <div className="flex flex-wrap items-center gap-2 shrink-0">
                   {b.has_pre_parliament_data && (
-                    <Link
-                      href="/?bill_id=online-safety-bill"
-                      className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-100 transition-colors"
-                    >
-                      View Phase 1 (Before Parliament) →
-                    </Link>
+                    <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-900">
+                      Includes GOV.UK Pre-Parliament Events
+                    </span>
                   )}
                   <Link
                     href={`/?bill_id=${b.bill_id}`}
                     className="rounded-lg bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 transition-colors"
                   >
-                    Display on Tracker →
+                    Display on 3-Phase Tracker →
                   </Link>
                 </div>
+
               </div>
             );
           })}

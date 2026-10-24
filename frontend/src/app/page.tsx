@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 
 type StageStatus = "completed" | "current" | "upcoming" | "stopped";
+type PhaseKey = "before_parliament" | "inside_parliament" | "after_royal_assent";
 
 interface ApiEvidenceEvent {
   event_date: string;
@@ -17,7 +18,7 @@ interface ApiEvidenceEvent {
 
 interface TrackedStageNode {
   stage: string;
-  phase: "before_parliament" | "inside_parliament" | "after_royal_assent";
+  phase: PhaseKey;
   order: number;
   label: string;
   description: string;
@@ -53,7 +54,7 @@ interface GovernmentBillTracking {
   as_of_date: string;
   earliest_signal_date: string;
   first_reading_date: string;
-  current_phase: "before_parliament" | "inside_parliament" | "after_royal_assent";
+  current_phase: PhaseKey;
   current_stage: string | null;
   current_stage_order: number;
   total_stages: number;
@@ -109,13 +110,53 @@ const STOP_RISK_DESCRIPTIONS: Record<string, { title: string; subtitle: string }
     title: "Deadlock",
     subtitle: "Commons and Lords fail to agree in ping-pong",
   },
+  never_commenced: {
+    title: "Never commenced",
+    subtitle: "Passed into law, never switched on",
+  },
+  annulled: {
+    title: "Annulled",
+    subtitle: "Rare: Parliament blocks a statutory instrument",
+  },
 };
 
-const PHASE_LABELS: Record<string, string> = {
-  before_parliament: "1. Before Parliament (Pre-Legislative Tracker)",
-  inside_parliament: "2. Inside Parliament (Parliamentary Passage)",
-  after_royal_assent: "3. Royal Assent (Enacted into Law)",
-};
+const PHASE_CONFIG: {
+  key: PhaseKey;
+  number: number;
+  title: string;
+  subtitle: string;
+  accentBg: string;
+  accentBorder: string;
+  badgeClass: string;
+}[] = [
+  {
+    key: "before_parliament",
+    number: 1,
+    title: "1. Before Parliament",
+    subtitle: "Signal, commitment, consultation, drafting & King's Speech slot",
+    accentBg: "bg-amber-50/50",
+    accentBorder: "border-amber-200",
+    badgeClass: "bg-amber-100 text-amber-900",
+  },
+  {
+    key: "inside_parliament",
+    number: 2,
+    title: "2. Inside Parliament",
+    subtitle: "Commons & Lords readings, committees, report, 3rd reading & ping-pong",
+    accentBg: "bg-blue-50/40",
+    accentBorder: "border-blue-200",
+    badgeClass: "bg-blue-100 text-blue-900",
+  },
+  {
+    key: "after_royal_assent",
+    number: 3,
+    title: "3. After Royal Assent",
+    subtitle: "Royal Assent, commencement orders (SIs), regulations & law in force",
+    accentBg: "bg-emerald-50/40",
+    accentBorder: "border-emerald-200",
+    badgeClass: "bg-emerald-100 text-emerald-900",
+  },
+];
 
 function BillTrackerContent() {
   const router = useRouter();
@@ -123,11 +164,14 @@ function BillTrackerContent() {
   const queryBillId = searchParams.get("bill_id");
 
   const [allBills, setAllBills] = useState<BillSummary[]>([]);
-  const [activeBillId, setActiveBillId] = useState<string | null>(queryBillId);
+  const [activeBillId, setActiveBillId] = useState<string | null>(
+    queryBillId === "online-safety-bill" ? "3137" : queryBillId
+  );
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [bill, setBill] = useState<GovernmentBillTracking | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [layoutMode, setLayoutMode] = useState<"columns" | "stacked">("columns");
 
   // Load directory of bills from Neon Postgres
   useEffect(() => {
@@ -138,7 +182,8 @@ function BillTrackerContent() {
         const data: BillSummary[] = await res.json();
         setAllBills(data);
         if (!queryBillId && data.length > 0) {
-          setActiveBillId(String(data[0].bill_id));
+          const onlineSafety = data.find((b) => b.bill_id === 3137);
+          setActiveBillId(String((onlineSafety ?? data[0]).bill_id));
         }
       } catch {
         // Handled by main fetch
@@ -150,7 +195,9 @@ function BillTrackerContent() {
   // Sync activeBillId when URL query parameter changes
   useEffect(() => {
     if (queryBillId) {
-      setActiveBillId(queryBillId);
+      setActiveBillId(
+        queryBillId === "online-safety-bill" ? "3137" : queryBillId
+      );
       setSelectedDate("");
     }
   }, [queryBillId]);
@@ -201,31 +248,39 @@ function BillTrackerContent() {
     };
   }, [activeBillId, selectedDate]);
 
+  const stagesByPhase = useMemo(() => {
+    const grouped: Record<PhaseKey, TrackedStageNode[]> = {
+      before_parliament: [],
+      inside_parliament: [],
+      after_royal_assent: [],
+    };
+    if (!bill) return grouped;
+    for (const s of bill.stages) {
+      grouped[s.phase]?.push(s);
+    }
+    return grouped;
+  }, [bill]);
+
   const currentStageObj = bill?.stages.find(
     (s) => s.stage === bill.current_stage
   );
-  const isComplete =
-    bill !== null &&
-    (bill.current_stage === "ready_for_first_reading" ||
-      bill.current_stage === "royal_assent");
   const isStopped =
     currentStageObj !== undefined && currentStageObj.status === "stopped";
+  const hasRoyalAssent =
+    bill?.stages.find((s) => s.stage === "royal_assent")?.status ===
+    "completed";
 
   return (
-    <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* Top Navigation & Bill Switcher Bar */}
-      <nav className="rounded-xl border border-slate-200 bg-slate-900 text-white px-5 py-3.5 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <nav className="rounded-xl border border-slate-200 bg-slate-900 text-white px-5 py-3.5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
             Neon Database Bill Selector
           </span>
           <select
             aria-label="Select a bill from Neon Postgres"
-            value={
-              activeBillId === "online-safety-bill"
-                ? "3137"
-                : activeBillId ?? ""
-            }
+            value={activeBillId ?? ""}
             onChange={(e) => {
               const nextId = e.target.value;
               if (nextId) {
@@ -244,25 +299,31 @@ function BillTrackerContent() {
           </select>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {bill?.parliament_bill_id === 3137 && (
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="inline-flex rounded-lg border border-slate-700 bg-slate-800 p-0.5 text-xs">
             <button
               type="button"
-              onClick={() => {
-                setSelectedDate("");
-                router.push(
-                  activeBillId === "online-safety-bill"
-                    ? "/?bill_id=3137"
-                    : "/?bill_id=online-safety-bill"
-                );
-              }}
-              className="rounded-lg border border-amber-400/50 bg-amber-500/20 px-3 py-1.5 text-xs font-semibold text-amber-200 hover:bg-amber-500/30 transition-colors"
+              onClick={() => setLayoutMode("columns")}
+              className={`rounded-md px-2.5 py-1 font-semibold transition-colors ${
+                layoutMode === "columns"
+                  ? "bg-amber-500 text-slate-950"
+                  : "text-slate-300 hover:text-white"
+              }`}
             >
-              {activeBillId === "online-safety-bill"
-                ? "Switch to Parliamentary Stages →"
-                : "Switch to Phase 1 (Before Parliament) →"}
+              3-Column Pipeline
             </button>
-          )}
+            <button
+              type="button"
+              onClick={() => setLayoutMode("stacked")}
+              className={`rounded-md px-2.5 py-1 font-semibold transition-colors ${
+                layoutMode === "stacked"
+                  ? "bg-amber-500 text-slate-950"
+                  : "text-slate-300 hover:text-white"
+              }`}
+            >
+              Detailed Stack
+            </button>
+          </div>
           <Link
             href="/bills"
             className="rounded-lg bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-colors"
@@ -277,14 +338,12 @@ function BillTrackerContent() {
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider">
-              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-amber-800">
-                {bill
-                  ? PHASE_LABELS[bill.current_phase] ?? bill.current_phase
-                  : "Loading Pipeline..."}
+              <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-white">
+                Full 3-Phase UK Government Bill Lifecycle
               </span>
               {bill && (
                 <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">
-                  {bill.originating_house}
+                  Originating House: {bill.originating_house}
                   {bill.introduced_session_id
                     ? ` · Session ${bill.introduced_session_id}`
                     : ""}
@@ -292,7 +351,7 @@ function BillTrackerContent() {
               )}
               {bill && (
                 <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-blue-800">
-                  Outcome: {bill.outcome}
+                  Overall Outcome: {bill.outcome}
                 </span>
               )}
             </div>
@@ -320,10 +379,10 @@ function BillTrackerContent() {
           {/* Current Position Badge */}
           {bill && (
             <div
-              className={`rounded-lg border px-4 py-3 text-center shrink-0 min-w-[220px] ${
+              className={`rounded-lg border px-4 py-3 text-center shrink-0 min-w-[230px] ${
                 isStopped
                   ? "border-red-400 bg-red-50"
-                  : isComplete
+                  : hasRoyalAssent
                   ? "border-emerald-400 bg-emerald-50"
                   : "border-amber-300 bg-amber-50"
               }`}
@@ -332,27 +391,25 @@ function BillTrackerContent() {
                 className={`text-xs font-medium ${
                   isStopped
                     ? "text-red-800"
-                    : isComplete
+                    : hasRoyalAssent
                     ? "text-emerald-800"
                     : "text-amber-800"
                 }`}
               >
-                State as of {bill.as_of_date}
+                Snapshot as of {bill.as_of_date}
               </div>
               <div className="mt-0.5 text-lg font-bold text-slate-900">
                 {bill.current_stage_order === 0
-                  ? "Not Yet Entered"
+                  ? "Pre-Signal"
                   : isStopped
-                  ? `Stopped at Stage ${bill.current_stage_order}`
-                  : isComplete
-                  ? `All ${bill.total_stages} Stages Completed ✓`
+                  ? `Stopped at Stage ${bill.current_stage_order}/${bill.total_stages}`
                   : `Stage ${bill.current_stage_order} of ${bill.total_stages}`}
               </div>
               <div
                 className={`text-xs font-semibold ${
                   isStopped
                     ? "text-red-900"
-                    : isComplete
+                    : hasRoyalAssent
                     ? "text-emerald-900"
                     : "text-amber-900"
                 }`}
@@ -362,6 +419,43 @@ function BillTrackerContent() {
             </div>
           )}
         </div>
+
+        {/* 3-Phase Overview Progress Bar */}
+        {bill && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+            {PHASE_CONFIG.map((phaseCfg) => {
+              const phaseStages = stagesByPhase[phaseCfg.key] ?? [];
+              const completedCount = phaseStages.filter(
+                (s) => s.status === "completed"
+              ).length;
+              const isActivePhase = bill.current_phase === phaseCfg.key;
+              return (
+                <div
+                  key={phaseCfg.key}
+                  className={`rounded-lg border p-3 transition-all ${
+                    isActivePhase
+                      ? "border-2 border-slate-900 bg-slate-50 shadow-sm"
+                      : "border-slate-200 bg-white"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${phaseCfg.badgeClass}`}
+                    >
+                      {phaseCfg.title}
+                    </span>
+                    <span className="text-xs font-mono font-semibold text-slate-600">
+                      {completedCount}/{phaseStages.length} done
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-slate-500">
+                    {phaseCfg.subtitle}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Date Picker Controls */}
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
@@ -374,10 +468,10 @@ function BillTrackerContent() {
                 Select Historical Snapshot Date (`as_of_date`)
               </label>
               <p className="text-xs text-slate-500">
-                Evaluates where{" "}
-                <strong>{bill?.short_title ?? "this bill"}</strong> stood on
-                that date using stage sittings stored in Neon Lakebase Postgres
-                ({bill?.earliest_signal_date ?? "—"} →{" "}
+                Time-travel across all 3 phases of{" "}
+                <strong>{bill?.short_title ?? "this bill"}</strong> using real
+                dates from Neon Lakebase Postgres (
+                {bill?.earliest_signal_date ?? "—"} →{" "}
                 {bill?.outcome_date ?? bill?.as_of_date ?? "—"}).
               </p>
             </div>
@@ -432,6 +526,33 @@ function BillTrackerContent() {
             </div>
           )}
         </div>
+
+        {/* Legend */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-slate-600 border-t border-slate-100">
+          <span>
+            Each phase column shows the main legislative path on the left and{" "}
+            <strong className="text-red-700">dashed red stop risks</strong> on
+            the right.
+          </span>
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded-full bg-emerald-500"></span>
+              Completed
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded-full bg-amber-500 ring-4 ring-amber-200"></span>
+              <strong>Current Stage</strong>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded-full bg-red-500"></span>
+              Stopped
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded-full bg-slate-300"></span>
+              Upcoming
+            </span>
+          </div>
+        </div>
       </header>
 
       {/* Error State */}
@@ -441,206 +562,222 @@ function BillTrackerContent() {
         </div>
       )}
 
-      {/* Stage Flowchart Column */}
+      {/* 3-Phase Pipeline Grid (1. Before Parliament | 2. Inside Parliament | 3. After Royal Assent) */}
       {bill && (
-        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 border-b border-slate-200 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">
-                {PHASE_LABELS[bill.current_phase] ?? bill.current_phase}
-              </h2>
-              <p className="text-xs text-slate-500">
-                Main path runs down the left column. Dashed red boxes on the
-                right show where a bill can stop at that step.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded-full bg-emerald-500"></span>
-                Completed
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded-full bg-amber-500 ring-4 ring-amber-200"></span>
-                <strong>Current Stage</strong>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded-full bg-red-500"></span>
-                Stopped
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded-full bg-slate-300"></span>
-                Upcoming
-              </span>
-            </div>
-          </div>
+        <div
+          className={
+            layoutMode === "columns"
+              ? "grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
+              : "space-y-6"
+          }
+        >
+          {PHASE_CONFIG.map((phaseCfg) => {
+            const phaseStages = stagesByPhase[phaseCfg.key] ?? [];
+            const completedCount = phaseStages.filter(
+              (s) => s.status === "completed"
+            ).length;
 
-          <div className="space-y-4">
-            {bill.stages.map((stage, idx) => {
-              const isCompleted = stage.status === "completed";
-              const isCurrent = stage.status === "current";
-              const isStageStopped = stage.status === "stopped";
-              const stopRiskKey =
-                stage.active_stop_reason ?? stage.stop_risks[0];
-              const stopMeta = stopRiskKey
-                ? STOP_RISK_DESCRIPTIONS[stopRiskKey]
-                : null;
-
-              return (
-                <div key={stage.stage}>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                    {/* Main Stage Node (Left 8 columns) */}
-                    <div
-                      className={`md:col-span-8 rounded-lg border p-4 transition-all ${
-                        isStageStopped
-                          ? "border-2 border-red-500 bg-red-50/90 shadow-md ring-4 ring-red-200/70"
-                          : isCurrent
-                          ? "border-2 border-amber-500 bg-amber-50/90 shadow-md ring-4 ring-amber-200/70"
-                          : isCompleted
-                          ? "border-emerald-300 bg-emerald-50/70"
-                          : "border-slate-200 bg-slate-50/60 opacity-75"
-                      }`}
+            return (
+              <section
+                key={phaseCfg.key}
+                className={`rounded-xl border ${phaseCfg.accentBorder} bg-white p-4 sm:p-5 shadow-sm space-y-4`}
+              >
+                <div className="border-b border-slate-200 pb-3 flex items-start justify-between gap-2">
+                  <div>
+                    <span
+                      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-bold ${phaseCfg.badgeClass}`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-2.5">
-                          <span
-                            className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      {phaseCfg.title}
+                    </span>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {phaseCfg.subtitle}
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded bg-slate-100 px-2 py-0.5 text-[11px] font-mono font-semibold text-slate-700">
+                    {completedCount}/{phaseStages.length}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {phaseStages.map((stage, idx) => {
+                    const isCompleted = stage.status === "completed";
+                    const isCurrent = stage.status === "current";
+                    const isStageStopped = stage.status === "stopped";
+                    const stopRiskKey =
+                      stage.active_stop_reason ?? stage.stop_risks[0];
+                    const stopMeta = stopRiskKey
+                      ? STOP_RISK_DESCRIPTIONS[stopRiskKey]
+                      : null;
+
+                    return (
+                      <div key={stage.stage}>
+                        <div className="grid grid-cols-12 gap-2.5 items-stretch">
+                          {/* Main Stage Card */}
+                          <div
+                            className={`${
+                              stopMeta ? "col-span-8" : "col-span-12"
+                            } rounded-lg border p-3 transition-all ${
                               isStageStopped
-                                ? "bg-red-600 text-white"
+                                ? "border-2 border-red-500 bg-red-50/90 shadow-md ring-2 ring-red-200"
                                 : isCurrent
-                                ? "bg-amber-500 text-white"
+                                ? "border-2 border-amber-500 bg-amber-50/90 shadow-md ring-2 ring-amber-200"
                                 : isCompleted
-                                ? "bg-emerald-600 text-white"
-                                : "bg-slate-200 text-slate-700"
+                                ? "border-emerald-300 bg-emerald-50/70"
+                                : "border-slate-200 bg-slate-50/60 opacity-75"
                             }`}
                           >
-                            {isCompleted ? "✓" : isStageStopped ? "✕" : stage.order}
-                          </span>
-                          <div>
-                            <div className="text-base font-bold text-slate-900">
-                              {stage.label}
-                            </div>
-                            <div className="text-xs text-slate-600">
-                              {stage.description}
-                            </div>
-                          </div>
-                        </div>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-start gap-2">
+                                <span
+                                  className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
+                                    isStageStopped
+                                      ? "bg-red-600 text-white"
+                                      : isCurrent
+                                      ? "bg-amber-500 text-white"
+                                      : isCompleted
+                                      ? "bg-emerald-600 text-white"
+                                      : "bg-slate-200 text-slate-700"
+                                  }`}
+                                >
+                                  {isCompleted
+                                    ? "✓"
+                                    : isStageStopped
+                                    ? "✕"
+                                    : stage.order}
+                                </span>
+                                <div>
+                                  <div className="text-sm font-bold text-slate-900 leading-snug">
+                                    {stage.label}
+                                  </div>
+                                  <div className="text-[11px] text-slate-600 mt-0.5">
+                                    {stage.description}
+                                  </div>
+                                </div>
+                              </div>
 
-                        <span
-                          className={`shrink-0 rounded px-2.5 py-0.5 text-xs font-semibold uppercase ${
-                            isStageStopped
-                              ? "bg-red-600 text-white"
-                              : isCurrent
-                              ? "bg-amber-500 text-white"
-                              : isCompleted
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-slate-200 text-slate-600"
-                          }`}
-                        >
-                          {isStageStopped
-                            ? `Stopped (${stage.active_stop_reason ?? bill.outcome})`
-                            : isCurrent
-                            ? `Current Stage (on ${bill.as_of_date})`
-                            : isCompleted
-                            ? "Completed"
-                            : "Upcoming"}
-                        </span>
-                      </div>
-
-                      {/* Real API Evidence Box (Only shown if reached by as_of_date) */}
-                      {stage.entered_date && (
-                        <div className="mt-3 rounded-md border border-slate-200 bg-white p-3 text-xs space-y-2">
-                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-1.5">
-                            <span className="font-semibold text-slate-800">
-                              Stage Period: {stage.entered_date} →{" "}
-                              {stage.completed_date
-                                ? stage.completed_date
-                                : `In Progress as of ${bill.as_of_date}`}
-                            </span>
-                            {stage.source_api_url && (
-                              <a
-                                href={stage.source_api_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-[11px] font-medium text-blue-600 hover:underline"
+                              <span
+                                className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                                  isStageStopped
+                                    ? "bg-red-600 text-white"
+                                    : isCurrent
+                                    ? "bg-amber-500 text-white"
+                                    : isCompleted
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : "bg-slate-200 text-slate-600"
+                                }`}
                               >
-                                View Raw API JSON ↗
-                              </a>
+                                {isStageStopped
+                                  ? "Stopped"
+                                  : isCurrent
+                                  ? "Current"
+                                  : isCompleted
+                                  ? "Done"
+                                  : "Upcoming"}
+                              </span>
+                            </div>
+
+                            {/* Entered/Completed Dates & Collapsible Sittings */}
+                            {(stage.entered_date ||
+                              stage.visible_events.length > 0) && (
+                              <div className="mt-2.5 rounded border border-slate-200/80 bg-white p-2 text-[11px] space-y-1.5">
+                                {stage.entered_date && (
+                                  <div className="flex flex-wrap items-center justify-between gap-1 text-slate-700 font-medium">
+                                    <span>
+                                      {stage.entered_date}
+                                      {stage.completed_date &&
+                                      stage.completed_date !== stage.entered_date
+                                        ? ` → ${stage.completed_date}`
+                                        : ""}
+                                    </span>
+                                    {stage.source_api_url && (
+                                      <a
+                                        href={stage.source_api_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-[10px] text-blue-600 hover:underline"
+                                      >
+                                        API ↗
+                                      </a>
+                                    )}
+                                  </div>
+                                )}
+
+                                {stage.visible_events.length > 0 && (
+                                  <details className="group">
+                                    <summary className="cursor-pointer font-semibold text-slate-700 hover:text-slate-900 select-none">
+                                      {stage.visible_events.length} recorded{" "}
+                                      {stage.visible_events.length === 1
+                                        ? "event/sitting"
+                                        : "events/sittings"}{" "}
+                                      ≤ {bill.as_of_date}
+                                    </summary>
+                                    <ul className="mt-1.5 space-y-1 max-h-48 overflow-y-auto pr-1">
+                                      {stage.visible_events.map((ev, evIdx) => (
+                                        <li
+                                          key={`${ev.event_date}-${evIdx}`}
+                                          className="rounded bg-slate-50 p-1.5 border border-slate-100"
+                                        >
+                                          <div className="font-semibold text-slate-800">
+                                            {ev.event_date} — {ev.title}
+                                          </div>
+                                          <div className="text-[10px] text-slate-600 mt-0.5">
+                                            {ev.note}
+                                          </div>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </details>
+                                )}
+                              </div>
                             )}
                           </div>
 
-                          {stage.visible_events.length > 0 && (
-                            <div className="space-y-1.5">
-                              <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                                Official Sittings / Events Recorded ≤{" "}
-                                {bill.as_of_date}:
+                          {/* Dashed Red Stop Risk Box on Right (4 columns) */}
+                          {stopMeta && (
+                            <div className="col-span-4 flex items-center gap-1">
+                              <span className="text-red-400 font-mono text-xs shrink-0">
+                                ▸
+                              </span>
+                              <div
+                                className={`w-full rounded-lg border border-dashed p-2 text-center flex flex-col justify-center ${
+                                  isStageStopped
+                                    ? "border-2 border-red-600 bg-red-100 shadow-sm"
+                                    : isCurrent
+                                    ? "border-red-400 bg-red-50/90"
+                                    : "border-red-300 bg-red-50/40 opacity-75"
+                                }`}
+                              >
+                                <div className="text-[11px] font-bold text-slate-900 leading-tight">
+                                  {stopMeta.title}
+                                </div>
+                                <div className="text-[10px] text-slate-600 mt-0.5 leading-tight">
+                                  {stopMeta.subtitle}
+                                </div>
                               </div>
-                              <ul className="space-y-1.5">
-                                {stage.visible_events.map((ev, evIdx) => (
-                                  <li
-                                    key={`${ev.event_date}-${evIdx}`}
-                                    className="rounded bg-slate-50 p-2 border border-slate-100"
-                                  >
-                                    <div className="flex items-center justify-between gap-2">
-                                      <span className="font-semibold text-slate-800">
-                                        {ev.event_date} — {ev.title}
-                                      </span>
-                                      <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-mono text-slate-700">
-                                        {ev.document_type}
-                                      </span>
-                                    </div>
-                                    <p className="mt-0.5 text-slate-600">
-                                      {ev.note}
-                                    </p>
-                                  </li>
-                                ))}
-                              </ul>
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
 
-                    {/* Dashed Red Stop Node (Right 4 columns, matching flowchart) */}
-                    <div className="md:col-span-4">
-                      {stopMeta && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-red-400 font-mono text-sm shrink-0">
-                            ---▸
-                          </span>
-                          <div
-                            className={`w-full rounded-lg border border-dashed p-3 text-center ${
-                              isStageStopped
-                                ? "border-2 border-red-600 bg-red-100 shadow-md"
-                                : isCurrent
-                                ? "border-red-400 bg-red-50/90 shadow-sm"
-                                : "border-red-300 bg-red-50/40 opacity-75"
-                            }`}
-                          >
-                            <div className="text-sm font-bold text-slate-900">
-                              {stopMeta.title}
-                            </div>
-                            <div className="text-xs text-slate-600 mt-0.5">
-                              {stopMeta.subtitle}
+                        {/* Downward Connector Arrow */}
+                        {idx < phaseStages.length - 1 && (
+                          <div className="grid grid-cols-12">
+                            <div
+                              className={`${
+                                stopMeta ? "col-span-8" : "col-span-12"
+                              } flex justify-center py-1 text-slate-400 text-xs leading-none`}
+                            >
+                              ↓
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Downward Arrow between stages */}
-                  {idx < bill.stages.length - 1 && (
-                    <div className="grid grid-cols-1 md:grid-cols-12">
-                      <div className="md:col-span-8 flex justify-center py-1.5 text-slate-400 text-sm leading-none">
-                        ↓
+                        )}
                       </div>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-        </section>
+              </section>
+            );
+          })}
+        </div>
       )}
     </main>
   );
@@ -650,8 +787,8 @@ export default function BillTrackerPage() {
   return (
     <Suspense
       fallback={
-        <main className="max-w-5xl mx-auto px-6 py-8 text-sm text-slate-600">
-          Loading tracker from Neon Lakebase Postgres...
+        <main className="max-w-7xl mx-auto px-6 py-8 text-sm text-slate-600">
+          Loading 3-phase lifecycle tracker from Neon Lakebase Postgres...
         </main>
       }
     >
