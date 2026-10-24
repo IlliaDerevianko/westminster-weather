@@ -7,9 +7,11 @@ Follows neon-postgres skill best practices:
 """
 
 from datetime import date
+from typing import Any
 
 import pandas as pd
-from sqlalchemy import Connection, Engine, create_engine, select, text
+from sqlalchemy import Connection, Engine, Table, create_engine, delete, select, text
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Session
 from sqlalchemy.pool import NullPool
@@ -209,4 +211,290 @@ def fetch_session_overrides_df() -> pd.DataFrame:
             return df
     finally:
         engine.dispose()
+
+
+def _clean_record(record: dict[str, Any]) -> dict[str, Any]:
+    cleaned: dict[str, Any] = {}
+    for k, v in record.items():
+        if isinstance(v, list):
+            cleaned[k] = v
+        elif pd.isna(v):
+            cleaned[k] = None
+        elif isinstance(v, pd.Timestamp):
+            cleaned[k] = v.to_pydatetime()
+        else:
+            cleaned[k] = v
+    return cleaned
+
+
+def _upsert_rows(
+    conn: Connection, table: Table, rows: list[dict[str, Any]], batch_size: int = 500
+) -> None:
+    if not rows:
+
+        return
+    pk_cols = [c.name for c in table.primary_key]
+    non_pk_cols = [c.name for c in table.columns if c.name not in pk_cols]
+    for i in range(0, len(rows), batch_size):
+        chunk = rows[i : i + batch_size]
+        stmt = pg_insert(table).values(chunk)
+        if non_pk_cols:
+            stmt = stmt.on_conflict_do_update(
+                index_elements=pk_cols,
+                set_={col: stmt.excluded[col] for col in non_pk_cols},
+            )
+        else:
+            stmt = stmt.on_conflict_do_nothing(index_elements=pk_cols)
+        conn.execute(stmt)
+
+
+def save_dataset_tables_to_db(tables: dict[str, pd.DataFrame]) -> dict[str, int]:
+    """Persist flattened UK Government Bills and calendar tables into Neon Lakebase Postgres."""
+    from westminster_weather.models import (
+        BillRow,
+        ParliamentSessionRow,
+        ScheduledSittingRow,
+        SittingDayRow,
+        StageMapRow,
+        StageSittingRow,
+    )
+
+    ensure_reference_tables_seeded_sync()
+    engine = get_sync_direct_engine()
+    counts: dict[str, int] = {}
+    try:
+        with engine.begin() as conn:
+            Base.metadata.create_all(conn)
+
+            if "stage_map" in tables and not tables["stage_map"].empty:
+                records = [_clean_record(r) for r in tables["stage_map"].to_dict("records")]
+                _upsert_rows(conn, StageMapRow.__table__, records)
+                counts["stage_map"] = len(records)
+
+            if "sessions" in tables and not tables["sessions"].empty:
+                records = [_clean_record(r) for r in tables["sessions"].to_dict("records")]
+                _upsert_rows(conn, ParliamentSessionRow.__table__, records)
+                counts["sessions"] = len(records)
+
+            if "sitting_days" in tables and not tables["sitting_days"].empty:
+                records = [_clean_record(r) for r in tables["sitting_days"].to_dict("records")]
+                _upsert_rows(conn, SittingDayRow.__table__, records)
+                counts["sitting_days"] = len(records)
+
+            if "bills" in tables and not tables["bills"].empty:
+                records = [_clean_record(r) for r in tables["bills"].to_dict("records")]
+                _upsert_rows(conn, BillRow.__table__, records)
+                counts["bills"] = len(records)
+
+            if "stage_sittings" in tables:
+                records = [_clean_record(r) for r in tables["stage_sittings"].to_dict("records")]
+                _upsert_rows(conn, StageSittingRow.__table__, records)
+                counts["stage_sittings"] = len(records)
+
+            if "scheduled_sittings" in tables:
+                conn.execute(delete(ScheduledSittingRow))
+                records = [
+                    _clean_record(r) for r in tables["scheduled_sittings"].to_dict("records")
+                ]
+                _upsert_rows(conn, ScheduledSittingRow.__table__, records)
+                counts["scheduled_sittings"] = len(records)
+        return counts
+    finally:
+        engine.dispose()
+
+
+def fetch_bills_df() -> pd.DataFrame:
+    """DB adapter: read `bills` table (~588 UK Government Bills) from Neon Lakebase Postgres."""
+    from westminster_weather.models import BillRow
+
+    ensure_reference_tables_seeded_sync()
+    engine = get_sync_pooled_engine()
+    try:
+        with Session(engine) as session:
+            rows = session.execute(select(BillRow).order_by(BillRow.bill_id)).scalars().all()
+            columns = [
+                "bill_id",
+                "short_title",
+                "originating_house",
+                "introduced_session_id",
+                "introduced_date",
+                "department",
+                "kings_speech_flag",
+                "size_clauses",
+                "size_pages",
+                "commons_committee_type",
+                "carry_over_date",
+                "outcome",
+                "outcome_date",
+                "stop_reason",
+                "last_api_update",
+                "ingested_at",
+                "is_act",
+                "is_defeated",
+                "withdrawn_date",
+                "included_session_ids",
+            ]
+            if not rows:
+                return pd.DataFrame(columns=columns)
+            df = pd.DataFrame(
+                [
+                    {
+                        "bill_id": r.bill_id,
+                        "short_title": r.short_title,
+                        "originating_house": r.originating_house,
+                        "introduced_session_id": r.introduced_session_id,
+                        "introduced_date": r.introduced_date,
+                        "department": r.department,
+                        "kings_speech_flag": r.kings_speech_flag,
+                        "size_clauses": r.size_clauses,
+                        "size_pages": r.size_pages,
+                        "commons_committee_type": r.commons_committee_type,
+                        "carry_over_date": r.carry_over_date,
+                        "outcome": r.outcome,
+                        "outcome_date": r.outcome_date,
+                        "stop_reason": r.stop_reason,
+                        "last_api_update": pd.Timestamp(r.last_api_update)
+                        if r.last_api_update
+                        else pd.NaT,
+                        "ingested_at": pd.Timestamp(r.ingested_at),
+                        "is_act": r.is_act,
+                        "is_defeated": r.is_defeated,
+                        "withdrawn_date": r.withdrawn_date,
+                        "included_session_ids": list(r.included_session_ids or []),
+                    }
+                    for r in rows
+                ],
+                columns=columns,
+            )
+            for col in ("kings_speech_flag", "size_clauses", "size_pages"):
+                df[col] = df[col].astype("object")
+            return df
+    finally:
+        engine.dispose()
+
+
+def _fetch_sittings_table_df(model_cls: Any) -> pd.DataFrame:
+    ensure_reference_tables_seeded_sync()
+    engine = get_sync_pooled_engine()
+    try:
+        with Session(engine) as session:
+            rows = (
+                session.execute(
+                    select(model_cls).order_by(
+                        model_cls.bill_id, model_cls.event_date, model_cls.sort_order
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            columns = [
+                "sitting_id",
+                "bill_id",
+                "bill_type_id",
+                "api_stage_id",
+                "bill_stage_id",
+                "house",
+                "session_id",
+                "sort_order",
+                "event_date",
+                "ingested_at",
+            ]
+            if not rows:
+                return pd.DataFrame(columns=columns)
+            return pd.DataFrame(
+                [
+                    {
+                        "sitting_id": r.sitting_id,
+                        "bill_id": r.bill_id,
+                        "bill_type_id": r.bill_type_id,
+                        "api_stage_id": r.api_stage_id,
+                        "bill_stage_id": r.bill_stage_id,
+                        "house": r.house,
+                        "session_id": r.session_id,
+                        "sort_order": r.sort_order,
+                        "event_date": r.event_date,
+                        "ingested_at": pd.Timestamp(r.ingested_at),
+                    }
+                    for r in rows
+                ],
+                columns=columns,
+            )
+    finally:
+        engine.dispose()
+
+
+def fetch_stage_sittings_df() -> pd.DataFrame:
+    """DB adapter: read `stage_sittings` table from Neon Lakebase Postgres."""
+    from westminster_weather.models import StageSittingRow
+
+    return _fetch_sittings_table_df(StageSittingRow)
+
+
+def fetch_scheduled_sittings_df() -> pd.DataFrame:
+    """DB adapter: read `scheduled_sittings` table from Neon Lakebase Postgres."""
+    from westminster_weather.models import ScheduledSittingRow
+
+    return _fetch_sittings_table_df(ScheduledSittingRow)
+
+
+def fetch_sessions_df() -> pd.DataFrame:
+    """DB adapter: read `sessions` table from Neon Lakebase Postgres."""
+    from westminster_weather.models import ParliamentSessionRow
+
+    ensure_reference_tables_seeded_sync()
+    engine = get_sync_pooled_engine()
+    try:
+        with Session(engine) as session:
+            rows = (
+                session.execute(
+                    select(ParliamentSessionRow).order_by(ParliamentSessionRow.session_id)
+                )
+                .scalars()
+                .all()
+            )
+            columns = ["session_id", "parliament_id", "start_date", "end_date", "end_type"]
+            if not rows:
+                return pd.DataFrame(columns=columns)
+            return pd.DataFrame(
+                [
+                    {
+                        "session_id": r.session_id,
+                        "parliament_id": r.parliament_id,
+                        "start_date": r.start_date,
+                        "end_date": r.end_date,
+                        "end_type": r.end_type,
+                    }
+                    for r in rows
+                ],
+                columns=columns,
+            )
+    finally:
+        engine.dispose()
+
+
+def fetch_sitting_days_df() -> pd.DataFrame:
+    """DB adapter: read `sitting_days` table from Neon Lakebase Postgres."""
+    from westminster_weather.models import SittingDayRow
+
+    ensure_reference_tables_seeded_sync()
+    engine = get_sync_pooled_engine()
+    try:
+        with Session(engine) as session:
+            rows = (
+                session.execute(
+                    select(SittingDayRow).order_by(SittingDayRow.date, SittingDayRow.house)
+                )
+                .scalars()
+                .all()
+            )
+            columns = ["date", "house"]
+            if not rows:
+                return pd.DataFrame(columns=columns)
+            return pd.DataFrame(
+                [{"date": r.date, "house": r.house} for r in rows],
+                columns=columns,
+            )
+    finally:
+        engine.dispose()
+
 
