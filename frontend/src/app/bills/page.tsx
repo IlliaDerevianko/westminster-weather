@@ -131,12 +131,20 @@ export default function BillsDirectoryPage() {
               tracker page.
             </p>
           </div>
+          <div className="flex flex-wrap gap-2 shrink-0">
           <Link
             href="/"
             className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100 transition-colors shrink-0"
           >
             ← Back to Tracker Page
           </Link>
+          <Link
+            href="/promises"
+            className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors shrink-0"
+          >
+            Promise Take-up Forecasts →
+          </Link>
+          </div>
         </div>
 
         {/* Summary Counters */}

@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 23:22 — feat(frontend): promises pages with take-up forecasts
+
+- **What:** new `/promises` page (search, verdict filter, sort, as-of picker, verdict badges, chance now / within 52 weeks, expected bill month, bill once introduced) and `/promises/[ideaId]` detail page (plain-English headline, inline-SVG chart of pi_now with the 80% window and event / mention / first-reading markers, minister quotes, events); shared types and fetch helper in `src/lib/takeup.ts`; nav links from home and `/bills`.
+- **Why:** task 11.
+- **Checks:** `npm run build`: passes (type check); not yet run against real take-up data (backend was down).
+- **Notes:** timing in the headline is conditional on a bill coming; to be checked on real data.
+
 ## 2026-10-24 23:19 — feat(takeup): take-up API endpoints
 
 - **What:** `takeup/api.py` (router included in `main.py`): `GET /api/v1/takeup/ideas`, `/forecast`, `/history` (all `as_of`-safe; split groups resolve to their own signal and don't reveal the later merge). Model rebuilt from the latest `takeup_runs` row, else fitted once in memory; stored `takeup_forecasts` used when present; 503 if `DATABASE_URL_TAKEUP` is not set.
