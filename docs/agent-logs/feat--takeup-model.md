@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 23:58 — docs(log): checkpoint 4 hand-label results
+
+- **What:** Roman reviewed `review_mentions.csv` (100) and `review_links.csv` (50) and confirmed every system decision correct; `score`: mentions precision 100% (85/85 kept, 0/15 wrongly rejected), links precision 100% (33/33 linked, 0/17 wrongly rejected).
+- **Why:** checkpoints 4 and 8 (target ≥ 85%).
+- **Checks:** `cli score`. With these sample sizes the 95% lower bounds are about 96% (mentions) and 91% (links).
+- **Notes:** label quality is therefore not the main reason the models don't beat B1; the limit is the information available at the trigger.
+
 ## 2026-10-24 23:57 — feat(takeup): discrete-time hazard model with recency features and conformal windows
 
 - **What:** `takeup/hazard.py` (one row per signal-week; recency features: weeks since last mention, mentions in last 26 weeks, cumulative mentions, max firmness; L2 logistic; forecasts assume no new mentions), `takeup/conformal.py` (CQR-style widening of the 80% timing window on a held-out period), `signals.mention_timeline(as_of)`; `evaluate.py` compares cure vs hazard vs B0/B1 on identical splits; report and charts regenerated.
