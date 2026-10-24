@@ -6,12 +6,14 @@ take-up tables must only ever be created by ``takeup.db.migrate()`` on the take-
 (``DATABASE_URL_TAKEUP``, Neon branch ``takeup-dev``).
 
 Foreign keys between take-up tables are declared (all within ``takeup_metadata``).
-``idea_bill_links.bill_id`` and ``kings_speech_items.bill_id`` refer to the production
-``bills`` table, which lives on ``Base.metadata``; they are NOT declared as database-level
-foreign keys (another MetaData cannot resolve them, and ``bills`` is maintained by the
-passage-model pipeline). The check is done in Python instead (DATA_CONTRACT §10.10).
-``idea_mentions.mention_id`` points at either ``signal_mentions`` or ``kings_speech_items``,
-so it has no foreign key either.
+``idea_bill_links.bill_id`` refers to the production ``bills`` table, which lives on
+``Base.metadata``; it is NOT declared as a database-level foreign key (another MetaData cannot
+resolve it, and ``bills`` is maintained by the passage-model pipeline). The check is done in
+Python instead (DATA_CONTRACT §10.10). ``idea_mentions.mention_id`` points at
+``signal_mentions``; it is checked in Python too (§10.10) and has no database-level foreign key.
+
+Ideas come only from NLP over written ministerial statements and Hansard; King's Speech data
+is not used by the take-up model.
 
 Each table is one ``Table(...)`` call below, so a column change is a one-line edit here plus
 a re-run of ``migrate()`` on the branch.
@@ -71,22 +73,6 @@ member_government_posts = Table(
     _fetched_at(),
 )
 
-# §10.1 One row per bill announced in a King's/Queen's Speech briefing note.
-kings_speech_items = Table(
-    "kings_speech_items",
-    takeup_metadata,
-    Column("item_id", Text, primary_key=True),  # ks-<speech_date>-<nn>
-    Column("speech_date", Date, nullable=False),
-    Column("announced_name", Text, nullable=False),
-    Column("is_draft", Boolean, nullable=False),
-    Column("is_carried_over", Boolean, nullable=False),
-    Column("department", Text, nullable=True),
-    # Hand-checked bill this item became; NULL = none. Production bills: not a DB-level FK.
-    Column("bill_id", Integer, nullable=True),
-    Column("source_url", Text, nullable=False),
-    _ingested_at(),
-)
-
 # §10.2 One row per sentence in which the government commits (or seems to) to legislate.
 signal_mentions = Table(
     "signal_mentions",
@@ -113,13 +99,13 @@ signal_mentions = Table(
 ideas = Table(
     "ideas",
     takeup_metadata,
-    Column("idea_id", Text, primary_key=True),  # ks-<speech_date>-<nn> (= item_id) | nlp-<nnnnn>
-    Column("origin", Text, nullable=False),  # kings_speech | nlp
+    Column("idea_id", Text, primary_key=True),  # nlp-<nnnnn>
+    Column("origin", Text, nullable=False),  # always 'nlp' (kept for future sources)
     Column("topic", Text, nullable=False),
     Column("trigger_date", Date, nullable=False),
     Column("department", Text, nullable=True),
-    Column("first_source", Text, nullable=False),  # kings_speech | wms | hansard_*
-    Column("initial_firmness", Integer, nullable=False),  # King's Speech = 2
+    Column("first_source", Text, nullable=False),  # wms | hansard_spoken | hansard_written
+    Column("initial_firmness", Integer, nullable=False),  # firmness of the first mention
     Column("n_mentions", Integer, nullable=False),
     _ingested_at(),
 )
@@ -129,7 +115,7 @@ idea_mentions = Table(
     "idea_mentions",
     takeup_metadata,
     Column("idea_id", Text, ForeignKey("ideas.idea_id"), primary_key=True),
-    Column("mention_id", Text, primary_key=True),  # signal_mentions or kings_speech_items id
+    Column("mention_id", Text, primary_key=True),  # signal_mentions.mention_id (not a DB FK)
     Column("group_id", Text, nullable=False),
 )
 
@@ -197,9 +183,8 @@ takeup_forecasts = Table(
 
 # Raw sources (§10.0a, §10.0b): read by the NLP pipeline, not by get_takeup_signals.
 SOURCE_TABLES: tuple[Table, ...] = (source_documents, member_government_posts)
-# The six tables get_takeup_signals reads (runs and forecasts are model outputs).
+# The five tables get_takeup_signals reads (runs and forecasts are model outputs).
 DATA_TABLES: tuple[Table, ...] = (
-    kings_speech_items,
     signal_mentions,
     ideas,
     idea_mentions,

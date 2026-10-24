@@ -5,26 +5,22 @@ One row per signal visible at ``as_of``, in the format ``TakeUpModel.prepare()``
 (``z_*`` numeric, known at ``signal_date``; ``x_*`` dates, ``NaT`` if not happened by
 ``as_of``). Nothing dated after ``as_of`` can change the output (no leakage):
 
+Ideas come only from NLP over ministers' words (written ministerial statements and Hansard);
+King's Speech data is not used.
+
 - Mentions: ``signal_mentions`` rows with ``is_commitment`` and ``is_minister`` true and
-  ``event_date <= as_of``, and ``kings_speech_items`` with ``speech_date <= as_of`` (source
-  ``kings_speech``, firmness 2). Carried-over items are excluded (their bill was first read
-  before the speech, so it is already in Phase 2) and counted in ``n_carried_over``.
+  ``event_date <= as_of``, joined to ``idea_mentions``.
 - Grouping: an idea whose linked bill had its first reading by ``as_of`` is one signal
   (``signal_id = idea_id``). Otherwise the same-bill merge is not yet known, so each
   ``idea_mentions.group_id`` is its own signal (``signal_id = '<idea_id>:<group_id>'``).
-  A split row uses only what belongs to its group: ``origin`` (``kings_speech`` only if the
-  group holds a King's Speech item, else ``nlp``) and ``title`` come from the group's own
-  mentions, and ``idea_events`` apply only to the idea's anchor group, chosen from mentions
-  visible at ``as_of`` (``_anchor_groups``): the group of a King's Speech idea's own item
-  (``idea_id == item_id``), else the group of the idea's earliest mention. ``idea_id`` (and the
-  ``idea_id`` part of ``signal_id``) on a split row reflects the later merge: it is an
-  identifier only and must never be used as a feature or to group rows.
-- ``x_kings_speech``: the idea's ``idea_events`` rows with ``event_type = 'kings_speech'``
-  (speech items text-matched to an earlier idea, dated on the speech), after the first
-  mention, so it is visible from the speech date even before any bill exists. King's Speech
-  items merged into an idea through a shared bill are mentions only: they can move the
-  signal date earlier but set no ``x_*`` feature (``x_firm_commitment`` and
-  ``x_repeat_mention`` count ``signal_mentions`` only, DATA_CONTRACT §10.11).
+  A split row uses only what belongs to its group: ``title`` comes from the group's own
+  mentions (``origin`` is always ``nlp``), and ``idea_events`` apply only to the idea's anchor
+  group, chosen from mentions visible at ``as_of`` (``_anchor_groups``): the group of the
+  idea's earliest mention. ``idea_id`` (and the ``idea_id`` part of ``signal_id``) on a split
+  row reflects the later merge: it is an identifier only and must never be used as a feature
+  or to group rows.
+- ``z_src_hansard``: the first mention came from Hansard (spoken or written); written
+  ministerial statements are the reference level (DATA_CONTRACT §10.11).
 - ``bill_date``: first reading of the linked bill (earliest stage 6 or 1 sitting) if it is
   ``<= as_of``. A bill first read up to 7 days before the first mention counts as taken up
   in week 1: ``signal_date`` is moved back to the first reading. A signal whose bill was
@@ -62,12 +58,13 @@ MIN_POSITIVE_CASES = 15
 # Department one-hots: at most this many of the most common departments, each with at least
 # MIN_POSITIVE_CASES signals. All other departments and unknown departments are pooled into
 # the reference level 'other' (no column), so the one-hots are not collinear with the
-# intercept. King's Speech is the reference level for the first-source one-hots.
+# intercept. Written statements ('wms') are the reference level for the first source.
 MAX_DEPARTMENTS = 8
 DAYS_PER_YEAR = 365.25
 DAYS_PER_MONTH = 30.4375
 
-SOURCE_RANK = {"kings_speech": 0, "wms": 1, "hansard_written": 2, "hansard_spoken": 3}
+# Tie-break between same-day mentions: the first source is the highest-ranked one.
+SOURCE_RANK = {"wms": 0, "hansard_written": 1, "hansard_spoken": 2}
 # idea_events.event_type -> x feature (§10.11: one `white_paper` feature for white or green
 # papers, the earliest of either).
 EVENT_FEATURES = {
@@ -88,7 +85,6 @@ BASE_COLUMNS = [
     "data_end",
 ]
 FIXED_Z = [
-    "z_src_wms",
     "z_src_hansard",
     "z_initial_firmness",
     "z_years_since_election",
@@ -98,7 +94,6 @@ CONTINUOUS_Z = {"z_initial_firmness", "z_years_since_election", "z_months_into_s
 X_COLUMNS = [
     "x_firm_commitment",
     "x_repeat_mention",
-    "x_kings_speech",
     *dict.fromkeys(EVENT_FEATURES.values()),
     "x_new_parliament",
 ]
@@ -113,7 +108,6 @@ MENTION_COLUMNS = [
     "firmness",
     "department",
     "topic",
-    "is_kings_speech",
 ]
 
 
@@ -154,13 +148,6 @@ class TakeupData:
         # more than BILL_BEFORE_SIGNAL_DAYS before the first mention (an existing bill).
         self.dropped_signals: dict[str, int] = {}
         self.n_signal_date_moved = 0  # signals moved back to a first reading 1-7 days earlier
-        # King's Speech items with speech_date <= as_of left out because carried over.
-        self.carried_over_items: list[str] = []
-
-    @property
-    def n_carried_over(self) -> int:
-        """Carried-over King's Speech items excluded at the last ``get_takeup_signals`` call."""
-        return len(self.carried_over_items)
 
     # ------------------------------------------------------------------ tables
 
@@ -231,30 +218,18 @@ class TakeupData:
     def _anchor_groups(self, m: pd.DataFrame) -> dict[str, str]:
         """idea_id -> the group that owns the idea's ``idea_events`` while groups are split,
         from the mentions ``m`` visible at ``as_of`` only, so groups whose mentions all come
-        later (which only ideas that will get a bill have) cannot move it:
-
-        - a King's Speech idea: the group of its own item (``idea_id == item_id``), once that
-          item is visible; until then no group, as other groups belong to it only through the
-          bill;
-        - an NLP idea: the group of its earliest visible mention. That is the idea's earliest
-          mention overall, so the anchor never changes while the groups are split.
+        later (which only ideas that will get a bill have) cannot move it: the group of the
+        idea's earliest visible mention. That is the idea's earliest mention overall, so the
+        anchor never changes while the groups are split.
 
         Other groups get no idea events until the bill's first reading is visible (the merge
         itself uses knowledge of the bill)."""
-        items = set(self.tables["kings_speech_items"]["item_id"].astype(str))
         ids, groups = m["idea_id"].astype(str), m["group_id"].astype(str)
         earliest = m.assign(idea_id=ids, group_id=groups).sort_values(
             ["event_date", "rank", "mention_id"]
         )
         earliest = earliest.drop_duplicates("idea_id")
-        out = {
-            i: g
-            for i, g in zip(earliest["idea_id"], earliest["group_id"], strict=True)
-            if i not in items
-        }
-        own = m["mention_id"].astype(str) == ids
-        out.update(zip(ids[own], groups[own], strict=True))
-        return out
+        return dict(zip(earliest["idea_id"], earliest["group_id"], strict=True))
 
     @cached_property
     def _session_starts(self) -> list[pd.Timestamp]:
@@ -323,9 +298,7 @@ class TakeupData:
     # ---------------------------------------------------------------- signals
 
     def visible_mentions(self, as_of: pd.Timestamp) -> pd.DataFrame:
-        """Idea mentions dated ``<= as_of``: minister commitments from ``signal_mentions`` and
-        King's Speech items that are not carried over (the carried-over ids visible at
-        ``as_of`` are recorded in ``self.carried_over_items``)."""
+        """Idea mentions dated ``<= as_of``: minister commitments from ``signal_mentions``."""
         sm = self.tables["signal_mentions"]
         sm = sm.assign(event_date=_dates(sm["event_date"]))
         sm = sm[_flag(sm["is_commitment"]) & _flag(sm["is_minister"]) & (sm["event_date"] <= as_of)]
@@ -338,35 +311,13 @@ class TakeupData:
                 "firmness": pd.to_numeric(sm["firmness"]).fillna(0).astype(int),
                 "department": sm["department"],
                 "topic": sm["topic"],
-                "is_kings_speech": False,
             }
         )
-        ks = self.tables["kings_speech_items"]
-        ks = ks.assign(speech_date=_dates(ks["speech_date"]))
-        ks = ks[ks["speech_date"] <= as_of]
-        # A carried-over item announces a bill first read before the speech: not a take-up.
-        carried = _flag(ks["is_carried_over"])
-        self.carried_over_items = sorted(ks.loc[carried, "item_id"].astype(str))
-        ks = ks[~carried]
-        kings_speech = pd.DataFrame(
-            {
-                "mention_id": ks["item_id"].astype(str),
-                "source": "kings_speech",
-                "doc_id": ks["item_id"].astype(str),
-                "event_date": ks["speech_date"],
-                "firmness": 2,
-                "department": ks["department"],
-                "topic": ks["announced_name"],
-                "is_kings_speech": True,
-            }
-        )
-        frames = [f for f in (kings_speech, nlp) if not f.empty]
-        if not frames:
+        if nlp.empty:
             return pd.DataFrame(columns=MENTION_COLUMNS)
-        mentions = pd.concat(frames, ignore_index=True)
         im = self.tables["idea_mentions"][["idea_id", "mention_id", "group_id"]].copy()
         im["mention_id"] = im["mention_id"].astype(str)
-        out = im.merge(mentions, on="mention_id", how="inner")
+        out = im.merge(nlp, on="mention_id", how="inner")
         return out[MENTION_COLUMNS]
 
     def get_takeup_signals(
@@ -383,7 +334,6 @@ class TakeupData:
         """
         as_of = pd.Timestamp(as_of).normalize()
         self.dropped_features, self.dropped_signals, self.n_signal_date_moved = {}, {}, 0
-        self.carried_over_items = []
         m = self.visible_mentions(as_of)
         if m.empty:
             cols = BASE_COLUMNS + (features if features is not None else FIXED_Z + X_COLUMNS)
@@ -425,10 +375,6 @@ class TakeupData:
                 if title is not None and pd.notna(title):
                     row["title"] = title
             rows.append(row)
-        if self.carried_over_items:
-            logger.info(
-                "excluded %d carried-over King's Speech item(s)", len(self.carried_over_items)
-            )
         if self.dropped_signals:
             logger.info(
                 "dropped %d signal(s) whose bill was first read > %d days before the signal",
@@ -489,19 +435,13 @@ class TakeupData:
         source = str(first["source"])
 
         # x: dates <= as_of only (every row here is already visible at as_of), strictly after
-        # the first mention (anything on that day is a z feature). Firm and repeat mentions
-        # count signal_mentions only; King's Speech is an x feature only through its
-        # idea_events row (§10.9), never through an item merged in via a shared bill.
+        # the first mention (anything on that day is a z feature).
         later = g[g["event_date"] > first_date]
-        later = later[~later["is_kings_speech"].astype(bool)]
         firm_at_start = on_day["firmness"].max() >= 2  # then z_initial_firmness says it all
         firm = pd.NaT if firm_at_start else later.loc[later["firmness"] >= 2, "event_date"].min()
         repeat = later["event_date"].min()  # a later mention is always another document
-        ks_dates: list[pd.Timestamp] = []
         x_events: dict[str, object] = dict.fromkeys(EVENT_FEATURES.values(), pd.NaT)
         if events is not None:
-            ks_ev = events.loc[events["event_type"] == "kings_speech", "event_date"]
-            ks_dates = [d for d in ks_ev if d > first_date]
             for col in x_events:
                 types = [e for e, c in EVENT_FEATURES.items() if c == col]
                 x_events[col] = events.loc[events["event_type"].isin(types), "event_date"].min()
@@ -512,13 +452,12 @@ class TakeupData:
             "idea_id": first["idea_id"],
             # split rows: from the group's own mentions (merged rows: replaced from `ideas`)
             "title": None if pd.isna(topic) else str(topic),
-            "origin": "kings_speech" if g["is_kings_speech"].astype(bool).any() else "nlp",
+            "origin": "nlp",
             "signal_date": signal_date,
             "bill_id": bill_id if has_bill else None,
             "bill_date": fr if has_bill else pd.NaT,
             "data_end": data_end,
             "department": dept.iloc[0] if len(dept) else None,
-            "z_src_wms": float(source == "wms"),
             "z_src_hansard": float(source.startswith("hansard")),
             "z_initial_firmness": float(on_day["firmness"].max()),
             "z_years_since_election": (signal_date - election).days / DAYS_PER_YEAR
@@ -529,7 +468,6 @@ class TakeupData:
             else np.nan,
             "x_firm_commitment": firm,
             "x_repeat_mention": repeat,
-            "x_kings_speech": min(ks_dates) if ks_dates else pd.NaT,
             **x_events,
             "x_new_parliament": self._new_parliament(signal_date, as_of),
         }

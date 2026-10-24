@@ -487,7 +487,7 @@ def test_analytic_gradient_matches_finite_differences():
 TRUE_G0 = -0.4
 TRUE_GAMMA = {"z_manifesto": 1.0, "z_cost": -0.6}
 TRUE_ALPHA = (-2.4, -2.7, -3.0, -3.0, -3.2, -3.4)
-TRUE_BETA = {"x_consultation_response": 1.0, "x_kings_speech": 0.7}
+TRUE_BETA = {"x_consultation_response": 1.0, "x_draft_bill": 0.7}
 DATA_END = pd.Timestamp("2026-10-24")
 
 
@@ -600,7 +600,7 @@ def prototype_synthetic() -> pd.DataFrame:
         "z_years_to_election": 0.3,
     }
     alpha = -3.0
-    beta = {"x_consultation_response": 1.2, "x_kings_speech": 1.5}
+    beta = {"x_consultation_response": 1.2, "x_draft_bill": 1.5}
     data_end = date(2026, 10, 24)
     rows = []
     for i in range(900):

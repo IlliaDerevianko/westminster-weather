@@ -11,7 +11,7 @@ This is the first model in the pipeline. Once a real bill exists, the passage mo
 - **Tier A: the model.** A mixture cure model that turns ideas into forecasts (section 2.2).
 - **Tier B: the data pipeline.** Collects sources, finds commitments to legislate with NLP, groups them into ideas, links ideas to bills, and records dated events (section 2.3). Tier B produces everything Tier A trains and predicts on.
 
-Both tiers are required. The King's Speech part of Tier B gives clean, dated ideas that almost always became bills, so it teaches *when*; ministers' commitments found by NLP include the ones never taken up, so they teach *whether*.
+Both tiers are required. **King's Speech data is not used** (Roman's decision, 2026-10-24, overriding the spec's "never cut"): ideas come only from ministers' commitments found by NLP, which include both promises that became bills (teaching *when*) and promises that never did (teaching *whether*). Timing estimates rest on fewer clean, firm promises as a result.
 
 ---
 
@@ -34,7 +34,6 @@ Known prototype bugs: `predict()` computes timing quantiles from week 0 instead 
 | Written ministerial statements `questions-statements-api.parliament.uk/api/writtenstatements/statements` | `value.{id, dateMade, memberId, title, text, house, answeringBodyName}` | **Starts Nov 2014.** 17,844 statements since 2015 (fetched) |
 | Hansard search `hansard-api.parliament.uk/search/contributions/{Spoken,Written}.json` | `{MemberId, SittingDate, DebateSection, ContributionExtId, ContributionTextFull, House}` | 2015+: 3,895 unique spoken contributions with a trigger phrase (fetched); 2006–2014 spoken + written fetching |
 | Members biography `members-api.parliament.uk/api/Members/{id}/Biography` | `value.governmentPosts[].{name, startDate, endDate}` | 983 speakers checked (fetched) |
-| GOV.UK King's/Queen's Speech briefing notes (search + content API) | PDF attachment per speech | **2012 to 2026 only: 13 speeches** (2012, 2013, 2014, 2015, 2016, 2017, Oct 2019, Dec 2019, 2021, 2022, 2023, 2024, 2026). 2006–2010 are not on GOV.UK; no speech in 2011 |
 
 **Repo:** `bills` (588 Government Bills), `stage_sittings`, `sessions`, `sitting_days`, `parliaments` are in Neon; `data/calendar.py` has `week_sitting_probability` and `future_sitting_days`. `bills` has **no long title**, which linking needs. There is **no `political_snapshots` table**, so `working_majority` is skipped.
 
@@ -51,7 +50,6 @@ backend/src/westminster_weather/takeup/
   model.py         # Tier A: TakeUpModel, cure model + required changes (2.2)
   triggers.py      # Tier B2: phrase lexicon (ported, tuned at checkpoint 4)
   tier_b.py        # Tier B2: fetch written statements, Hansard, ministers' posts (cache)
-  kings_speech.py  # Tier B1: briefing-note PDFs -> kings_speech_items -> links to bills
   bill_text.py     # Tier B4: bill long titles (Bills API, cached), first readings
   govuk_events.py  # Tier B1: consultation / response / green or white paper / draft bill events
   nlp.py           # Tier B2-B4: label, group, link, merge; review + score
@@ -80,12 +78,10 @@ Required changes from the prototype:
 
 ### 2.3 Tier B: the data pipeline
 
-- **B1 structured sources (no NLP).** King's/Queen's Speech items from the GOV.UK briefing notes (speech date = State Opening, announced name, department, draft and carried-over flags). GOV.UK search API events (consultation, consultation response, green / white paper, draft bill) into `idea_events`, reusing the Phase 1 tracker's event types.
+- **B1 structured sources (no NLP).** GOV.UK search API events (consultation, consultation response, green / white paper, draft bill) into `idea_events`, reusing the Phase 1 tracker's event types. (King's Speech items were removed.)
 - **B2 trigger finding.** Written ministerial statements (always ministers) and Hansard spoken contributions matching `triggers.py` phrases, 2015 onwards first, then 2006–2014; Hansard speakers checked against their government posts on the date. Firmness 2 / 1 / 0; questions, negations and demands excluded; timing words upgrade medium to firm. Gemini (if `GEMINI_API_KEY` is set) confirms commitments and cleans topics; rules-only path always works.
 - **B3 ideas.** Group mentions by meaning (TF-IDF), split groups with gaps over 2 years; trigger = earliest mention; mention-level rows kept so ideas can be rebuilt for any `as_of`.
 - **B4 links.** Match each idea to a Government Bill first read between trigger − 7 days and trigger + 5 years, using title + long title; auto-link strong matches, Gemini or hand-check for borderline ones. Merge ideas linked to the same bill, including NLP ideas with King's Speech ideas (earliest trigger kept). Unlinked ideas = not (yet) taken up.
-- **King's Speech ↔ earlier commitments.** In addition, each speech item is matched by text to earlier NLP ideas and stored as their dated `kings_speech` event, so the forecast moves from the speech day, before any bill exists. Items with no earlier idea are their own ideas (trigger = speech date, firmness 2, source `kings_speech`).
-- **Carried-over King's Speech bills** were first read before the speech, so under the "first reading ≥ trigger − 7 days" rule they cannot be a take-up outcome (they are already in Phase 2). They are kept in `kings_speech_items` but excluded from the take-up dataset, and counted in the report.
 - **B5 `get_takeup_signals(as_of)`**: ideas from mentions dated ≤ `as_of`, links only to bills first read by `as_of`, events only ≤ `as_of`, features only from information available on `as_of`. Merges through a shared bill become visible only once that bill's first reading is ≤ `as_of`.
 - **B6 quality check.** Export 100 mentions and 50 idea → bill links for hand-labelling (`cli review`), report precision (`cli score`); below 85% → fix lexicon / thresholds and rerun.
 
@@ -96,11 +92,11 @@ Required changes from the prototype:
 - **Database is the source of truth.** Raw sources (`source_documents`, `member_government_posts`, ~40–45 MB of the 1 GB) are stored as well as the derived tables; the local cache is only a download speed-up.
 - Connection strings are never printed or committed.
 
-Tables (full definitions in `DATA_CONTRACT.md` section 10): `source_documents`, `member_government_posts`, `kings_speech_items`, `signal_mentions`, `ideas`, `idea_mentions`, `idea_events`, `idea_bill_links`, `takeup_runs`, `takeup_forecasts`.
+Tables (full definitions in `DATA_CONTRACT.md` section 10): `source_documents`, `member_government_posts`, `signal_mentions`, `ideas`, `idea_mentions`, `idea_events`, `idea_bill_links`, `takeup_runs`, `takeup_forecasts`.
 
 ### 2.5 Features
 
-Registry with definitions and sources: `DATA_CONTRACT.md` section 10.11. z: `first_source`, `initial_firmness`, `department` (small ones pooled), `years_since_election`, `months_into_session`. x: `firm_commitment`, `repeat_mention`, `consultation`, `consultation_response`, `white_paper`, `draft_bill`, `kings_speech`, `new_parliament`. `working_majority` skipped (no `political_snapshots` table). Any feature with fewer than ~15 positive cases is dropped and logged.
+Registry with definitions and sources: `DATA_CONTRACT.md` section 10.11. z: `first_source`, `initial_firmness`, `department` (small ones pooled), `years_since_election`, `months_into_session`. x: `firm_commitment`, `repeat_mention`, `consultation`, `consultation_response`, `white_paper`, `draft_bill`, `new_parliament`. `working_majority` skipped (no `political_snapshots` table). Any feature with fewer than ~15 positive cases is dropped and logged.
 
 ### 2.6 Evaluation
 
@@ -115,7 +111,7 @@ Train on triggers before 2019-01-01, test on 2019 onwards; second split at 2022-
 | 1 | Read docs + prototype; prototype tests pass; this plan | **Checkpoint 1**: approved |
 | 2 | Neon branch `takeup-dev`; `DATA_CONTRACT.md` additions | **Checkpoint 2**: awaiting approval; then migrate the branch, tests pass |
 | 3 | Tier B fetch in the background, first-record keys shown | 2015+ done (17,844 statements, 3,895 Hansard contributions, 983 speakers); 2006–2014 running |
-| 4 | Tier B: King's Speech items + bill links; export links CSV | **Checkpoint 3**: you hand-check the links |
+| 4 | ~~King's Speech items + links; checkpoint 3~~ | **Removed** (King's Speech not used) |
 | 5 | Tier B: GOV.UK events into `idea_events` | events stored with dates and URLs |
 | 6 | Tier A: port the model with the required changes + conditional quantiles; synthetic tests; tests for nothing after `as_of`, zero hazard in non-sitting weeks, censoring at change of government, quantiles > s | tests pass |
 | 7 | Tier B: label, group, link, merge; `get_takeup_signals(as_of)`; review CSVs | **Checkpoint 4**: mentions, ideas, % linked, never-taken-up ideas |
@@ -126,7 +122,7 @@ Train on triggers before 2019-01-01, test on 2019 onwards; second split at 2022-
 | 12 | Lint, full test suite, README section, PR | **Checkpoint 6** |
 
 **Cut order if time runs out:** `/takeup/history` (static chart instead) → Tier B years before 2015 → Hansard (keep written statements) → Gemini (rules only).
-**Never cut:** King's Speech data, written statements 2015+, the `as_of` rule, the time-split evaluation, the baselines.
+**Never cut:** written statements 2015+, the `as_of` rule, the time-split evaluation, the baselines.
 
 ---
 
@@ -134,18 +130,17 @@ Train on triggers before 2019-01-01, test on 2019 onwards; second split at 2022-
 
 Where the task spec and the repo differ, the repo docs win; these are flagged for your decision:
 
-1. **King's Speech since 2006 ("never cut").** GOV.UK has briefing notes only from 2012 (13 speeches). At checkpoint 1 you approved 2012–2026 now and 2006–2010 if time allows; the 5 older speeches would need the National Archives copies.
+1. **King's Speech removed.** The spec lists it as never cut; Roman decided to drop it (2026-10-24).
 2. **Date column names.** The contract's point-in-time rule names event dates `event_date`; the spec says `date`. The contract name is kept.
 3. **Endpoint paths.** All existing endpoints are under `/api/v1/`, so the take-up endpoints are `/api/v1/takeup/...`.
 4. **Feature registry.** The take-up features get their own registry (contract 10.11) instead of being added to the passage model's 5.5, so the passage model's documents are not changed.
-5. **King's Speech merging.** Merging through a shared bill (spec B4) is kept; the additional text match of speech items to earlier commitments makes the speech visible to the forecast before the bill exists.
 
 ## 5. Risks
 
 | Risk | Mitigation |
 |---|---|
 | Too few "never taken up" ideas | NLP commitments are required; report counts at checkpoint 4 |
-| Wrong idea → bill links | long titles; full hand-check of King's Speech links, sample of NLP links |
+| Wrong idea → bill links | long titles; hand-check of a sample of NLP links (checkpoint 4) |
 | Hansard rate limit (~1,000 requests / 5 min) and HTTP 500 under parallel load | 2 searches at a time, request starts ≥ 0.35 s apart, failed searches logged and retried on the next run |
 | Take-up tables leaking into production | own MetaData + separate `DATABASE_URL_TAKEUP` (2.4) |
 | Clash with passage-model work | separate package, branch and tables |

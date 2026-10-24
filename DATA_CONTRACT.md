@@ -387,13 +387,9 @@ The take-up model asks whether a government commitment to legislate becomes a bi
 
 Naming follows the take-up task spec: **Tier A** is the model (cure model, `takeup/model.py`), **Tier B** is the data pipeline that fills these tables (sources, NLP triggers, ideas, links, events).
 
-An **idea** is one commitment to legislate on one topic. NLP ideas come from ministers' words (written ministerial statements, Hansard), grouped by topic; their earliest commitment is the trigger. King's/Queen's Speech items connect to them in two ways:
+An **idea** is one commitment to legislate on one topic. Ideas come only from ministers' words (written ministerial statements, Hansard), found by NLP and grouped by topic; the earliest commitment is the trigger. King's/Queen's Speech data is **not** used (decision of 2026-10-24); `bills.kings_speech_flag` in section 3 belongs to the passage model and is unaffected.
 
-- **King's Speech as an event of an earlier idea.** Each speech item is matched by text (announced name and briefing-note text vs the idea's topic, no bill information) to NLP ideas whose trigger is before the speech. A match is stored as an `idea_events` row (`event_type = 'kings_speech'`, `event_date` = speech date), so the forecast for that idea updates from the speech day onward (`x_kings_speech`), even before any bill is introduced. The matched item does not become a separate idea.
-- **King's Speech as a trigger.** An item with no earlier matching NLP idea becomes its own idea (`idea_id` = its `item_id`), triggered on the speech date with firmness 2 and `first_source = 'kings_speech'`. Ideas linked to the same bill are still merged (earliest trigger kept), as in the spec.
-- **Carried-over items** were first read before the speech, so they are not a take-up outcome (already in Phase 2): kept in `kings_speech_items`, excluded from `get_takeup_signals`.
-
-**Raw sources are stored too** (10.0a, 10.0b), so the database is the source of truth: the NLP pipeline reads from them, every commitment sentence points back to its source document, and changing the trigger lexicon never needs a re-fetch. About 40–45 MB stored for 2015 onwards. The fetcher's local cache (`backend/data/cache/takeup/`) is only a download speed-up.
+**Raw sources are stored too** (10.0a, 10.0b), so the database is the source of truth: the NLP pipeline reads from them, every commitment sentence points back to its source document, and changing the trigger lexicon never needs a re-fetch. About 25,000 documents with 86 MB of text (2006–2026; 71 MB of it from 2015), roughly 40–50 MB once Postgres compresses it. The fetcher's local cache (`backend/data/cache/takeup/`) is only a download speed-up.
 
 ### 10.0a `source_documents`
 One row per written ministerial statement (all, Nov 2014 onwards) or Hansard contribution that contains a trigger phrase.
@@ -424,22 +420,6 @@ Government posts per member, for the "was the speaker a minister on that date" c
 
 A member with no rows has held no government post. Members whose posts were fetched are listed in the fetch log, so "no rows" is distinguishable from "not fetched".
 
-### 10.1 `kings_speech_items`
-One row per bill announced in a King's/Queen's Speech briefing note (2012 onwards).
-| Column | Type | Notes |
-|---|---|---|
-| `item_id` | TEXT PK | `ks-<speech_date>-<nn>`, `nn` = order in the contents list |
-| `speech_date` | DATE | Date of the speech |
-| `announced_name` | TEXT | Bill name as announced, e.g. `Renters' Rights Bill` |
-| `is_draft` | BOOLEAN | Announced as a draft bill |
-| `is_carried_over` | BOOLEAN | Carried over from the previous session |
-| `department` | TEXT NULL | Lead department if stated |
-| `bill_id` | INTEGER NULL | Bill this item became (hand-checked at checkpoint 3); `NULL` = none |
-| `source_url` | TEXT | GOV.UK publication page |
-| `ingested_at` | TIMESTAMP | |
-
-`bill_id` here is the item's own link. When the item is its own idea, `idea_bill_links` holds the same link for that idea; the loader writes both from the same hand-checked value, and validation 10.10 checks they agree. Items matched to an earlier NLP idea appear as that idea's `kings_speech` event (10.5).
-
 ### 10.2 `signal_mentions`
 One row per sentence in which the government commits (or seems to commit) to legislate.
 | Column | Type | Notes |
@@ -464,13 +444,13 @@ One row per sentence in which the government commits (or seems to commit) to leg
 ### 10.3 `ideas`
 | Column | Type | Notes |
 |---|---|---|
-| `idea_id` | TEXT PK | `ks-<speech_date>-<nn>` (King's Speech item) or `nlp-<nnnnn>` (NLP idea) |
-| `origin` | TEXT | `'kings_speech'` or `'nlp'` |
+| `idea_id` | TEXT PK | `nlp-<nnnnn>` |
+| `origin` | TEXT | Always `'nlp'` (kept for future sources) |
 | `topic` | TEXT | |
 | `trigger_date` | DATE | Earliest mention (all data); `get_takeup_signals` recomputes it as of a date |
 | `department` | TEXT NULL | |
-| `first_source` | TEXT | `'kings_speech'`, `'wms'`, `'hansard_spoken'`, `'hansard_written'` |
-| `initial_firmness` | INTEGER | Firmness of the first mention (King's Speech = 2) |
+| `first_source` | TEXT | `'wms'`, `'hansard_spoken'`, `'hansard_written'` |
+| `initial_firmness` | INTEGER | Firmness of the first mention |
 | `n_mentions` | INTEGER | |
 | `ingested_at` | TIMESTAMP | |
 
@@ -478,7 +458,7 @@ One row per sentence in which the government commits (or seems to commit) to leg
 | Column | Type | Notes |
 |---|---|---|
 | `idea_id` | TEXT FK → `ideas` | |
-| `mention_id` | TEXT | `signal_mentions.mention_id`, or `kings_speech_items.item_id` for a King's Speech mention |
+| `mention_id` | TEXT | `signal_mentions.mention_id` |
 | `group_id` | TEXT | Topic group before ideas linked to the same bill were merged |
 | PK | (`idea_id`, `mention_id`) | |
 
@@ -489,7 +469,7 @@ Time-varying events for an idea (the model's `x` features).
 | Column | Type | Notes |
 |---|---|---|
 | `idea_id` | TEXT FK → `ideas` | |
-| `event_type` | TEXT | `'kings_speech'`, `'consultation'`, `'consultation_response'`, `'green_paper'`, `'white_paper'`, `'draft_bill'` |
+| `event_type` | TEXT | `'consultation'`, `'consultation_response'`, `'green_paper'`, `'white_paper'`, `'draft_bill'` |
 | `event_date` | DATE | |
 | `title` | TEXT | |
 | `source_url` | TEXT | |
@@ -536,7 +516,7 @@ The bill's first reading date is not copied here; it is read from `stage_sitting
 | `created_at` | TIMESTAMP | |
 
 ### 10.9 Interface: `get_takeup_signals(as_of) -> table`
-The take-up model reads data only through this function. One row per idea with at least one mention dated ≤ `as_of` (King's Speech items: `speech_date ≤ as_of`; carried-over items excluded).
+The take-up model reads data only through this function. One row per idea with at least one mention dated ≤ `as_of`.
 | Column | Notes |
 |---|---|
 | `signal_id`, `title` | `idea_id`, or `<idea_id>:<group_id>` for a group whose merge is not yet visible at `as_of` (10.4); topic |
@@ -546,13 +526,12 @@ The take-up model reads data only through this function. One row per idea with a
 | `z_*` | Features known at `signal_date` |
 | `x_*` | Dates time-varying events happened, only if ≤ `as_of` |
 
-Rules: mentions, events and links dated after `as_of` are invisible; merges of groups follow `idea_mentions.group_id` (10.4); first reading = earliest sitting of Bills API stage 6 or 1. `x_kings_speech` comes from the idea's `kings_speech` event (text match, dated on the speech), so it is visible from the speech date even if the bill has not yet been introduced; merging through a shared bill is only for de-duplicating ideas and stays invisible until that bill's first reading.
+Rules: mentions, events and links dated after `as_of` are invisible; merges of groups follow `idea_mentions.group_id` (10.4); first reading = earliest sitting of Bills API stage 6 or 1. Merging through a shared bill de-duplicates ideas and stays invisible until that bill's first reading.
 
 ### 10.10 Validation checks
-- Every `idea_mentions.mention_id` exists in `signal_mentions` or `kings_speech_items`.
+- Every `idea_mentions.mention_id` exists in `signal_mentions`.
 - Every `signal_mentions.doc_id` exists in `source_documents`; every `source_documents.member_id` of a Hansard row has been checked against `member_government_posts`.
 - Every `idea_bill_links.bill_id` (non-null) exists in `bills` and has a first-reading sitting on or after the idea's `trigger_date` minus 7 days.
-- Every King's Speech idea has a hand-checked link row (`checked = TRUE`), with `bill_id` or `NULL`, equal to `kings_speech_items.bill_id`.
 - No `signal_mentions.event_date` or `idea_events.event_date` after `ingested_at`.
 
 ### 10.11 Take-up feature registry
@@ -560,9 +539,9 @@ Features the take-up model requests by name (separate from the passage model's r
 
 | Feature | Type | Definition | Source |
 |---|---|---|---|
-| `first_source` | z, one-hot | Where the idea first appeared: `kings_speech` (reference), `written_statement`, `hansard` | `ideas.first_source` |
-| `initial_firmness` | z, 0/1/2 | Firmness of the first mention (King's Speech = 2) | `signal_mentions.firmness` |
-| `department` | z, one-hot | Lead department; small departments pooled into `other` | `source_documents.department`, `kings_speech_items.department` |
+| `first_source` | z, one-hot | Where the idea first appeared: `written_statement` (reference), `hansard` | `ideas.first_source` |
+| `initial_firmness` | z, 0/1/2 | Firmness of the first mention | `signal_mentions.firmness` |
+| `department` | z, one-hot | Lead department; small departments pooled into `other` | `source_documents.department` |
 | `years_since_election` | z, real | Years from the last general election to the trigger | `parliaments` |
 | `months_into_session` | z, real | Months from the session's start to the trigger | `sessions` |
 | `working_majority` | z, int | **Skipped:** needs `political_snapshots`, which does not exist yet | — |
@@ -572,5 +551,4 @@ Features the take-up model requests by name (separate from the passage model's r
 | `consultation_response` | x, date | Government response published | `idea_events` (GOV.UK) |
 | `white_paper` | x, date | White or green paper published | `idea_events` (GOV.UK) |
 | `draft_bill` | x, date | Draft bill published | `idea_events` (GOV.UK) |
-| `kings_speech` | x, date | Included in a King's/Queen's Speech after the trigger | `idea_events` (`kings_speech`) |
 | `new_parliament` | x, date | State Opening after a same-party election (2015, 2017, 2019) | `sessions`, `parliaments` |

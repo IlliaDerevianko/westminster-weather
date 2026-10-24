@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 23:02 — refactor(takeup): remove King's Speech data
+
+- **What:** deleted `kings_speech.py` and its tests; removed `kings_speech_items`, `x_kings_speech`, the `kings_speech` source and event type, and the carried-over exclusion from tables, signals and tests; written statements are now the reference first source (`z_src_hansard` only). Contract section 10 and `TAKEUP_PLAN.md` updated (task 4 / checkpoint 3 removed). Local King's Speech PDFs and the review CSV deleted.
+- **Why:** Roman decided not to use King's Speech data (overriding the spec's "never cut" after the trade-off was explained).
+- **Checks:** full `pytest`: 158 passed; `ruff check`: clean. All non-King's-Speech leakage protections and their tests kept.
+- **Notes:** `bill_text.py` kept (long titles needed for NLP linking). `bills.kings_speech_flag` (passage model) untouched. Timing estimates now rest on NLP ideas only.
+
 ## 2026-10-24 22:50 — Merge origin/main into feat/takeup-model
 
 - **What:** merged PR #17 (legislation.gov.uk post-Royal-Assent ingestion for all 522 Acts).

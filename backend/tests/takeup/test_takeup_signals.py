@@ -62,30 +62,8 @@ def synthetic() -> dict[str, pd.DataFrame]:
         _mention("wms-11-0", "2016-01-10", firmness=2),  # nlp-00006, same-party 2017 election
         _mention("wms-12-0", "2008-01-01"),  # nlp-00007, 2010 change of government
         _mention("wms-13-0", "2027-01-01", firmness=2),  # future mention of nlp-00006
-    ]
-    ks = [
-        {
-            "item_id": "ks-2016-05-18-01",
-            "speech_date": D("2016-05-18"),
-            "announced_name": "Prisons Bill",
-            "is_draft": False,
-            "is_carried_over": False,
-            "department": "Ministry of Justice",
-            "bill_id": 105,
-            "source_url": "u",
-            "ingested_at": NOW,
-        },
-        {
-            "item_id": "ks-2016-05-18-02",
-            "speech_date": D("2016-05-18"),
-            "announced_name": "Topic Six Bill",
-            "is_draft": False,
-            "is_carried_over": False,
-            "department": None,
-            "bill_id": None,
-            "source_url": "u",
-            "ingested_at": NOW,
-        },
+        # nlp-00008: bill 105 (first read 2016-06-20), with consultation and white paper
+        _mention("wms-14-0", "2016-05-18", firmness=2, dept="Ministry of Justice"),
     ]
     idea_mentions = [
         ("nlp-00001", "wms-1-0", "g1"),
@@ -102,16 +80,16 @@ def synthetic() -> dict[str, pd.DataFrame]:
         ("nlp-00006", "wms-11-0", "g7"),
         ("nlp-00006", "wms-13-0", "g7"),
         ("nlp-00007", "wms-12-0", "g8"),
-        ("ks-2016-05-18-01", "ks-2016-05-18-01", "ks-2016-05-18-01"),
+        ("nlp-00008", "wms-14-0", "g10"),
     ]
     ideas = [
         {
             "idea_id": i,
-            "origin": "kings_speech" if i.startswith("ks-") else "nlp",
+            "origin": "nlp",
             "topic": f"topic {i}",
             "trigger_date": D("2015-01-01"),
             "department": None,
-            "first_source": "kings_speech" if i.startswith("ks-") else "wms",
+            "first_source": "wms",
             "initial_firmness": 1,
             "n_mentions": 1,
             "ingested_at": NOW,
@@ -124,16 +102,15 @@ def synthetic() -> dict[str, pd.DataFrame]:
         ("nlp-00003", 103),
         ("nlp-00004", 104),
         ("nlp-00005", None),
-        ("ks-2016-05-18-01", 105),
+        ("nlp-00008", 105),
     ]
     events = [
-        ("ks-2016-05-18-01", "consultation", "2015-12-01"),
-        ("ks-2016-05-18-01", "white_paper", "2016-02-01"),
-        ("ks-2016-05-18-01", "draft_bill", "2017-01-01"),
+        ("nlp-00008", "consultation", "2015-12-01"),
+        ("nlp-00008", "white_paper", "2016-02-01"),
+        ("nlp-00008", "draft_bill", "2017-01-01"),
         ("nlp-00006", "consultation_response", "2019-01-01"),
-        # ks-2016-05-18-02 matched by text to nlp-00006's earlier commitment: an event, not
-        # an idea of its own (and no bill yet)
-        ("nlp-00006", "kings_speech", "2016-05-18"),
+        # nlp-00006 never gets a bill: its events are visible from their own dates
+        ("nlp-00006", "draft_bill", "2016-05-18"),
     ]
     sittings = [
         (1, 101, 6, "2016-03-01"),
@@ -158,7 +135,6 @@ def synthetic() -> dict[str, pd.DataFrame]:
     sitting_days = pd.date_range("2010-01-04", "2026-10-22", freq="W-TUE")
     return {
         "signal_mentions": pd.DataFrame(mentions),
-        "kings_speech_items": pd.DataFrame(ks).astype({"bill_id": "Int64"}),
         "ideas": pd.DataFrame(ideas),
         "idea_mentions": pd.DataFrame(idea_mentions, columns=["idea_id", "mention_id", "group_id"]),
         "idea_events": pd.DataFrame(
@@ -226,14 +202,12 @@ def _truncate(t: dict[str, pd.DataFrame], as_of: date) -> dict[str, pd.DataFrame
         out[name] = df[pd.to_datetime(df[col]) <= pd.Timestamp(as_of)].reset_index(drop=True)
 
     keep("signal_mentions", "event_date")
-    keep("kings_speech_items", "speech_date")
     keep("idea_events", "event_date")
     keep("stage_sittings", "event_date")
     keep("sessions", "start_date")
     keep("sitting_days", "date")
     # idea_mentions rows have no date of their own: they go with their (removed) mention
     known = set(out["signal_mentions"]["mention_id"].astype(str))
-    known |= set(out["kings_speech_items"]["item_id"].astype(str))
     im = t["idea_mentions"]
     out["idea_mentions"] = im[im["mention_id"].astype(str).isin(known)].reset_index(drop=True)
     p = t["parliaments"].copy()
@@ -247,7 +221,7 @@ def _truncate(t: dict[str, pd.DataFrame], as_of: date) -> dict[str, pd.DataFrame
 AS_OFS = [
     D("2010-04-20"),  # between the 2010 dissolution and the election
     D("2016-01-01"),
-    D("2016-05-18"),  # the speech day: kings_speech event, no bill yet
+    D("2016-05-18"),  # nlp-00008's first mention; nlp-00006's draft bill, no bill yet
     D("2016-06-01"),
     D("2017-06-15"),
     D("2024-01-01"),
@@ -303,7 +277,7 @@ def test_future_groups_do_not_change_split_rows(synthetic, as_of):
     t = _with_events(
         synthetic,
         [
-            ("nlp-00001", "kings_speech", "2015-10-15"),
+            ("nlp-00001", "draft_bill", "2015-10-15"),
             ("nlp-00001", "consultation", "2015-10-01"),
             ("nlp-00001", "green_paper", "2015-12-15"),
         ],
@@ -313,15 +287,15 @@ def test_future_groups_do_not_change_split_rows(synthetic, as_of):
     pd.testing.assert_frame_equal(full, past)
 
 
-def test_kings_speech_event_visible_from_speech_for_idea_that_later_gets_a_bill(synthetic):
+def test_idea_event_visible_from_its_date_for_idea_that_later_gets_a_bill(synthetic):
     """nlp-00001 gains a second group (g2, 2015-11-01) and bill 101 later; on 2015-10-20 its
-    only visible group still gets the kings_speech event from the speech date (§10.9)."""
+    only visible group still gets the idea's events from their own dates (§10.9)."""
     t = _with_events(
         synthetic,
-        [("nlp-00001", "kings_speech", "2015-10-15"), ("nlp-00001", "consultation", "2015-10-01")],
+        [("nlp-00001", "draft_bill", "2015-10-15"), ("nlp-00001", "consultation", "2015-10-01")],
     )
     row = _signals(t, "2015-10-20").loc["nlp-00001:g1"]
-    assert row["x_kings_speech"] == pd.Timestamp("2015-10-15")
+    assert row["x_draft_bill"] == pd.Timestamp("2015-10-15")
     assert row["x_consultation"] == pd.Timestamp("2015-10-01")
 
 
@@ -334,7 +308,7 @@ def test_invisible_mentions_are_ignored(synthetic):
     later = _signals(synthetic, "2018-01-01").loc["nlp-00006:g7"]
     assert later["z_initial_firmness"] == 2 and pd.isna(later["x_firm_commitment"])
     assert pd.isna(later["x_repeat_mention"])  # the only later mention is in 2027
-    assert later["x_kings_speech"] == pd.Timestamp("2016-05-18")  # its kings_speech event
+    assert later["x_draft_bill"] == pd.Timestamp("2016-05-18")  # its own idea event
     assert pd.isna(later["x_consultation_response"])  # 2019-01-01 is after as_of
     latest = _signals(synthetic, "2026-10-24").loc["nlp-00006:g7"]
     assert latest["x_consultation_response"] == pd.Timestamp("2019-01-01")
@@ -351,10 +325,10 @@ def test_groups_split_before_first_reading(synthetic):
     assert g1["signal_date"] == pd.Timestamp("2015-07-01")
     assert g1["x_firm_commitment"] == pd.Timestamp("2015-09-01")
     assert g1["x_repeat_mention"] == pd.Timestamp("2015-09-01")
-    assert g1["z_src_wms"] == 1 and g1["z_initial_firmness"] == 1
+    assert g1["z_src_hansard"] == 0 and g1["z_initial_firmness"] == 1  # wms = reference
     assert pd.isna(g1["bill_date"]) and pd.isna(g1["bill_id"])
     assert g2["signal_date"] == pd.Timestamp("2015-11-01")
-    assert g2["z_src_hansard"] == 1 and g2["z_src_wms"] == 0
+    assert g2["z_src_hansard"] == 1
     assert pd.isna(g2["x_repeat_mention"])
     assert (df["idea_id"] == "nlp-00001").sum() == 2
 
@@ -463,7 +437,7 @@ def test_same_party_election_sets_new_parliament(synthetic):
     later = _signals(synthetic, "2018-01-01").loc["nlp-00006:g7"]
     assert later["x_new_parliament"] == pd.Timestamp("2017-06-21")
     assert later["data_end"] == pd.Timestamp("2018-01-01")  # not censored
-    assert later["x_kings_speech"] == pd.Timestamp("2016-05-18")
+    assert later["x_draft_bill"] == pd.Timestamp("2016-05-18")
     before = _signals(synthetic, "2017-06-15").loc["nlp-00006:g7"]
     assert pd.isna(before["x_new_parliament"])  # election held, State Opening not yet
 
@@ -471,14 +445,14 @@ def test_same_party_election_sets_new_parliament(synthetic):
 # ---------------------------------------------------------------------- features
 
 
-def test_kings_speech_idea_signal(synthetic):
+def test_idea_signal_with_events(synthetic):
     df = _signals(synthetic, "2016-12-31")
-    a = df.loc["ks-2016-05-18-01"]
-    assert a["origin"] == "kings_speech"
-    assert a["signal_date"] == pd.Timestamp("2016-05-18")  # triggered on the speech date
+    a = df.loc["nlp-00008"]
+    assert a["origin"] == "nlp" and a["title"] == "topic nlp-00008"
+    assert a["signal_date"] == pd.Timestamp("2016-05-18")
     assert a["z_initial_firmness"] == 2
-    assert a["z_src_wms"] == 0 and a["z_src_hansard"] == 0  # King's Speech = reference
-    assert pd.isna(a["x_kings_speech"])  # announced at the signal itself
+    assert a["z_src_hansard"] == 0  # written statement = reference level
+    assert "z_src_wms" not in df.columns
     assert a["x_consultation"] == pd.Timestamp("2015-12-01")
     assert a["x_white_paper"] == pd.Timestamp("2016-02-01")
     assert pd.isna(a["x_draft_bill"])  # 2017-01-01 is after as_of
@@ -489,57 +463,14 @@ def test_kings_speech_idea_signal(synthetic):
     ("as_of", "expected"),
     [("2016-05-17", None), ("2016-05-18", "2016-05-18"), ("2016-12-31", "2016-05-18")],
 )
-def test_kings_speech_event_visible_from_speech_before_any_bill(synthetic, as_of, expected):
-    """x_kings_speech comes from the idea's kings_speech event (text match, dated on the
-    speech): visible from the speech date on, although nlp-00006 has no bill at all."""
-    df = TakeupData(synthetic).get_takeup_signals(as_of, min_positive=0)
-    row = df.set_index("signal_id").loc["nlp-00006:g7"]  # one group, no link: own events
+def test_idea_event_visible_from_its_date_before_any_bill(synthetic, as_of, expected):
+    """An idea event is visible from its own date on, although nlp-00006 has no bill at all."""
+    row = _signals(synthetic, as_of).loc["nlp-00006:g7"]  # one group, no link: own events
     assert pd.isna(row["bill_id"]) and pd.isna(row["bill_date"])
     if expected is None:
-        assert pd.isna(row["x_kings_speech"])
+        assert pd.isna(row["x_draft_bill"])
     else:
-        assert row["x_kings_speech"] == pd.Timestamp(expected)
-    # the matched item is not an idea of its own
-    assert not df["idea_id"].str.startswith("ks-2016-05-18-02").any()
-
-
-def test_kings_speech_item_as_mention_is_not_x_kings_speech(synthetic):
-    """A King's Speech item among an idea's mentions (e.g. merged in through a bill) never
-    sets x_kings_speech; only kings_speech events do, and only after the first mention."""
-    t = dict(synthetic)
-    t["idea_events"] = t["idea_events"][t["idea_events"]["event_type"] != "kings_speech"]
-    t["idea_mentions"] = pd.concat(
-        [
-            t["idea_mentions"],
-            pd.DataFrame(
-                [("nlp-00006", "ks-2016-05-18-02", "g7")],
-                columns=["idea_id", "mention_id", "group_id"],
-            ),
-        ],
-        ignore_index=True,
-    )
-    row = _signals(t, "2018-01-01").loc["nlp-00006:g7"]
-    assert pd.isna(row["x_kings_speech"]) and pd.isna(row["x_repeat_mention"])
-    # an event on the trigger day (or before it) is not "after the trigger"
-    ev = (
-        t["idea_events"]
-        .iloc[[0]]
-        .assign(idea_id="nlp-00006", event_type="kings_speech", event_date=D("2016-01-10"))
-    )
-    t["idea_events"] = pd.concat([t["idea_events"], ev], ignore_index=True)
-    assert pd.isna(_signals(t, "2018-01-01").loc["nlp-00006:g7", "x_kings_speech"])
-
-
-def test_kings_speech_event_of_multi_group_idea_goes_to_its_first_group(synthetic):
-    """While split, only the group of the idea's earliest mention (g1) gets idea events, a
-    kings_speech event included; the other group (g2) gets them only through the merge."""
-    t = _with_events(synthetic, [("nlp-00001", "kings_speech", "2015-12-01")])
-    split = _signals(t, "2016-01-01")
-    assert split.loc["nlp-00001:g1", "x_kings_speech"] == pd.Timestamp("2015-12-01")
-    assert pd.isna(split.loc["nlp-00001:g2", "x_kings_speech"])
-    assert _signals(t, "2016-06-01").loc["nlp-00001", "x_kings_speech"] == pd.Timestamp(
-        "2015-12-01"
-    )
+        assert row["x_draft_bill"] == pd.Timestamp(expected)
 
 
 def test_green_and_white_papers_are_one_feature(synthetic):
@@ -573,13 +504,13 @@ def test_departments_and_sparse_feature_drop(synthetic):
     )
     assert df.set_index("signal_id").loc["nlp-00001", "z_dept_education"] == 1
     sparse = data.get_takeup_signals("2026-10-24")  # default: 15 positive cases
-    assert "z_src_wms" in data.dropped_features and "z_src_wms" not in sparse
+    assert "z_src_hansard" in data.dropped_features and "z_src_hansard" not in sparse
     assert "z_dept_education" in data.dropped_features
     assert {"z_initial_firmness", "z_years_since_election"} <= set(sparse.columns)
 
 
 def test_fixed_feature_list(synthetic):
-    feats = ["z_src_wms", "z_dept_treasury", "x_draft_bill", "x_manifesto"]
+    feats = ["z_src_hansard", "z_dept_treasury", "x_draft_bill", "x_manifesto"]
     df = TakeupData(synthetic).get_takeup_signals("2026-10-24", features=feats)
     assert [c for c in df.columns if c[:2] in ("z_", "x_")] == feats
     assert (df["z_dept_treasury"] == 0).all() and df["x_manifesto"].isna().all()
@@ -616,7 +547,6 @@ def test_calendar_helpers(synthetic, monkeypatch):
 TAKEUP_TABLES = {
     "source_documents",
     "member_government_posts",
-    "kings_speech_items",
     "signal_mentions",
     "ideas",
     "idea_mentions",
@@ -643,8 +573,15 @@ def test_tables_on_own_metadata():
         for fk in table.foreign_keys:
             assert fk.column.table.metadata is tables.takeup_metadata, fk
     assert not tables.idea_bill_links.c.bill_id.foreign_keys
-    assert not tables.kings_speech_items.c.bill_id.foreign_keys
-    assert tables.kings_speech_items.c.bill_id.nullable
+    assert not tables.idea_mentions.c.mention_id.foreign_keys  # checked in Python (§10.10)
+    assert "kings_speech_items" not in tables.TABLES
+    assert set(tables.DATA_TABLES) == {
+        tables.signal_mentions,
+        tables.ideas,
+        tables.idea_mentions,
+        tables.idea_events,
+        tables.idea_bill_links,
+    }
     assert [c.name for c in tables.idea_mentions.primary_key] == ["idea_id", "mention_id"]
 
 
@@ -784,60 +721,6 @@ def test_bill_long_before_signal_is_dropped(synthetic):
     assert data.dropped_signals == {"nlp-00004": 104}
 
 
-def _with_ks_item(t, item_id, speech, carried, bill_id=None):
-    t = dict(t)
-    item = {
-        "item_id": item_id,
-        "speech_date": D(speech),
-        "announced_name": "Carried Bill",
-        "is_draft": False,
-        "is_carried_over": carried,
-        "department": None,
-        "bill_id": bill_id,
-        "source_url": "u",
-        "ingested_at": NOW,
-    }
-    idea = item_id  # a King's Speech item that is its own idea
-    t["kings_speech_items"] = pd.concat(
-        [t["kings_speech_items"], pd.DataFrame([item]).astype({"bill_id": "Int64"})],
-        ignore_index=True,
-    )
-    t["idea_mentions"] = pd.concat(
-        [
-            t["idea_mentions"],
-            pd.DataFrame([(idea, item_id, item_id)], columns=["idea_id", "mention_id", "group_id"]),
-        ],
-        ignore_index=True,
-    )
-    if bill_id is not None:
-        link = t["idea_bill_links"].iloc[[0]].assign(idea_id=idea, bill_id=bill_id)
-        t["idea_bill_links"] = pd.concat([t["idea_bill_links"], link], ignore_index=True)
-    return t
-
-
-def test_carried_over_kings_speech_items_are_not_signals(synthetic):
-    # carried over, linked to a bill first read in an earlier session
-    t = _with_ks_item(synthetic, "ks-2017-06-21-01", "2017-06-21", True, bill_id=102)
-    # carried over, not linked: excluded by the flag alone
-    t = _with_ks_item(t, "ks-2017-06-21-02", "2017-06-21", True)
-    data = TakeupData(t)
-    df = data.get_takeup_signals("2020-01-01", min_positive=0)
-    assert not any(i.startswith("ks-2017-06-21") for i in df["idea_id"])
-    assert data.carried_over_items == ["ks-2017-06-21-01", "ks-2017-06-21-02"]
-    assert data.n_carried_over == 2
-    assert "ks-2017-06-21-01" not in data.dropped_signals  # excluded, not dropped
-    # counted only once the speech has happened, and reset on every call
-    data.get_takeup_signals("2017-06-20", min_positive=0)
-    assert data.n_carried_over == 0
-    # the same item announced as new is a signal
-    t = _with_ks_item(synthetic, "ks-2017-06-21-02", "2017-06-21", False)
-    data = TakeupData(t)
-    df = data.get_takeup_signals("2020-01-01", min_positive=0).set_index("signal_id")
-    assert "ks-2017-06-21-02:ks-2017-06-21-02" in df.index and data.n_carried_over == 0
-    row = df.loc["ks-2017-06-21-02:ks-2017-06-21-02"]
-    assert row["origin"] == "kings_speech" and row["z_initial_firmness"] == 2
-
-
 # -------------------------------------------------- split rows: no idea-level data
 
 
@@ -856,36 +739,35 @@ def _comparable(row: pd.Series) -> pd.Series:
 
 def test_split_group_gets_nothing_from_its_later_idea(synthetic):
     """Before the first reading a group's row must be the same whether or not it will be
-    merged (through the bill) into a King's Speech idea with events, origin and a title."""
+    merged (through the bill) into an idea with events and a title."""
     t = dict(synthetic)
-    extra = _mention("wms-20-0", "2016-04-01", firmness=1)
+    extra = _mention("wms-20-0", "2016-05-25", firmness=1)
     t["signal_mentions"] = pd.concat(
         [t["signal_mentions"], pd.DataFrame([extra])], ignore_index=True
     )
     im = pd.DataFrame(
-        [("ks-2016-05-18-01", "wms-20-0", "g9")], columns=["idea_id", "mention_id", "group_id"]
+        [("nlp-00008", "wms-20-0", "g9")], columns=["idea_id", "mention_id", "group_id"]
     )
     t["idea_mentions"] = pd.concat([t["idea_mentions"], im], ignore_index=True)
     as_of = "2016-06-01"  # bill 105 is first read on 2016-06-20
     merged_later = _signals(t, as_of)
     alone = _signals(_own_idea(t, "g9", "nlp-00099"), as_of)
-    row = merged_later.loc["ks-2016-05-18-01:g9"]
+    row = merged_later.loc["nlp-00008:g9"]
     assert row["origin"] == "nlp" and row["title"] == "topic"
     assert pd.isna(row["x_consultation"]) and pd.isna(row["x_white_paper"])
     pd.testing.assert_series_equal(
         _comparable(row), _comparable(alone.loc["nlp-00099:g9"]), check_names=False
     )
-    # the group holding the King's Speech item keeps the item's own events
-    anchor = merged_later.loc["ks-2016-05-18-01:ks-2016-05-18-01"]
-    assert anchor["origin"] == "kings_speech" and anchor["title"] == "Prisons Bill"
+    # the group of the idea's earliest mention (the anchor) keeps the idea's events
+    anchor = merged_later.loc["nlp-00008:g10"]
     assert anchor["x_consultation"] == pd.Timestamp("2015-12-01")
-    # after the first reading the idea is one signal with idea-level origin, title and events
-    after = _signals(t, "2016-07-01").loc["ks-2016-05-18-01"]
-    assert after["origin"] == "kings_speech" and after["title"] == "topic ks-2016-05-18-01"
-    assert after["signal_date"] == pd.Timestamp("2016-04-01")
+    assert pd.isna(anchor["x_repeat_mention"])  # g9's mention is not the anchor's repeat
+    # after the first reading the idea is one signal with idea-level title and events
+    after = _signals(t, "2016-07-01").loc["nlp-00008"]
+    assert after["origin"] == "nlp" and after["title"] == "topic nlp-00008"
+    assert after["signal_date"] == pd.Timestamp("2016-05-18")
     assert after["x_white_paper"] == pd.Timestamp("2016-02-01")
-    # the King's Speech item merged in through the bill is a mention, not an x feature
-    assert pd.isna(after["x_kings_speech"]) and pd.isna(after["x_repeat_mention"])
+    assert after["x_repeat_mention"] == pd.Timestamp("2016-05-25")
 
 
 def test_multi_group_nlp_idea_events_go_to_its_first_group(synthetic):
@@ -895,22 +777,6 @@ def test_multi_group_nlp_idea_events_go_to_its_first_group(synthetic):
     assert pd.isna(split.loc["nlp-00001:g2", "x_consultation"])
     merged = _signals(t, "2016-06-01").loc["nlp-00001"]
     assert merged["x_consultation"] == pd.Timestamp("2015-10-01")
-
-
-def test_kings_speech_idea_events_wait_for_its_own_item(synthetic):
-    """Before the speech, a group merged into a King's Speech idea through the bill is the
-    idea's only visible group, but it still gets none of the idea's events."""
-    t = dict(synthetic)
-    extra = _mention("wms-20-0", "2016-04-01", firmness=1)
-    t["signal_mentions"] = pd.concat(
-        [t["signal_mentions"], pd.DataFrame([extra])], ignore_index=True
-    )
-    im = pd.DataFrame(
-        [("ks-2016-05-18-01", "wms-20-0", "g9")], columns=["idea_id", "mention_id", "group_id"]
-    )
-    t["idea_mentions"] = pd.concat([t["idea_mentions"], im], ignore_index=True)
-    row = _signals(t, "2016-05-01").loc["ks-2016-05-18-01:g9"]
-    assert pd.isna(row["x_consultation"]) and pd.isna(row["x_white_paper"])
 
 
 # ---------------------------------------------------------- same-day mentions
@@ -930,7 +796,7 @@ def test_firmness_on_signal_day_uses_every_mention(synthetic):
     assert row["z_initial_firmness"] == 2
     assert pd.isna(row["x_firm_commitment"])  # already firm at the signal
     assert pd.isna(row["x_repeat_mention"])  # a same-day document is not a later repeat
-    assert row["z_src_wms"] == 1  # the first source is still the statement
+    assert row["z_src_hansard"] == 0  # the first source is still the statement
 
 
 # ------------------------------------------------------- read-only reference load
