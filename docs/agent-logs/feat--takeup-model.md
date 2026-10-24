@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 22:50 — Merge origin/main into feat/takeup-model
+
+- **What:** merged PR #17 (legislation.gov.uk post-Royal-Assent ingestion for all 522 Acts).
+- **Why:** Roman asked to bring the branch up to date with `main`.
+- **Checks:** no conflicts; `pytest`: 184 passed; `ruff check`: clean.
+
 ## 2026-10-24 22:48 — feat(takeup): align data layer with contract section 10; hide DB URLs
 
 - **What:** settings renamed to `DATABASE_URL_TAKEUP` / `DATABASE_URL_TAKEUP_UNPOOLED` (still never falling back to `DATABASE_URL`); new tables `source_documents`, `member_government_posts`; `signal_mentions.doc_id`; `ideas.origin`; `kings_speech_items.bill_id`; `takeup_forecasts` keyed by `signal_id` with the spec column names. `get_takeup_signals`: `x_kings_speech` from dated `idea_events`, carried-over King's Speech items excluded and counted, one `x_white_paper` for white or green papers. All database URL settings are now hidden from `repr()`.

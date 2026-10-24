@@ -148,6 +148,40 @@ async def test_ping_pong_marked_skipped_with_zero_rounds_when_unneeded() -> None
     assert ping_pong["status"] == StageStatus.SKIPPED
     assert ping_pong["sitting_count"] == 0
     assert "0 ping-pong rounds" in ping_pong["summary"]
+    comm_orders = next(s for s in data["stages"] if s["stage"] == "commencement_orders")
+    assert comm_orders["status"] == StageStatus.SKIPPED
+    assert comm_orders["sitting_count"] == 0
+    in_force = next(s for s in data["stages"] if s["stage"] == "law_fully_in_force")
+    assert in_force["status"] == StageStatus.COMPLETED
+
+
+async def test_post_royal_assent_stages_and_model_interface_from_neon_db() -> None:
+    from datetime import date
+
+    from westminster_weather.data.interface import (
+        get_act_commencements,
+        get_post_royal_assent_events,
+    )
+
+    comm_df = get_act_commencements(date(2026, 10, 24))
+    events_df = get_post_royal_assent_events(date(2026, 10, 24))
+    assert len(comm_df) >= 520
+    assert len(events_df) >= 4500
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/bills/3137")
+    assert response.status_code == 200
+    data = response.json()
+    by_stage = {s["stage"]: s for s in data["stages"]}
+    assert by_stage["commencement_orders"]["status"] == StageStatus.COMPLETED
+    assert by_stage["commencement_orders"]["sitting_count"] >= 7
+    assert by_stage["regulations_drafted"]["status"] == StageStatus.COMPLETED
+    assert by_stage["regulations_drafted"]["sitting_count"] >= 4
+    assert by_stage["regulations_laid"]["status"] == StageStatus.COMPLETED
+    assert by_stage["regulations_laid"]["sitting_count"] >= 7
+    assert by_stage["law_fully_in_force"]["status"] == StageStatus.COMPLETED
+
 
 
 
