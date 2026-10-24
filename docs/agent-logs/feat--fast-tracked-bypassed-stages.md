@@ -1,3 +1,12 @@
+## 2026-10-25 — Antigravity — `feat(ui): display red stop box only on stage where bill actually stopped`
+
+- **Branch**: `feat/fast-tracked-bypassed-stages`
+- **Summary**: Updated the 3-phase pipeline view in `frontend/src/app/page.tsx` so the red stop-risk box (`stopMeta`) on the right of a stage card is rendered **only** when that stage actually stopped (`stage.status === "stopped"` and `stage.active_stop_reason` is set). Bills that turn into law or are still in progress now render full-width (`col-span-12`) stage cards with no unused red stop boxes, while stopped bills (e.g. Bill `#3703` *Tobacco and Vapes Bill* at `commons_report_stage` due to `election_called`) display only the taken stop box on the exact stage where they stopped.
+- **Files touched**:
+  - `frontend/src/app/page.tsx`
+  - `docs/agent-logs/feat--fast-tracked-bypassed-stages.md`
+- **Verification**: `npx tsc --noEmit` and `uv run pytest -q` passed.
+
 ## 2026-10-25 — Antigravity — `feat(stages): mark bypassed pre-parliamentary and 0-sitting parliamentary stages as fast_tracked`
 
 - **Branch**: `feat/fast-tracked-bypassed-stages`

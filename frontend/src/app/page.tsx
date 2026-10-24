@@ -540,9 +540,9 @@ function BillTrackerContent() {
         {/* Legend */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-slate-600 border-t border-slate-100">
           <span>
-            Each phase column shows the main legislative path on the left and{" "}
-            <strong className="text-red-700">dashed red stop risks</strong> on
-            the right.
+            Each phase column shows the main legislative path, with a{" "}
+            <strong className="text-red-700">red stop branch</strong> on the
+            right only when a bill actually stopped at that stage.
           </span>
           <div className="flex flex-wrap items-center gap-4">
             <span className="flex items-center gap-1.5">
@@ -654,10 +654,14 @@ function BillTrackerContent() {
                     const countLabel = countUnit
                       ? `${stage.sitting_count} ${countUnit}`
                       : null;
-                    const stopRiskKey =
-                      stage.active_stop_reason ?? stage.stop_risks[0];
+                    const stopRiskKey = isStageStopped
+                      ? stage.active_stop_reason
+                      : null;
                     const stopMeta = stopRiskKey
-                      ? STOP_RISK_DESCRIPTIONS[stopRiskKey]
+                      ? STOP_RISK_DESCRIPTIONS[stopRiskKey] ?? {
+                          title: stopRiskKey.replace(/_/g, " "),
+                          subtitle: "Bill stopped at this stage",
+                        }
                       : null;
 
                     return (
