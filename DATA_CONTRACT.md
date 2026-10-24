@@ -523,9 +523,10 @@ The bill's first reading date is not copied here; it is read from `stage_sitting
 | Column | Type | Notes |
 |---|---|---|
 | `run_id` | INTEGER FK → `takeup_runs` | |
+| `signal_id` | TEXT | Row of `get_takeup_signals(as_of)`: the `idea_id`, or `<idea_id>:<group_id>` for a group not yet merged at `as_of` (10.4) |
 | `idea_id` | TEXT FK → `ideas` | |
 | `as_of` | DATE | |
-| PK | (`run_id`, `idea_id`, `as_of`) | |
+| PK | (`run_id`, `signal_id`, `as_of`) | |
 | `pi`, `pi_lo`, `pi_hi` | REAL | Chance ever taken up and its 95% CI |
 | `verdict` | TEXT | `'likely'`, `'unlikely'` or `'uncertain'` |
 | `weeks_elapsed` | INTEGER | Weeks since trigger with no bill |
@@ -538,7 +539,7 @@ The bill's first reading date is not copied here; it is read from `stage_sitting
 The take-up model reads data only through this function. One row per idea with at least one mention dated ≤ `as_of` (King's Speech items: `speech_date ≤ as_of`; carried-over items excluded).
 | Column | Notes |
 |---|---|
-| `signal_id`, `title` | `idea_id`, topic |
+| `signal_id`, `title` | `idea_id`, or `<idea_id>:<group_id>` for a group whose merge is not yet visible at `as_of` (10.4); topic |
 | `signal_date` | Earliest mention ≤ `as_of` |
 | `bill_date` | First reading of the linked bill if ≤ `as_of`, else `NULL` |
 | `data_end` | `as_of`, or the dissolution date if the governing party later changed before a bill appeared (censored, not failed) |

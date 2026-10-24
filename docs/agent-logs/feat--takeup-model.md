@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 22:35 — docs(contract): key take-up forecasts by signal_id
+
+- **What:** `takeup_forecasts` gets a `signal_id` column and primary key (`run_id`, `signal_id`, `as_of`); 10.9 documents `signal_id` = `idea_id`, or `<idea_id>:<group_id>` for a group whose merge is not yet visible at `as_of`.
+- **Why:** a reviewer found that one idea can produce several signals before its merge, which would collide on (`run_id`, `idea_id`, `as_of`).
+- **Checks:** none (docs only; still a draft for checkpoint 2).
+
 ## 2026-10-24 22:29 — Merge origin/main into feat/takeup-model
 
 - **What:** merged 13 commits from `main` (PRs #12–#16: `/api/v1/bills` list and dynamic tracker for any bill, bill selector page, all three lifecycle phases on the tracker, Government-Bills-only ingestion, ping-pong skipped/rounds display).
