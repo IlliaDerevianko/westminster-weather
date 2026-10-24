@@ -1,5 +1,12 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 22:07 — fix(data): label bills with a Royal Assent sitting as Acts
+
+- **What:** in `data/bills_api.py` (`flatten_bills`), a bill is an Act (`is_act`, outcome `royal_assent`) if the API says so **or** it has a Royal Assent (stage 11) sitting; a warning is logged when this overrides the API. Added an offline test and a Neon DB test that fails if any non-Act bill has a Royal Assent sitting. Reloaded Neon with `cli fetch` (government bills only).
+- **Why:** Aleks approved changing the DB code and data. Bill 3064 Commercial Rent (Coronavirus) Bill received Royal Assent on 2022-03-24 (legislation.gov.uk: Commercial Rent (Coronavirus) Act 2022, c. 12, enactment date 2022-03-24), but the Bills API still returns `isAct = False` while its `currentStage` is Royal Assent. Cause: the wrong API flag, not carry-over (the bill was only ever in session 36).
+- **Checks:** `ruff`: clean; `pytest`: all passed after the reload. DB now: 522 royal_assent, 26 fell_dissolution, 17 fell_session_end, 18 in_progress, 5 withdrawn; sitting_days 4,274, sessions 19, scheduled 27 (unchanged).
+- **Notes:** all 66 non-Act bills were checked against legislation.gov.uk for an Act with the same title enacted while the bill was live. Only one other hit: 2732 Non-Domestic Rating (Lists) Bill [HL], but that Act came from Commons bill 2774 (already an Act); 2732 was dropped after Lords 1st reading, so its label is correct.
+
 ## 2026-10-24 21:46 — feat(model): cli build for hazard training rows and advance-rate chart
 
 - **What:** added `cli build [--as-of]` (prints row count, positive rate, rates by state, time in state and days to session end; saves `backend/data/processed/training_rows.parquet`) and `backend/reports/advance_rates.png`.

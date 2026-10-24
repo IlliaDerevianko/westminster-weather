@@ -269,7 +269,12 @@ def flatten_bills(
     sittings: pd.DataFrame,
     sessions: pd.DataFrame,
 ) -> pd.DataFrame:
-    """One row per government bill (DATA_CONTRACT §3.1) plus ``stop_reason`` and API flags."""
+    """One row per government bill (DATA_CONTRACT §3.1) plus ``stop_reason`` and API flags.
+
+    A bill is an Act (``is_act``, outcome ``royal_assent``) if the API says so **or** it has a
+    Royal Assent sitting (stage 11), so ``outcome = 'royal_assent'`` ⇔ a stage 11 sitting
+    exists (DATA_CONTRACT §8) even when the API's ``isAct`` flag is wrong.
+    """
     by_bill = {bid: g for bid, g in sittings.groupby("bill_id")}
     session_end = dict(zip(sessions["session_id"], sessions["end_date"], strict=True))
     session_end_type = dict(zip(sessions["session_id"], sessions["end_type"], strict=True))
@@ -309,7 +314,18 @@ def flatten_bills(
         )
         withdrawn = _to_date(item["billWithdrawn"])
 
-        if item["isAct"]:
+        # A Royal Assent sitting is proof the bill became an Act. The API's ``isAct`` flag is
+        # occasionally wrong: Commercial Rent (Coronavirus) Bill (3064) has Royal Assent on
+        # 2022-03-24 (Commercial Rent (Coronavirus) Act 2022, c. 12) but ``isAct = False``.
+        has_royal_assent = STAGE_ROYAL_ASSENT in first_dates
+        is_act = bool(item["isAct"]) or has_royal_assent
+        if has_royal_assent and not item["isAct"]:
+            logger.warning(
+                "bill %s has a Royal Assent sitting but isAct is False; labelling it an Act",
+                bill_id,
+            )
+
+        if is_act:
             outcome, outcome_date = "royal_assent", first_dates.get(STAGE_ROYAL_ASSENT)
         elif withdrawn is not None:
             outcome, outcome_date = "withdrawn", withdrawn
@@ -341,7 +357,7 @@ def flatten_bills(
                 "stop_reason": _stop_reason_value(outcome),
                 "last_api_update": pd.Timestamp(item["lastUpdate"]),
                 "ingested_at": pd.Timestamp(payload["fetched_at"]),
-                "is_act": item["isAct"],
+                "is_act": is_act,
                 "is_defeated": item["isDefeated"],
                 "withdrawn_date": withdrawn,
                 "included_session_ids": list(item["includedSessionIds"] or []),
