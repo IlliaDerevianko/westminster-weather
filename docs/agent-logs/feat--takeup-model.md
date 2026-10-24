@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 00:19 — fix(takeup): stop extrapolation on sparse features; add stage 1 replay
+
+- **What:** `hazard.py` switches off a static 0/1 feature seen on fewer than 15 training signals on either side (plan rule) and caps standardised values at ±5. New `takeup/replay.py`: for 9 past promises, a model trained only on earlier promises forecasts at the promise and 1/2/4 years later, next to what really happened (`backend/reports/takeup/stage1_replay.csv`).
+- **Why:** Roman asked for real-vs-predicted tests on past data. The replay exposed a bug: a written-statement promise in March 2015 got a 100% forecast because written statements only start in Nov 2014, so the training data had almost none (feature spread 0.02, z = −46).
+- **Checks:** `pytest tests/takeup/test_takeup_hazard.py`: 18 passed (2 new regression tests); after the fix that promise gets 15% fading to 3% (correct: never got a bill).
+- **Notes:** replay findings: timing windows held the real date in 13 of 18 checkpoints for delivered promises; chance rises with repeat mentions (Post Office 20% → 95%, delivered); fails when mentions sit in other groups (Online Safety: 1 mention in its group) and for repeatedly-promised-but-dropped policies (conversion practices 25% → 83%, never introduced).
+
 ## 2026-10-24 23:58 — docs(log): checkpoint 4 hand-label results
 
 - **What:** Roman reviewed `review_mentions.csv` (100) and `review_links.csv` (50) and confirmed every system decision correct; `score`: mentions precision 100% (85/85 kept, 0/15 wrongly rejected), links precision 100% (33/33 linked, 0/17 wrongly rejected).

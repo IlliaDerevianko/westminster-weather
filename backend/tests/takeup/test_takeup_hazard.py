@@ -308,3 +308,27 @@ def test_run_evaluation_three_models(fake, tmp_path):
     doc = (tmp_path / "EVAL.md").read_text()
     assert "Model comparison" in doc and "CQR" in doc
     assert (tmp_path / "calibration.png").exists()
+
+
+def test_sparse_static_feature_is_switched_off():
+    """A 0/1 feature seen on fewer than MIN_CASES training signals (e.g. written statements
+    before 2015) is switched off, so a signal with that value cannot get an extreme forecast."""
+    sig, tl = make_recency(n=300, seed=11)
+    sig["z_src_hansard"] = 1.0
+    sig.loc[sig.index[: hzm.MIN_CASES - 5], "z_src_hansard"] = 0.0  # too few written statements
+    model = hzm.HazardModel().fit(sig, tl, all_sitting(), AS_OF)
+    assert model.inactive[model.feature_names.index("z_src_hansard")]
+    row = sig.iloc[-1].copy()
+    preds = []
+    for src in (0.0, 1.0):
+        row["z_src_hansard"] = src
+        p = model.predict(row, tl[tl["signal_id"] == row["signal_id"]], AS_OF, all_sitting())
+        preds.append(p["pi_now"])
+    assert preds[0] == pytest.approx(preds[1])  # the switched-off feature has no effect
+
+
+def test_standardised_values_are_capped():
+    sig, tl = make_recency(n=300, seed=12)
+    model = hzm.HazardModel().fit(sig, tl, all_sitting(), AS_OF)
+    X = np.full((1, len(model.feature_names)), 1e6)
+    assert np.abs(model._standardise(X)).max() <= hzm.Z_CAP

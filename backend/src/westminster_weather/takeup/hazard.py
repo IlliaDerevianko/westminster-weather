@@ -61,6 +61,8 @@ MONTHS_CAP = 24.0
 DAYS_PER_MONTH = 30.4375
 C_GRID = (0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0)
 DEFAULT_C = 0.1
+MIN_CASES = 15  # signals needed on each side of a 0/1 feature (plan: drop sparse features)
+Z_CAP = 5.0  # standardised features are capped at +-Z_CAP in fitting and prediction
 VALIDATION_YEARS = 2
 HORIZONS = tm.HORIZONS
 QUANTILES = tm.QUANTILES
@@ -331,7 +333,16 @@ class HazardModel:
         self.mu = np.average(X, axis=0, weights=w)
         sd = np.sqrt(np.average((X - self.mu) ** 2, axis=0, weights=w))
         self.sd = np.where(sd > 1e-9, sd, 1.0)
-        Xs = (X - self.mu) / self.sd
+        # Plan rule: a static 0/1 feature (source, department) needs >= MIN_CASES signals on
+        # each side in training, else it is switched off. E.g. written statements only start in
+        # Nov 2014, so a model trained before 2015 has almost none and would extrapolate wildly.
+        self.inactive = np.zeros(len(self.feature_names), dtype=bool)
+        for c in self.zcols:
+            if c in signals:
+                ones = int((signals[c].fillna(0) > 0).sum())
+                if min(ones, len(signals) - ones) < MIN_CASES:
+                    self.inactive[self.feature_names.index(c)] = True
+        Xs = self._standardise(X)
 
         val_start = _day(as_of - pd.DateOffset(years=VALIDATION_YEARS))
         tr, va = rows["week_start"] < val_start, rows["week_start"] >= val_start
@@ -371,8 +382,17 @@ class HazardModel:
 
     # -------------------------------------------------------------------- predict
 
+    def _standardise(self, X: np.ndarray) -> np.ndarray:
+        """Standardised features; switched-off features are 0 and extremes are capped at
+        +-Z_CAP so a value far outside the training range cannot dominate a forecast."""
+        Z = np.clip((X - self.mu) / self.sd, -Z_CAP, Z_CAP)
+        inactive = getattr(self, "inactive", None)
+        if inactive is not None and inactive.any():
+            Z[:, inactive] = 0.0
+        return Z
+
     def _design(self, X: np.ndarray) -> np.ndarray:
-        return np.column_stack([np.ones(len(X)), (X - self.mu) / self.sd])
+        return np.column_stack([np.ones(len(X)), self._standardise(X)])
 
     def predict(
         self,
