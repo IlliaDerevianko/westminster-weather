@@ -297,6 +297,8 @@ def forecast_bill(
     if start is None:
         return _resolved(trans.iloc[-1], as_of, common)
 
+    if variant == "live":
+        start.scheduled_entry = scheduled_entry(start, bill_id, as_of, src)
     result = simulate(start, models, src.get_calendar(as_of)["sitting_days"], n=n)
     summary = summarise(result, trans.iloc[-1]["entered_date"])
     if models.quantile is not None and summary["time_to_royal_assent"] is not None:
@@ -310,6 +312,32 @@ def forecast_bill(
         n_paths=n,
         **summary,
     )
+
+
+def scheduled_entry(
+    start: StartState, bill_id: int, as_of: date, src: Any
+) -> tuple[int, date] | None:
+    """The first later stage of this bill with a future-dated scheduled sitting (live only)."""
+    from westminster_weather.data.stage_map import STAGE_ID_TO_STATE
+
+    getter = getattr(src, "get_scheduled_sittings", None)
+    if getter is None:
+        return None
+    scheduled = getter(as_of)
+    if scheduled.empty:
+        return None
+    mine = scheduled[(scheduled["bill_id"] == bill_id) & (scheduled["event_date"] > as_of)]
+    later = []
+    for stage_id, when in zip(mine["api_stage_id"], mine["event_date"], strict=True):
+        state = STAGE_ID_TO_STATE.get(int(stage_id))
+        if state is not None and state.value in start.chain:
+            k = start.chain.index(state.value)
+            if start.k0 < k < start.chain.index(RA):
+                later.append((when, k))
+    if not later:
+        return None
+    when, k = min(later)
+    return k, when
 
 
 def _average_with_quantile_model(

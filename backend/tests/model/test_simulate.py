@@ -197,3 +197,12 @@ def test_per_path_speed_spread_widens_timing():
     a, b = _run(narrow, n=4000), _run(wide, n=4000)
     spread = lambda r: np.subtract(*np.percentile(r.end_day, [90, 10]))  # noqa: E731
     assert spread(b) > spread(a)
+
+
+def test_scheduled_stage_is_forced_on_its_date():
+    start = _start()
+    k = CHAIN.index("commons_committee")
+    start.scheduled_entry = (k, date(2020, 2, 4))
+    result = _run(_models(lambda r: 0.5, session_length=10_000), start)
+    entered = result.date_of(result.entry_day[:, k])
+    assert (entered == np.datetime64("2020-02-04")).all()  # never earlier, never later

@@ -1,5 +1,11 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-25 00:01 — feat(model): scheduled sittings force the next stage in live forecasts (Part 1, step 6)
+
+- **What:** live forecasts only: if a later stage of the bill has a future-dated sitting in `get_scheduled_sittings`, the simulator enters that stage on that date on every path (not earlier; paths behind are moved to it, passing skipped states the same day). Never used in backtests (announcement dates unknown). Example: Cyber Security and Resilience Bill (4035) Lords report scheduled 2026-10-26 → median Royal Assent 2027-02-02 → 2027-01-05. Added a test.
+- **Why:** Aleks's Part 1 step 6.
+- **Checks:** `ruff`: clean; simulator tests passed. Not backtested by design.
+
 ## 2026-10-25 00:00 — feat(model): LightGBM quantile model averaged with the simulator (Part 1, step 5)
 
 - **What:** average error was still 66 > 60 after steps 1–4, so added `model/quantile.py`: LightGBM quantile regressions (p10/p50/p90 days to Royal Assent) on forecast-time features from the simulator's start state. Chosen on training-era sessions only (fit on sessions 20–26, compared on 27–30): simulator MAE 40.5 / coverage 80%, LightGBM 37.1 / 74%, **average 36.2 / 80%** → average. `cli quantile` saves `quantile_train` and `quantile_live` (3,277 finished-bill forecasts); `forecast_bill` averages the simulator's and the quantile model's days. `cli train` stores the tuned speed spread on the saved hazards. Added a test.

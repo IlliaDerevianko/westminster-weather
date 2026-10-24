@@ -76,6 +76,9 @@ class StartState:
     election_date: date  # election that created the current Parliament
     parliament_first_meeting: date
     parliaments: pd.DataFrame | None = None  # as known on as_of (for dissolution gaps)
+    # Live forecasts only: (chain index, date) of the first later stage that already has a
+    # future-dated sitting scheduled. Never set in backtests (announcement dates unknown).
+    scheduled_entry: tuple[int, date] | None = None
 
 
 @dataclass
@@ -189,6 +192,13 @@ def simulate(
         seed if seed is not None else [start.bill_id, start.as_of.toordinal()]
     )
     days = _future_days(start, sitting_days, rng)
+    forced_k, forced_day = -1, -1
+    if start.scheduled_entry is not None:
+        forced_k, when = start.scheduled_entry
+        when64 = np.datetime64(when, "D")
+        if when64 not in days:
+            days = np.sort(np.append(days, when64))
+        forced_day = int(np.searchsorted(days, when64)) + 1
     horizon = len(days)
     chain = start.chain
     n_states = len(chain)
@@ -275,6 +285,16 @@ def simulate(
         active = alive & (state < k_pp)
         end_bucket = np.digitize(np.maximum(S - j, 0), END_EDGES)
         end_bucket[rushed] = 0  # extended session: end-of-session speed until it finishes
+        if forced_k >= 0:
+            behind = alive & (state < forced_k)
+            if j == forced_day and behind.any():
+                # The scheduled stage happens today: skipped states are passed on the same day.
+                rows = np.flatnonzero(behind)
+                for k in range(start.k0 + 1, forced_k + 1):
+                    unset = entry_day[rows, k] < 0
+                    entry_day[rows[unset], k] = j
+                state[behind] = forced_k
+                tau[behind] = 0
         for _ in range(n_states):
             if not active.any():
                 break
@@ -284,6 +304,8 @@ def simulate(
             if speed_sd > 0:
                 odds = p[idx] / (1 - p[idx]) * speed[idx]
                 p[idx] = odds / (1 + odds)
+            if j < forced_day:
+                p[state == forced_k - 1] = 0.0  # the scheduled stage cannot start earlier
             moves = active & (rng.random(n) < p)
             defeated = moves & vote[state] & (rng.random(n) < p_defeat)
             finish(defeated, DEFEATED, j)
