@@ -83,6 +83,9 @@ class Models:
     hazard: HazardModel
     failure: FailureModel
     pingpong: PingPongModel
+    # Optional LightGBM quantile model; its days to Royal Assent are averaged with the
+    # simulator's (Part 1 step 5).
+    quantile: Any = None
 
 
 @dataclass

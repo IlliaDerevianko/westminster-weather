@@ -184,9 +184,13 @@ def _train_hazard(as_of: date) -> None:
     for col, value in shared.items():
         print(f"  {hazard.label(col, fitted.departments):<62}{np.exp(value):6.2f}")
 
+    metrics_path = REPORTS_DIR / "metrics.json"
+    saved = json.loads(metrics_path.read_text()) if metrics_path.exists() else {}
+    fitted.speed_sd = saved.get("speed_sd_tuning", {}).get("chosen", 0.0)
     model_path = fitted.save(MODELS_DIR / "hazard_train.joblib")
     live_rows = features.build_training_rows(as_of)
     live = hazard.fit_hazard_with_c(live_rows, fitted.C, val)
+    live.speed_sd = fitted.speed_sd
     live_path = live.save(MODELS_DIR / "hazard_live.joblib")
     print(
         f"Live hazard refit on all {live_rows.rows['bill_id'].nunique()} bills "
@@ -378,6 +382,99 @@ def cmd_tune_speed(args: argparse.Namespace) -> None:
     path.write_text(json.dumps(metrics, indent=2, default=str) + "\n")
 
 
+def cmd_quantile(args: argparse.Namespace) -> None:
+    """Step 5: compare the simulator, a LightGBM quantile model and their average on training-era
+    sessions, then apply the best to the test backtest."""
+    import json
+
+    import joblib
+
+    from westminster_weather.model import baseline, evaluate, hazard, quantile
+    from westminster_weather.model.splits import TRAIN_CUTOFF, TRAIN_SESSIONS, TUNING_SESSIONS
+
+    metrics_path = REPORTS_DIR / "metrics.json"
+    metrics = json.loads(metrics_path.read_text())
+    speed_sd = metrics.get("speed_sd_tuning", {}).get("chosen", 0.0)
+    haz = hazard.HazardModel.load(MODELS_DIR / "hazard_train.joblib")
+    fitted_b = baseline.fit()
+
+    era = evaluate.backtest_points(TRAIN_CUTOFF, sessions=TRAIN_SESSIONS)
+    era_x = quantile.point_features(era, haz, args.workers)
+    era = era.merge(era_x[["bill_id", "as_of"]], on=["bill_id", "as_of"])
+    era["days_to_ra"] = (pd.to_datetime(era["outcome_date"]) - pd.to_datetime(era["as_of"])).dt.days
+    fit_pts = era[era["ra"] & ~era["introduced_session_id"].isin(TUNING_SESSIONS)]
+    val_pts = era[era["introduced_session_id"].isin(TUNING_SESSIONS)]
+    keyed = era_x.set_index(["bill_id", "as_of"])
+    model = quantile.fit(
+        keyed.loc[list(zip(fit_pts["bill_id"], fit_pts["as_of"], strict=True))].reset_index(),
+        fit_pts["days_to_ra"].to_numpy(),
+    )
+    print(
+        f"Quantile model fitted on {len(fit_pts):,} training-era forecasts (sessions before "
+        f"{TUNING_SESSIONS[0]}); compared on {len(val_pts):,} from sessions {TUNING_SESSIONS}"
+    )
+
+    sim_val = evaluate.run_backtest(
+        val_pts.drop(columns="days_to_ra"), workers=args.workers, mode="rolling",
+        evaluated_as_of=TRAIN_CUTOFF, C=haz.C, speed_sd=speed_sd,
+    )  # fmt: skip
+    options = {
+        "simulator": sim_val,
+        "lgbm": quantile.apply(sim_val, era_x, model, "lgbm"),
+        "average": quantile.apply(sim_val, era_x, model, "average"),
+    }
+    comparison = {}
+    for name, res in options.items():
+        m = evaluate.score(res, fitted_b)
+        comparison[name] = {
+            "mae_days": m["mae_days"]["model"],
+            "coverage": m["coverage_p10_p90"],
+            "too_early": m["share_median_too_early"],
+        }
+        print(
+            f"  {name:<10} MAE {m['mae_days']['model']:.1f}  coverage "
+            f"{100 * m['coverage_p10_p90']:.0f}%  too early "
+            f"{100 * m['share_median_too_early']:.0f}%"
+        )
+    best = min(comparison, key=lambda k: comparison[k]["mae_days"])
+    print(f"Best on training-era sessions: {best}")
+
+    acts = era[era["ra"]]
+    final = quantile.fit(
+        keyed.loc[list(zip(acts["bill_id"], acts["as_of"], strict=True))].reset_index(),
+        acts["days_to_ra"].to_numpy(),
+    )
+    metrics["quantile_selection"] = {"training_era": comparison, "chosen": best}
+    if best != "simulator":
+        joblib.dump(final, MODELS_DIR / "quantile_train.joblib")
+        # Live version: every finished bill so far, with the live hazard's features.
+        today = date.today()
+        live_haz = hazard.HazardModel.load(MODELS_DIR / "hazard_live.joblib")
+        live_pts = evaluate.backtest_points(today, sessions=tuple(range(20, 41)))
+        live_pts = live_pts[live_pts["ra"]]
+        live_x = quantile.point_features(live_pts, live_haz, args.workers)
+        live_pts = live_pts.merge(live_x[["bill_id", "as_of"]], on=["bill_id", "as_of"])
+        y = (pd.to_datetime(live_pts["outcome_date"]) - pd.to_datetime(live_pts["as_of"])).dt.days
+        live_keyed = live_x.set_index(["bill_id", "as_of"])
+        keys = list(zip(live_pts["bill_id"], live_pts["as_of"], strict=True))
+        joblib.dump(
+            quantile.fit(live_keyed.loc[keys].reset_index(), y.to_numpy()),
+            MODELS_DIR / "quantile_live.joblib",
+        )
+        print(f"Saved quantile models (train, and live on {len(live_pts):,} forecasts)")
+
+    step4 = pd.read_parquet(PROCESSED_DIR / args.base)
+    if best != "simulator":
+        test_x = quantile.point_features(step4, haz, args.workers)
+        result = quantile.apply(step4, test_x, final, best)
+        label = f"Step 5: {best} (quantile model)"
+        metrics.setdefault("backtest_comparison", {})[label] = evaluate.score(result, fitted_b)
+        metrics["backtest"] = metrics["backtest_comparison"][label]
+        result.to_parquet(PROCESSED_DIR / "backtest_step_5.parquet", index=False)
+        print(_comparison_table(metrics["backtest_comparison"]).to_string())
+    metrics_path.write_text(json.dumps(metrics, indent=2, default=str) + "\n")
+
+
 def cmd_evaluate(args: argparse.Namespace) -> None:
     import json
     import time
@@ -482,6 +579,11 @@ def main(argv: list[str] | None = None) -> None:
         "--also-frozen", action="store_true", help="Also run the frozen-2019 models for comparison"
     )
     ev.set_defaults(func=cmd_evaluate)
+
+    qt = sub.add_parser("quantile", help="Step 5: quantile model vs simulator (training era)")
+    qt.add_argument("--workers", type=int, default=6)
+    qt.add_argument("--base", default="backtest_step_4__speed_spread_s_0_5.parquet")
+    qt.set_defaults(func=cmd_quantile)
 
     tune = sub.add_parser("tune-speed", help="Tune the per-path speed spread (training era)")
     tune.add_argument("--workers", type=int, default=6)

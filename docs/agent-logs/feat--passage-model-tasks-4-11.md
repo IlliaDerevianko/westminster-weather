@@ -1,5 +1,11 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-25 00:00 — feat(model): LightGBM quantile model averaged with the simulator (Part 1, step 5)
+
+- **What:** average error was still 66 > 60 after steps 1–4, so added `model/quantile.py`: LightGBM quantile regressions (p10/p50/p90 days to Royal Assent) on forecast-time features from the simulator's start state. Chosen on training-era sessions only (fit on sessions 20–26, compared on 27–30): simulator MAE 40.5 / coverage 80%, LightGBM 37.1 / 74%, **average 36.2 / 80%** → average. `cli quantile` saves `quantile_train` and `quantile_live` (3,277 finished-bill forecasts); `forecast_bill` averages the simulator's and the quantile model's days. `cli train` stores the tuned speed spread on the saved hazards. Added a test.
+- **Why:** Aleks's Part 1 step 5.
+- **Checks:** `ruff`: clean; `pytest`: 112 passed. Test backtest: MAE 66 → 61, median error 40 → 36, too early 54% → 51%, carried-over 193 → 183, coverage 71% → 66% (worse), pass chance and Brier unchanged (timing only). Kept, because the choice was made on training-era sessions; the coverage drop is reported.
+
 ## 2026-10-24 23:51 — feat(model): per-path speed spread (Part 1, step 4)
 
 - **What:** each simulated path multiplies its daily advance odds by exp(u), u ~ Normal(0, s), drawn once per path (`HazardModel.speed_sd`). Added `cli tune-speed`: grid search over s on a rolling backtest of training-era sessions 27–30 only (data as of 2019-10-14, 815 forecasts): s = 0 → 72% coverage, 0.3 → 76%, **0.5 → 80%**, 0.7 → 82%, 0.9 → 84%, 1.2 → 87%; chosen s = 0.5. `cli evaluate` uses the tuned s. Added a test.

@@ -79,11 +79,13 @@ class ForecastUnavailable(ValueError):
 
 @cache
 def load_models(variant: str, models_dir: Path = MODELS_DIR) -> Models:
+    quantile_path = models_dir / f"quantile_{variant}.joblib"
     try:
         return Models(
             hazard=HazardModel.load(models_dir / f"hazard_{variant}.joblib"),
             failure=FailureModel.load(models_dir / f"failure_{variant}.joblib"),
             pingpong=joblib.load(models_dir / f"pingpong_{variant}.joblib"),
+            quantile=joblib.load(quantile_path) if quantile_path.exists() else None,
         )
     except FileNotFoundError as exc:
         raise ForecastUnavailable(
@@ -297,6 +299,10 @@ def forecast_bill(
 
     result = simulate(start, models, src.get_calendar(as_of)["sitting_days"], n=n)
     summary = summarise(result, trans.iloc[-1]["entered_date"])
+    if models.quantile is not None and summary["time_to_royal_assent"] is not None:
+        summary["time_to_royal_assent"] = _average_with_quantile_model(
+            summary["time_to_royal_assent"], models.quantile, start, bill
+        )
     return BillForecastResponse(
         **common,
         current_phase=LifecyclePhase.INSIDE_PARLIAMENT,
@@ -304,6 +310,26 @@ def forecast_bill(
         n_paths=n,
         **summary,
     )
+
+
+def _average_with_quantile_model(
+    sim: TimelineQuantiles, model: Any, start: StartState, bill: pd.Series
+) -> TimelineQuantiles:
+    """Average the simulator's days to Royal Assent with the quantile model's (step 5)."""
+    from westminster_weather.model.quantile import start_features
+
+    q = model.predict_days(pd.DataFrame([start_features(start, bill)]))[0]
+    days = [
+        round((s + float(v)) / 2)
+        for s, v in zip((sim.p10_days, sim.p50_days, sim.p90_days), q, strict=True)
+    ]
+    p10, p50, p90 = sorted(days)
+    as_of = start.as_of
+    return TimelineQuantiles(
+        p10_days=p10, p50_days=p50, p90_days=p90,
+        estimated_median_date=as_of + timedelta(days=p50),
+        p10_date=as_of + timedelta(days=p10), p90_date=as_of + timedelta(days=p90),
+    )  # fmt: skip
 
 
 def _resolved(last: pd.Series, as_of: date, common: dict[str, Any]) -> BillForecastResponse:
