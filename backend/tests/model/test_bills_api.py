@@ -155,3 +155,43 @@ def test_in_progress_bills_are_current_or_carried_over_in_neon_db():
         | in_progress["carry_over_date"].notna()
     )
     assert ok.all()
+
+
+def test_only_government_bills_are_used():
+    """DATA_SCOPE.md: other bill types never reach any table, including the calendar."""
+    private = _payload(99, [(6, ["2016-06-15"])])
+    private["list_item"]["billTypeId"] = 2
+    tables = bills_api.build_tables_from_payloads(
+        [
+            _payload(1, [(6, ["2016-06-01"])]),
+            private,
+            _payload(2, [(6, ["2017-01-10"])], session=31),
+        ]
+    )
+    assert set(tables["bills"]["bill_id"]) == {1, 2}
+    assert set(tables["stage_sittings"]["bill_type_id"]) == {1}
+    assert date(2016, 6, 15) not in set(tables["sitting_days"]["date"])
+
+
+def test_downloader_requests_government_bills_only():
+    class FakeDownloader:
+        def __init__(self):
+            self.listed_types = []
+
+        def list_stage_types(self):
+            return []
+
+        def list_bills(self, bill_type):
+            self.listed_types.append(bill_type)
+            return [{"billId": 1, "billTypeId": 1}]
+
+        def bill_detail(self, bill_id):
+            return {}
+
+        def bill_stages(self, bill_id):
+            return []
+
+    fake = FakeDownloader()
+    payloads, _, counts = bills_api.fetch_all_payloads(downloader=fake)
+    assert fake.listed_types == [1]
+    assert counts["listed"] == counts["government"] == 1
