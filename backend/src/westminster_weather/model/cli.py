@@ -2,6 +2,7 @@
 
 uv run python -m westminster_weather.model.cli fetch
 uv run python -m westminster_weather.model.cli states [--as-of YYYY-MM-DD]
+uv run python -m westminster_weather.model.cli build [--as-of YYYY-MM-DD]
 """
 
 from __future__ import annotations
@@ -53,7 +54,9 @@ def cmd_fetch(args: argparse.Namespace) -> None:
     )
 
 
-REPORTS_DIR = Path(__file__).resolve().parents[3] / "reports"
+BACKEND_DIR = Path(__file__).resolve().parents[3]
+REPORTS_DIR = BACKEND_DIR / "reports"
+PROCESSED_DIR = BACKEND_DIR / "data" / "processed"
 
 
 def cmd_states(args: argparse.Namespace) -> None:
@@ -78,6 +81,38 @@ def cmd_states(args: argparse.Namespace) -> None:
     print(f"\nChart saved: {chart}")
 
 
+def cmd_build(args: argparse.Namespace) -> None:
+    from westminster_weather.model import features
+
+    training = features.build_training_rows(args.as_of)
+    rows = training.rows
+    print(f"Hazard training rows as of {args.as_of}: {len(rows):,}")
+    print(
+        f"Bills: {rows['bill_id'].nunique()}  Positive rate (moved on that day): "
+        f"{training.positive_rate:.3f}"
+    )
+    print("\nBy state:")
+    print(
+        rows.groupby("state")["y"].agg(rows="size", moved="sum", rate="mean").round(3).to_string()
+    )
+    print("\nBy time in state (tau):")
+    print(rows.groupby("tau_bucket")["y"].agg(rows="size", rate="mean").round(3).to_string())
+    print("\nBy sitting days to session end:")
+    print(
+        rows.groupby("days_to_session_end_bucket")["y"]
+        .agg(rows="size", rate="mean")
+        .round(3)
+        .to_string()
+    )
+    print(f"\nFeatures ({len(training.feature_columns)}): {', '.join(training.feature_columns)}")
+
+    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    out = PROCESSED_DIR / "training_rows.parquet"
+    rows.to_parquet(out, index=False)
+    chart = features.plot_advance_rates(rows, REPORTS_DIR / "advance_rates.png")
+    print(f"\nRows saved: {out}\nChart saved: {chart}")
+
+
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -94,6 +129,10 @@ def main(argv: list[str] | None = None) -> None:
     st = sub.add_parser("states", help="Sanity report and checks for model state transitions")
     st.add_argument("--as-of", type=date.fromisoformat, default=date.today())
     st.set_defaults(func=cmd_states)
+
+    build = sub.add_parser("build", help="Build hazard training rows (task 4)")
+    build.add_argument("--as-of", type=date.fromisoformat, default=date.today())
+    build.set_defaults(func=cmd_build)
 
     args = parser.parse_args(argv)
     args.func(args)

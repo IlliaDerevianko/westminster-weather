@@ -1,5 +1,12 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 21:46 — feat(model): cli build for hazard training rows and advance-rate chart
+
+- **What:** added `cli build [--as-of]` (prints row count, positive rate, rates by state, time in state and days to session end; saves `backend/data/processed/training_rows.parquet`) and `backend/reports/advance_rates.png`.
+- **Why:** BUILD_PLAN task 4 "done when": row count and positive rate printed.
+- **Checks:** `ruff`: clean; `pytest`: 61 passed. Result as of 2026-10-24: 45,600 rows, 586 bills, positive rate 0.095.
+- **Notes:** fewer rows than MODEL_SPEC's 50k–150k estimate because the calendar now uses government-bill sittings only.
+
 ## 2026-10-24 21:45 — feat(model): Tier 1 feature registry and hazard training rows (task 4)
 
 - **What:** added `model/features.py`: a registry of Tier 1 features (`(bill_id, as_of, data) -> value`) and `build_training_rows(as_of_cutoff)` producing bill × sitting-day rows with `state, tau_bucket, days_to_session_end_bucket`, features and `y`. Added `tests/model/test_features.py`, `pyarrow`, and restored `backend/data/` and `backend/models/` in `.gitignore`.

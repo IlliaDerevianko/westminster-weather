@@ -399,3 +399,42 @@ def build_training_rows(
 def row_as_of(row_date: date | pd.Timestamp) -> date:
     """The ``as_of`` whose information a training row on ``row_date`` may use."""
     return pd.Timestamp(row_date).date() - timedelta(days=1)
+
+
+def plot_advance_rates(rows: pd.DataFrame, path: Any) -> Any:
+    """Observed share of rows where the bill moved on that day, by state and time in state,
+    and by sitting days to the session end."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    tau_order = [label for _, _, label in TAU_BUCKETS]
+    end_order = [label for _, _, label in END_BUCKETS]
+    by_tau = rows.pivot_table(index="tau_bucket", columns="state", values="y", aggfunc="mean")
+    by_end = rows.groupby("days_to_session_end_bucket")["y"].agg(["mean", "size"])
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5), width_ratios=[2, 1])
+    for state in [s.value for s in HAZARD_STATES if s.value in by_tau.columns]:
+        ax1.plot(
+            tau_order, by_tau.reindex(tau_order)[state], marker="o", label=state.replace("_", " ")
+        )
+    ax1.set_xlabel("Sitting days already spent in the stage")
+    ax1.set_ylabel("Share of days the bill moved on")
+    ax1.set_title("Chance of moving on, by stage and time in stage")
+    ax1.legend(fontsize=8)
+    ax1.grid(alpha=0.3)
+
+    end = by_end.reindex(end_order)
+    ax2.bar(end_order, end["mean"], color="#4c72b0")
+    for i, n in enumerate(end["size"]):
+        ax2.text(i, end["mean"].iloc[i], f"{int(n):,} rows", ha="center", va="bottom", fontsize=8)
+    ax2.set_xlabel("Sitting days left in the session")
+    ax2.set_title("End-of-session rush (all stages)")
+    ax2.grid(axis="y", alpha=0.3)
+
+    fig.tight_layout()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(path, dpi=150)
+    plt.close(fig)
+    return path
