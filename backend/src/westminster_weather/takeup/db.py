@@ -12,7 +12,8 @@ production through the existing ``westminster_weather.db`` adapters and never wr
 from typing import Any
 
 import pandas as pd
-from sqlalchemy import Engine, Table, create_engine, select
+from sqlalchemy import Connection, Engine, Table, create_engine, select
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.pool import NullPool
 
 from westminster_weather import db as app_db
@@ -71,28 +72,74 @@ def _table(table: Table | str) -> Table:
     return TABLES[table] if isinstance(table, str) else table
 
 
-def upsert(
-    table: Table | str, rows: pd.DataFrame | list[dict[str, Any]], batch_size: int = 500
-) -> int:
-    """Insert or update ``rows`` by primary key (Postgres ON CONFLICT); returns the row count."""
+def _records(table: Table | str, rows: pd.DataFrame | list[dict[str, Any]]) -> list[dict]:
     table = _table(table)
     if table.name not in takeup_metadata.tables:
         raise ValueError(f"{table.name} is not a take-up table")
     records = rows.to_dict("records") if isinstance(rows, pd.DataFrame) else list(rows)
-    records = [app_db._clean_record(r) for r in records]
+    return [app_db._clean_record(r) for r in records]
+
+
+def _refuse_production(conn: Connection) -> None:
+    """Refuse a connection whose URL is the production DATABASE_URL (pooled or direct)."""
+    url = conn.engine.url.render_as_string(hide_password=False)
+    production = {settings.sqlalchemy_pooled_url, settings.sqlalchemy_direct_url}
+    if url in production:
+        raise TakeupDatabaseNotConfigured(
+            "Refusing to write take-up rows to the production database."
+        )
+
+
+def _upsert_sqlite(conn: Connection, table: Table, rows: list[dict], batch_size: int) -> None:
+    pk_cols = [c.name for c in table.primary_key]
+    non_pk_cols = [c.name for c in table.columns if c.name not in pk_cols]
+    for i in range(0, len(rows), batch_size):
+        stmt = sqlite_insert(table).values(rows[i : i + batch_size])
+        stmt = stmt.on_conflict_do_update(
+            index_elements=pk_cols, set_={c: stmt.excluded[c] for c in non_pk_cols}
+        )
+        conn.execute(stmt)
+
+
+def upsert_rows(
+    bind: Engine | Connection,
+    table: Table | str,
+    rows: pd.DataFrame | list[dict[str, Any]],
+    batch_size: int = 500,
+) -> int:
+    """Upsert ``rows`` by primary key on a given engine or connection (PostgreSQL, or SQLite
+    for tests); returns the row count. Never writes to the production database."""
+    table = _table(table)
+    records = _records(table, rows)
+    if not records:
+        return 0
+    if isinstance(bind, Engine):
+        with bind.begin() as conn:
+            return upsert_rows(conn, table, records, batch_size)
+    _refuse_production(bind)
+    if bind.dialect.name == "sqlite":
+        _upsert_sqlite(bind, table, records, batch_size)
+    else:
+        app_db._upsert_rows(bind, table, records, batch_size=batch_size)
+    return len(records)
+
+
+def upsert(
+    table: Table | str, rows: pd.DataFrame | list[dict[str, Any]], batch_size: int = 500
+) -> int:
+    """Insert or update ``rows`` by primary key (Postgres ON CONFLICT); returns the row count."""
+    records = _records(table, rows)
     if not records:
         return 0
     engine = get_takeup_engine()
     try:
-        with engine.begin() as conn:
-            app_db._upsert_rows(conn, table, records, batch_size=batch_size)
-        return len(records)
+        return upsert_rows(engine, table, records, batch_size)
     finally:
         engine.dispose()
 
 
 def load_takeup_tables() -> dict[str, pd.DataFrame]:
-    """The six take-up data tables (§10.1–10.6) from the take-up database, by table name."""
+    """The five take-up data tables (§10.2–10.6) from the take-up database, by table name."""
     engine = get_takeup_engine()
     try:
         with engine.connect() as conn:

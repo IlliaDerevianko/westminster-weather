@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 23:02 — feat(takeup): raw-source loaders and migrate / load-raw / db-status commands
+
+- **What:** `takeup/loaders.py` builds `source_documents` (written statements, de-duplicated Hansard contributions with `matched_phrases`, HTML stripped) and `member_government_posts` from the cache, with idempotent upserts; `cli.py` adds `migrate`, `load-raw` and `db-status` (each with an offline `--dry-run`); `db.py` upserts on a given engine and refuses production.
+- **Why:** contract 10.0a/10.0b: the database is the source of truth for Tier B text.
+- **Checks:** `pytest tests/takeup/test_takeup_loaders.py` (in-memory SQLite, dummy settings) and full suite: 158 passed; `ruff check`: clean. Dry run on the real cache: 25,242 documents (17,844 statements, 7,144 Hansard spoken, 254 Hansard written; 0 skipped), 2,585 posts for 1,440 members; 86 MB of text.
+
 ## 2026-10-24 23:02 — refactor(takeup): remove King's Speech data
 
 - **What:** deleted `kings_speech.py` and its tests; removed `kings_speech_items`, `x_kings_speech`, the `kings_speech` source and event type, and the carried-over exclusion from tables, signals and tests; written statements are now the reference first source (`z_src_hansard` only). Contract section 10 and `TAKEUP_PLAN.md` updated (task 4 / checkpoint 3 removed). Local King's Speech PDFs and the review CSV deleted.
