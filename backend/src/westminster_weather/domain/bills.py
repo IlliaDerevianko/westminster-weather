@@ -583,7 +583,7 @@ async def list_all_bills_from_db(
                 "short_title": r.short_title,
                 "originating_house": r.originating_house,
                 "introduced_session_id": r.introduced_session_id,
-                "earliest_signal_date": pre_parl_dates.get(r.bill_id),
+                "earliest_signal_date": pre_parl_dates.get(r.bill_id) or r.introduced_date,
                 "introduced_date": r.introduced_date,
                 "department": r.department,
                 "outcome": r.outcome,
@@ -794,6 +794,13 @@ async def evaluate_parliament_bill_from_db(
                 tracked_nodes.append(
                     TrackedStageNode(node=node, status=StageStatus.UPCOMING)
                 )
+
+    # The very first signal is the date of the first Phase 1 stage (`signal_appears`).
+    first_pre_node = tracked_nodes[0] if tracked_nodes else None
+    if first_pre_node is not None:
+        earliest_date = (
+            first_pre_node.entered_date or first_pre_node.completed_date or earliest_date
+        )
 
     # ------------------------------------------------------------------
     # PHASE 2: INSIDE PARLIAMENT (Orders 7..15) & ROYAL ASSENT (Order 16)
