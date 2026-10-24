@@ -11,7 +11,10 @@ from westminster_weather.config import settings
 from westminster_weather.db import check_db_connection
 from westminster_weather.domain.bills import (
     GovernmentBill,
+    TrackedStageNode,
+    evaluate_parliament_bill_from_db,
     get_online_safety_bill_from_live_apis,
+    list_all_bills_from_db,
     sync_online_safety_bill_to_db,
 )
 from westminster_weather.domain.stages import (
@@ -20,7 +23,9 @@ from westminster_weather.domain.stages import (
 )
 from westminster_weather.schemas.bills import (
     ApiEvidenceEventSchema,
+    BillSummarySchema,
     GovernmentBillTrackingResponse,
+    MilestoneDateSchema,
     StageNodeSchema,
     TrackedStageNodeSchema,
 )
@@ -43,10 +48,54 @@ app.add_middleware(
 )
 
 
+def _serialize_tracked_nodes(
+    tracked_nodes: list[TrackedStageNode],
+) -> list[TrackedStageNodeSchema]:
+    return [
+        TrackedStageNodeSchema(
+            stage=t.node.stage,
+            phase=t.node.phase,
+            order=t.node.order,
+            label=t.node.label,
+            description=t.node.description,
+            stop_risks=list(t.node.stop_risks),
+            status=t.status,
+            entered_date=t.entered_date,
+            completed_date=t.completed_date,
+            summary=t.summary,
+            source_reference=t.source_reference,
+            source_api_url=t.source_api_url,
+            web_url=t.web_url,
+            visible_events=[
+                ApiEvidenceEventSchema(
+                    event_date=e.event_date,
+                    title=e.title,
+                    note=e.note,
+                    source_api_url=e.source_api_url,
+                    web_url=e.web_url,
+                    document_type=e.document_type,
+                )
+                for e in t.visible_events
+            ],
+            active_stop_reason=t.active_stop_reason,
+        )
+        for t in tracked_nodes
+    ]
+
+
 def _serialize_bill_at_date(
     bill: GovernmentBill, as_of_date: date
 ) -> GovernmentBillTrackingResponse:
     current_stage, current_order, tracked_nodes = bill.evaluate_at_date(as_of_date)
+    milestones = [
+        MilestoneDateSchema(
+            label=f"{rec.entered_date.isoformat()} ({node.label})",
+            date=rec.entered_date,
+            note=rec.headline,
+        )
+        for node in GOVERNMENT_BILL_PIPELINE
+        if (rec := bill.stage_records.get(node.stage)) is not None
+    ]
     return GovernmentBillTrackingResponse(
         id=bill.id,
         parliament_bill_id=bill.parliament_bill_id,
@@ -60,37 +109,10 @@ def _serialize_bill_at_date(
         current_stage=current_stage,
         current_stage_order=current_order,
         total_stages=len(GOVERNMENT_BILL_PIPELINE),
-        stages=[
-            TrackedStageNodeSchema(
-                stage=t.node.stage,
-                phase=t.node.phase,
-                order=t.node.order,
-                label=t.node.label,
-                description=t.node.description,
-                stop_risks=list(t.node.stop_risks),
-                status=t.status,
-                entered_date=t.entered_date,
-                completed_date=t.completed_date,
-                summary=t.summary,
-                source_reference=t.source_reference,
-                source_api_url=t.source_api_url,
-                web_url=t.web_url,
-                visible_events=[
-                    ApiEvidenceEventSchema(
-                        event_date=e.event_date,
-                        title=e.title,
-                        note=e.note,
-                        source_api_url=e.source_api_url,
-                        web_url=e.web_url,
-                        document_type=e.document_type,
-                    )
-                    for e in t.visible_events
-                ],
-                active_stop_reason=t.active_stop_reason,
-            )
-            for t in tracked_nodes
-        ],
+        stages=_serialize_tracked_nodes(tracked_nodes),
+        milestone_dates=milestones,
     )
+
 
 
 @app.get("/health", tags=["system"])
@@ -135,6 +157,20 @@ async def sync_bill_to_neon() -> dict[str, int | str]:
     }
 
 
+@app.get("/api/v1/bills", response_model=list[BillSummarySchema], tags=["bills"])
+async def list_bills(
+    search: Annotated[
+        str | None, Query(description="Filter by title, department, or bill_id")
+    ] = None,
+    outcome: Annotated[str | None, Query(description="Filter by outcome")] = None,
+    house: Annotated[str | None, Query(description="Filter by originating house")] = None,
+) -> list[BillSummarySchema]:
+
+    """List all UK Government Bills stored in Neon Lakebase Postgres."""
+    rows = await list_all_bills_from_db(search=search, outcome=outcome, house=house)
+    return [BillSummarySchema(**r) for r in rows]
+
+
 @app.get(
     "/api/v1/bills/{bill_id}",
     response_model=GovernmentBillTrackingResponse,
@@ -143,16 +179,44 @@ async def sync_bill_to_neon() -> dict[str, int | str]:
 async def get_tracked_bill(
     bill_id: str,
     as_of_date: Annotated[
-        date,
+        date | None,
         Query(
             description=(
-                "Historical date (YYYY-MM-DD) at which to evaluate the bill's Phase 1 state."
+                "Historical date (YYYY-MM-DD) at which to evaluate the bill's state."
             )
         ),
-    ] = date(2021, 1, 15),
+    ] = None,
 ) -> GovernmentBillTrackingResponse:
-    """Return the Online Safety Bill's Phase 1 state at `as_of_date` from Neon Lakebase Postgres."""
-    if bill_id != "online-safety-bill":
-        raise HTTPException(status_code=404, detail=f"Bill '{bill_id}' not found")
-    bill = await get_online_safety_bill_from_live_apis()
-    return _serialize_bill_at_date(bill, as_of_date)
+    """Return any UK Government Bill's stage tracking state at `as_of_date` from Neon Postgres."""
+    if bill_id == "online-safety-bill":
+        bill = await get_online_safety_bill_from_live_apis()
+        return _serialize_bill_at_date(bill, as_of_date or date(2021, 1, 15))
+
+    if bill_id.isdigit():
+        evaluated = await evaluate_parliament_bill_from_db(int(bill_id), as_of_date=as_of_date)
+        if evaluated is None:
+            raise HTTPException(status_code=404, detail=f"Bill '{bill_id}' not found")
+        return GovernmentBillTrackingResponse(
+            id=evaluated["id"],
+            parliament_bill_id=evaluated["parliament_bill_id"],
+            short_title=evaluated["short_title"],
+            long_title=evaluated["long_title"],
+            sponsoring_department=evaluated["sponsoring_department"],
+            originating_house=evaluated["originating_house"],
+            introduced_session_id=evaluated["introduced_session_id"],
+            outcome=evaluated["outcome"],
+            outcome_date=evaluated["outcome_date"],
+            stop_reason=evaluated["stop_reason"],
+            as_of_date=evaluated["as_of_date"],
+            earliest_signal_date=evaluated["earliest_signal_date"],
+            first_reading_date=evaluated["first_reading_date"],
+            current_phase=evaluated["current_phase"],
+            current_stage=evaluated["current_stage"],
+            current_stage_order=evaluated["current_stage_order"],
+            total_stages=evaluated["total_stages"],
+            stages=_serialize_tracked_nodes(evaluated["tracked_nodes"]),
+            milestone_dates=[MilestoneDateSchema(**m) for m in evaluated["milestone_dates"]],
+        )
+
+    raise HTTPException(status_code=404, detail=f"Bill '{bill_id}' not found")
+
