@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 00:59 — feat(takeup): day-one and one-year-later checks on the training data; pitch
+
+- **What:** `takeup/insample.py`: forecasts at each promise's trigger vs reality (`stage1_insample.csv`) and, with `--updating`, forecasts one year later for promises still waiting, using the data as it stood that month (`stage1_updating.csv`); `docs/model/TAKEUP_PITCH.md`.
+- **Why:** Roman asked for predicted vs real on the training data and for the "on day one nobody can tell; watch the repetition" pitch.
+- **Checks:** day one: bill within 52 w AUC 0.546, Brier 0.108 vs base 0.107. One year later (708 promises): AUC 0.599, Brier 0.0249 vs base 0.0261; real rate 2.1% (no repeats, model 2.2%) vs 20.0% (3+ repeats, model 18.9%). `ruff`: clean.
+- **Notes:** in-sample; the 3+ group has only 15 promises.
+
 ## 2026-10-25 00:55 — Merge Aleks's stage 2 (feat/passage-model-tasks-4-11) into feat/takeup-model
 
 - **What:** merged Aleks's passage model (stage 2: states, hazard, failure routes, ping-pong, Monte Carlo simulator, LightGBM quantile blend, backtest, `/api/v1/bills/{bill_id}/forecast`). Only conflict: `backend/pyproject.toml` dependencies; kept all (pypdf, matplotlib, pyarrow) and relocked. Our own unfinished stage-2 attempt (`journey/passage.py` etc., never committed) was moved to a local backup instead of merged.
