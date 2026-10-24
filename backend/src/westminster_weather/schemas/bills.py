@@ -38,12 +38,39 @@ class TrackedStageNodeSchema(StageNodeSchema):
     active_stop_reason: StopReason | None = None
 
 
+class MilestoneDateSchema(BaseModel):
+    label: str
+    date: date
+    note: str
+
+
+class BillSummarySchema(BaseModel):
+    bill_id: int
+    short_title: str
+    originating_house: str
+    introduced_session_id: int
+    introduced_date: date | None = None
+    department: str | None = None
+    outcome: str
+    outcome_date: date | None = None
+    stop_reason: str | None = None
+    is_act: bool
+    is_defeated: bool
+    withdrawn_date: date | None = None
+    has_pre_parliament_data: bool = False
+
+
 class GovernmentBillTrackingResponse(BaseModel):
     id: str
     parliament_bill_id: int
     short_title: str
     long_title: str
     sponsoring_department: str
+    originating_house: str = "Commons"
+    introduced_session_id: int | None = None
+    outcome: str = "in_progress"
+    outcome_date: date | None = None
+    stop_reason: str | None = None
     as_of_date: date
     earliest_signal_date: date
     first_reading_date: date
@@ -52,3 +79,5 @@ class GovernmentBillTrackingResponse(BaseModel):
     current_stage_order: int
     total_stages: int
     stages: list[TrackedStageNodeSchema]
+    milestone_dates: list[MilestoneDateSchema] = []
+

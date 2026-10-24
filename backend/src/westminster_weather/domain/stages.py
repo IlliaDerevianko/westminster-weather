@@ -34,6 +34,12 @@ class BillStage(StrEnum):
 
     # 3. After Royal Assent
     ROYAL_ASSENT = "royal_assent"
+    SOME_SECTIONS_START = "some_sections_start"
+    COMMENCEMENT_ORDERS = "commencement_orders"
+    REGULATIONS_DRAFTED = "regulations_drafted"
+    REGULATIONS_LAID = "regulations_laid"
+    LAW_FULLY_IN_FORCE = "law_fully_in_force"
+    AMENDED_OR_REPEALED = "amended_or_repealed"
 
 
 class StopReason(StrEnum):
@@ -49,6 +55,11 @@ class StopReason(StrEnum):
     PAUSED_OR_WITHDRAWN = "paused_or_withdrawn"
     ELECTION_CALLED = "election_called"
     DEADLOCK = "deadlock"
+
+    # 3. After Royal Assent stops
+    NEVER_COMMENCED = "never_commenced"
+    ANNULLED = "annulled"
+
 
 
 
@@ -112,3 +123,129 @@ GOVERNMENT_BILL_PIPELINE: tuple[StageNode, ...] = (
         stop_risks=(),
     ),
 )
+
+PARLIAMENTARY_STAGE_INFO: dict[
+    BillStage, tuple[LifecyclePhase, str, str, tuple[StopReason, ...]]
+] = {
+    BillStage.COMMONS_FIRST_READING: (
+        LifecyclePhase.INSIDE_PARLIAMENT,
+        "Commons 1st reading",
+        "Formal introduction; bill title read out and text ordered to be printed",
+        (StopReason.SESSION_RUNS_OUT, StopReason.ELECTION_CALLED, StopReason.PAUSED_OR_WITHDRAWN),
+    ),
+    BillStage.COMMONS_SECOND_READING: (
+        LifecyclePhase.INSIDE_PARLIAMENT,
+        "Commons 2nd reading",
+        "Debate on main principles, programme motion, and money resolution",
+        (
+            StopReason.DEFEATED,
+            StopReason.SESSION_RUNS_OUT,
+            StopReason.ELECTION_CALLED,
+            StopReason.PAUSED_OR_WITHDRAWN,
+        ),
+    ),
+    BillStage.COMMONS_COMMITTEE: (
+        LifecyclePhase.INSIDE_PARLIAMENT,
+        "Commons committee stage",
+        "Line-by-line scrutiny in Public Bill Committee or Committee of the whole House",
+        (StopReason.SESSION_RUNS_OUT, StopReason.ELECTION_CALLED, StopReason.PAUSED_OR_WITHDRAWN),
+    ),
+    BillStage.COMMONS_REPORT_STAGE: (
+        LifecyclePhase.INSIDE_PARLIAMENT,
+        "Commons report stage",
+        "Consideration of amendments on the floor of the House of Commons",
+        (
+            StopReason.PAUSED_OR_WITHDRAWN,
+            StopReason.SESSION_RUNS_OUT,
+            StopReason.ELECTION_CALLED,
+        ),
+    ),
+    BillStage.COMMONS_THIRD_READING: (
+        LifecyclePhase.INSIDE_PARLIAMENT,
+        "Commons 3rd reading",
+        "Final Commons debate and vote on the amended bill",
+        (
+            StopReason.DEFEATED,
+            StopReason.SESSION_RUNS_OUT,
+            StopReason.ELECTION_CALLED,
+        ),
+    ),
+    BillStage.LORDS_FIRST_AND_SECOND_READING: (
+        LifecyclePhase.INSIDE_PARLIAMENT,
+        "Lords 1st & 2nd reading",
+        "Introduction in the House of Lords and debate on general principles",
+        (StopReason.SESSION_RUNS_OUT, StopReason.ELECTION_CALLED, StopReason.PAUSED_OR_WITHDRAWN),
+    ),
+    BillStage.LORDS_COMMITTEE: (
+        LifecyclePhase.INSIDE_PARLIAMENT,
+        "Lords committee stage",
+        "Detailed clause-by-clause examination in Committee or Grand Committee",
+        (StopReason.SESSION_RUNS_OUT, StopReason.ELECTION_CALLED, StopReason.PAUSED_OR_WITHDRAWN),
+    ),
+    BillStage.LORDS_REPORT_AND_THIRD_READING: (
+        LifecyclePhase.INSIDE_PARLIAMENT,
+        "Lords report & 3rd reading",
+        "Further amendments, government defeats/concessions, and final Lords tidy-up",
+        (StopReason.SESSION_RUNS_OUT, StopReason.ELECTION_CALLED, StopReason.DEFEATED),
+    ),
+    BillStage.PING_PONG: (
+        LifecyclePhase.INSIDE_PARLIAMENT,
+        "Ping-pong (Consideration of amendments)",
+        "Commons and Lords exchange amendments until both Houses agree on identical text",
+        (
+            StopReason.DEADLOCK,
+            StopReason.SESSION_RUNS_OUT,
+            StopReason.ELECTION_CALLED,
+        ),
+    ),
+    BillStage.ROYAL_ASSENT: (
+        LifecyclePhase.AFTER_ROYAL_ASSENT,
+        "Royal Assent",
+        "Monarch signifies assent; the Bill becomes an Act of Parliament",
+        (),
+    ),
+}
+
+POST_ROYAL_ASSENT_STAGE_INFO: tuple[
+    tuple[BillStage, str, str, tuple[StopReason, ...]], ...
+] = (
+    (
+        BillStage.SOME_SECTIONS_START,
+        "Some sections start",
+        "Extent, citation, and initial sections commence on Royal Assent or a fixed date",
+        (),
+    ),
+    (
+        BillStage.COMMENCEMENT_ORDERS,
+        "Commencement orders",
+        "Secretary of State brings remaining substantive sections into force by SI",
+        (StopReason.NEVER_COMMENCED,),
+    ),
+    (
+        BillStage.REGULATIONS_DRAFTED,
+        "Regulations drafted",
+        "Department drafts secondary legislation (Statutory Instruments) to fill detail",
+        (),
+    ),
+
+    (
+        BillStage.REGULATIONS_LAID,
+        "Regulations laid",
+        "Statutory Instruments laid before Parliament (~40 days negative/affirmative scrutiny)",
+        (StopReason.ANNULLED,),
+    ),
+    (
+        BillStage.LAW_FULLY_IN_FORCE,
+        "Law fully in force",
+        "All commenced provisions and secondary regulations apply across the UK",
+        (),
+    ),
+    (
+        BillStage.AMENDED_OR_REPEALED,
+        "Amended or repealed",
+        "Post-legislative review or amendment by subsequent Acts of Parliament",
+        (),
+    ),
+)
+
+

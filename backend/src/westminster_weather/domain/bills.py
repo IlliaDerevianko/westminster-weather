@@ -6,21 +6,29 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import StrEnum
+from typing import Any
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 
 from westminster_weather.clients.govuk_content import GovUkContentClient
 from westminster_weather.clients.parliament_bills import ParliamentBillsClient
+from westminster_weather.data.stage_map import OPTIONAL_STATES, STAGE_ID_TO_STATE, chain
 from westminster_weather.db import SessionLocal, init_db
 from westminster_weather.domain.stages import (
     GOVERNMENT_BILL_PIPELINE,
+    PARLIAMENTARY_STAGE_INFO,
+    POST_ROYAL_ASSENT_STAGE_INFO,
     BillStage,
+    LifecyclePhase,
     StageNode,
     StopReason,
 )
 from westminster_weather.models import (
     ApiEvidenceEventRow,
+    BillRow,
+    StageMapRow,
     StageRecordRow,
+    StageSittingRow,
     TrackedBillRow,
 )
 
@@ -528,3 +536,450 @@ async def get_online_safety_bill_from_live_apis() -> GovernmentBill:
             )
             row = result.scalar_one()
             return _row_to_domain(row)
+
+
+async def list_all_bills_from_db(
+    search: str | None = None,
+    outcome: str | None = None,
+    house: str | None = None,
+) -> list[dict[str, Any]]:
+    """Return all UK Government Bills from the `bills` table in Neon Lakebase Postgres."""
+    await init_db()
+    async with SessionLocal() as session:
+        tracked_res = await session.execute(select(TrackedBillRow.parliament_bill_id))
+        pre_parl_ids = set(tracked_res.scalars().all())
+
+        stmt = select(BillRow)
+        if search and search.strip():
+            q = f"%{search.strip()}%"
+            conditions = [
+                BillRow.short_title.ilike(q),
+                BillRow.department.ilike(q),
+            ]
+            if search.strip().isdigit():
+                conditions.append(BillRow.bill_id == int(search.strip()))
+            stmt = stmt.where(or_(*conditions))
+        if outcome and outcome.strip():
+            stmt = stmt.where(BillRow.outcome == outcome.strip())
+        if house and house.strip():
+            stmt = stmt.where(BillRow.originating_house == house.strip())
+
+        stmt = stmt.order_by(BillRow.introduced_date.desc().nulls_last(), BillRow.bill_id.desc())
+        rows = (await session.execute(stmt)).scalars().all()
+        return [
+            {
+                "bill_id": r.bill_id,
+                "short_title": r.short_title,
+                "originating_house": r.originating_house,
+                "introduced_session_id": r.introduced_session_id,
+                "introduced_date": r.introduced_date,
+                "department": r.department,
+                "outcome": r.outcome,
+                "outcome_date": r.outcome_date,
+                "stop_reason": r.stop_reason,
+                "is_act": r.is_act,
+                "is_defeated": r.is_defeated,
+                "withdrawn_date": r.withdrawn_date,
+                "has_pre_parliament_data": r.bill_id in pre_parl_ids,
+            }
+            for r in rows
+        ]
+
+
+async def evaluate_parliament_bill_from_db(
+    bill_id: int, as_of_date: date | None = None
+) -> dict[str, Any] | None:
+    """Evaluate any UK Government Bill across all 3 phases from Neon Lakebase Postgres."""
+    await init_db()
+    if bill_id == 3137:
+        await get_online_safety_bill_from_live_apis()
+
+    async with SessionLocal() as session:
+        bill_row = (
+            await session.execute(select(BillRow).where(BillRow.bill_id == bill_id))
+        ).scalar_one_or_none()
+        if bill_row is None:
+            return None
+
+        tracked_pre_row = (
+            await session.execute(
+                select(TrackedBillRow).where(TrackedBillRow.parliament_bill_id == bill_id)
+            )
+        ).scalar_one_or_none()
+
+        sittings = (
+            (
+                await session.execute(
+                    select(StageSittingRow)
+                    .where(StageSittingRow.bill_id == bill_id)
+                    .order_by(StageSittingRow.event_date, StageSittingRow.sort_order)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        stage_map_rows = (await session.execute(select(StageMapRow))).scalars().all()
+        stage_names = {r.api_stage_id: r.api_stage_name for r in stage_map_rows}
+
+    pre_domain = _row_to_domain(tracked_pre_row) if tracked_pre_row is not None else None
+    all_dates = [s.event_date for s in sittings]
+    first_reading_dt = bill_row.introduced_date or (
+        min(all_dates) if all_dates else date.today()
+    )
+    earliest_date = (
+        pre_domain.earliest_signal_date if pre_domain is not None else first_reading_dt
+    )
+    latest_sitting_date = max(all_dates) if all_dates else first_reading_dt
+    default_as_of = bill_row.outcome_date or latest_sitting_date
+    eval_date = as_of_date or default_as_of
+
+    # Group sittings by BillStage
+    sittings_by_state: dict[BillStage, list[StageSittingRow]] = {}
+    first_sitting_by_state: dict[BillStage, date] = {}
+    for s in sittings:
+        mapped = STAGE_ID_TO_STATE.get(s.api_stage_id)
+        if mapped is not None:
+            sittings_by_state.setdefault(mapped, []).append(s)
+            if (
+                mapped not in first_sitting_by_state
+                or s.event_date < first_sitting_by_state[mapped]
+            ):
+                first_sitting_by_state[mapped] = s.event_date
+
+    ordered_parl_states = chain(bill_row.originating_house)
+
+    # Compute full entry dates along the Parliamentary chain (handling skipped non-optional states)
+    full_entry_dates: dict[BillStage, date] = {}
+    prev_entry: date | None = None
+    for i, st in enumerate(ordered_parl_states):
+        entry = first_sitting_by_state.get(st)
+        if entry is None and st not in OPTIONAL_STATES:
+            later = [
+                first_sitting_by_state[later_st]
+                for later_st in ordered_parl_states[i + 1 :]
+                if later_st in first_sitting_by_state
+            ]
+            if later:
+                entry = min(later)
+        if entry is not None:
+            if prev_entry is not None and entry < prev_entry:
+                entry = prev_entry
+            full_entry_dates[st] = entry
+            prev_entry = entry
+
+    entered_parl_as_of = [
+        st
+        for st in ordered_parl_states
+        if st in full_entry_dates and full_entry_dates[st] <= eval_date
+    ]
+
+    is_stopped_as_of = (
+        bill_row.outcome in ("fell_session_end", "fell_dissolution", "withdrawn", "defeated")
+        and bill_row.outcome_date is not None
+        and bill_row.outcome_date <= eval_date
+    )
+    active_stop = (
+        StopReason(bill_row.stop_reason)
+        if (is_stopped_as_of and bill_row.stop_reason)
+        else None
+    )
+
+    api_url = f"https://bills-api.parliament.uk/api/v1/Bills/{bill_row.bill_id}/Stages"
+    web_url = f"https://bills.parliament.uk/bills/{bill_row.bill_id}"
+
+    tracked_nodes: list[TrackedStageNode] = []
+    current_stage: BillStage | None = None
+    current_order = 0
+
+    # ------------------------------------------------------------------
+    # PHASE 1: BEFORE PARLIAMENT (Orders 1..6)
+    # ------------------------------------------------------------------
+    has_entered_parliament_as_of = len(entered_parl_as_of) > 0 or (
+        first_reading_dt <= eval_date
+    )
+    if pre_domain is not None:
+        pre_stage, pre_order, pre_nodes = pre_domain.evaluate_at_date(eval_date)
+        if has_entered_parliament_as_of:
+            for pn in pre_nodes:
+                pn.status = StageStatus.COMPLETED
+                if pn.completed_date is None:
+                    pn.completed_date = first_reading_dt
+        elif pre_stage is not None:
+            current_stage = pre_stage
+            current_order = pre_order
+        tracked_nodes.extend(pre_nodes)
+    else:
+        for node in GOVERNMENT_BILL_PIPELINE:
+            if has_entered_parliament_as_of:
+                tracked_nodes.append(
+                    TrackedStageNode(
+                        node=node,
+                        status=StageStatus.COMPLETED,
+                        entered_date=(
+                            first_reading_dt
+                            if node.stage == BillStage.READY_FOR_FIRST_READING
+                            else None
+                        ),
+                        completed_date=first_reading_dt,
+                        summary=(
+                            f"Pre-legislative preparation completed prior to First Reading "
+                            f"on {first_reading_dt.isoformat()}."
+                            if node.stage == BillStage.READY_FOR_FIRST_READING
+                            else None
+                        ),
+                        source_reference=web_url,
+                        source_api_url=api_url,
+                        web_url=web_url,
+                        visible_events=(
+                            [
+                                ApiEvidenceEvent(
+                                    event_date=first_reading_dt,
+                                    title=f"Introduced in {bill_row.originating_house}",
+                                    note=(
+                                        f"{bill_row.short_title} cleared pre-legislative "
+                                        f"preparation and entered {bill_row.originating_house}."
+                                    ),
+                                    source_api_url=api_url,
+                                    web_url=web_url,
+                                    document_type="parliament_introduction",
+                                )
+                            ]
+                            if node.stage == BillStage.READY_FOR_FIRST_READING
+                            else []
+                        ),
+                    )
+                )
+            else:
+                tracked_nodes.append(
+                    TrackedStageNode(node=node, status=StageStatus.UPCOMING)
+                )
+
+    # ------------------------------------------------------------------
+    # PHASE 2: INSIDE PARLIAMENT (Orders 7..15) & ROYAL ASSENT (Order 16)
+    # ------------------------------------------------------------------
+    base_order = len(GOVERNMENT_BILL_PIPELINE)
+    for idx, st in enumerate(ordered_parl_states, start=1):
+        order = base_order + idx
+        phase, label, description, stop_risks = PARLIAMENTARY_STAGE_INFO[st]
+        node = StageNode(
+            stage=st,
+            phase=phase,
+            order=order,
+            label=label,
+            description=description,
+            stop_risks=stop_risks,
+        )
+        entry_dt = full_entry_dates.get(st)
+        if entry_dt is None or entry_dt > eval_date:
+            tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
+            continue
+
+        idx_in_entered = entered_parl_as_of.index(st)
+        if idx_in_entered + 1 < len(entered_parl_as_of):
+            next_st = entered_parl_as_of[idx_in_entered + 1]
+            status = StageStatus.COMPLETED
+            completed_dt = full_entry_dates[next_st]
+            node_stop = None
+        elif st == BillStage.ROYAL_ASSENT:
+            status = StageStatus.COMPLETED
+            completed_dt = entry_dt
+            current_stage = st
+            current_order = order
+            node_stop = None
+        elif is_stopped_as_of:
+            status = StageStatus.STOPPED
+            completed_dt = max(bill_row.outcome_date or entry_dt, entry_dt)
+            current_stage = st
+            current_order = order
+            node_stop = active_stop
+        else:
+            status = StageStatus.CURRENT
+            completed_dt = None
+            current_stage = st
+            current_order = order
+            node_stop = None
+
+        st_sittings = [
+            s for s in sittings_by_state.get(st, []) if s.event_date <= eval_date
+        ]
+        visible_events = [
+            ApiEvidenceEvent(
+                event_date=s.event_date,
+                title=(
+                    f"{stage_names.get(s.api_stage_id, label)} "
+                    f"({s.house or bill_row.originating_house})"
+                ),
+                note=(
+                    f"Parliamentary stage sitting #{s.sitting_id} in Session {s.session_id} "
+                    f"for {bill_row.short_title}."
+                ),
+                source_api_url=api_url,
+                web_url=web_url,
+                document_type="parliament_stage_sitting",
+            )
+            for s in st_sittings
+        ]
+        plural = "s" if len(st_sittings) != 1 else ""
+        summary_text = (
+            f"Entered {label} on {entry_dt.isoformat()} "
+            f"({len(st_sittings)} sitting{plural} recorded ≤ {eval_date.isoformat()})."
+        )
+        tracked_nodes.append(
+            TrackedStageNode(
+                node=node,
+                status=status,
+                entered_date=entry_dt,
+                completed_date=completed_dt,
+                summary=summary_text,
+                source_reference=web_url,
+                source_api_url=api_url,
+                web_url=web_url,
+                visible_events=visible_events,
+                active_stop_reason=node_stop,
+            )
+        )
+
+    # ------------------------------------------------------------------
+    # PHASE 3: AFTER ROYAL ASSENT (Orders 17..22)
+    # ------------------------------------------------------------------
+    ra_date = full_entry_dates.get(BillStage.ROYAL_ASSENT)
+    has_royal_assent_as_of = ra_date is not None and ra_date <= eval_date
+    post_base_order = base_order + len(ordered_parl_states)
+    for post_idx, (post_st, post_label, post_desc, post_stops) in enumerate(
+        POST_ROYAL_ASSENT_STAGE_INFO, start=1
+    ):
+        order = post_base_order + post_idx
+        node = StageNode(
+            stage=post_st,
+            phase=LifecyclePhase.AFTER_ROYAL_ASSENT,
+            order=order,
+            label=post_label,
+            description=post_desc,
+            stop_risks=post_stops,
+        )
+        if (
+            has_royal_assent_as_of
+            and ra_date is not None
+            and post_st == BillStage.SOME_SECTIONS_START
+        ):
+            leg_url = f"https://www.legislation.gov.uk/ukpga/{ra_date.year}"
+
+            tracked_nodes.append(
+                TrackedStageNode(
+                    node=node,
+                    status=StageStatus.CURRENT,
+                    entered_date=ra_date,
+                    completed_date=None,
+                    summary=(
+                        f"Initial citation, extent, and commencement-power sections took effect "
+                        f"upon Royal Assent on {ra_date.isoformat()}."
+                    ),
+                    source_reference=leg_url,
+                    source_api_url=api_url,
+                    web_url=leg_url,
+                    visible_events=[
+                        ApiEvidenceEvent(
+                            event_date=ra_date,
+                            title=f"{bill_row.short_title} enacted ({ra_date.year})",
+                            note=(
+                                "General and preliminary sections commenced on Royal Assent; "
+                                "remaining substantive provisions await Commencement Orders (SIs)."
+                            ),
+                            source_api_url=api_url,
+                            web_url=leg_url,
+                            document_type="act_of_parliament",
+                        )
+                    ],
+                )
+            )
+            current_stage = post_st
+            current_order = order
+        else:
+            tracked_nodes.append(
+                TrackedStageNode(node=node, status=StageStatus.UPCOMING)
+            )
+
+    # Build dynamic database-driven milestone dates across all phases
+    milestones: list[dict[str, Any]] = []
+    seen_dates: set[date] = set()
+    if pre_domain is not None:
+        for node in GOVERNMENT_BILL_PIPELINE:
+            rec = pre_domain.stage_records.get(node.stage)
+            if rec is not None and rec.entered_date not in seen_dates:
+                seen_dates.add(rec.entered_date)
+                milestones.append(
+                    {
+                        "label": f"{rec.entered_date.isoformat()} (1. {node.label})",
+                        "date": rec.entered_date,
+                        "note": rec.headline,
+                    }
+                )
+    for st in ordered_parl_states:
+        if st in full_entry_dates:
+            dt = full_entry_dates[st]
+            phase, label, _, _ = PARLIAMENTARY_STAGE_INFO[st]
+            phase_num = "3" if phase == LifecyclePhase.AFTER_ROYAL_ASSENT else "2"
+            if dt not in seen_dates:
+                seen_dates.add(dt)
+                milestones.append(
+                    {
+                        "label": f"{dt.isoformat()} ({phase_num}. {label})",
+                        "date": dt,
+                        "note": label,
+                    }
+                )
+    if (
+        bill_row.outcome_date is not None
+        and bill_row.outcome_date not in seen_dates
+    ):
+        seen_dates.add(bill_row.outcome_date)
+        milestones.append(
+            {
+                "label": f"{bill_row.outcome_date.isoformat()} (Outcome: {bill_row.outcome})",
+                "date": bill_row.outcome_date,
+                "note": f"Final outcome: {bill_row.outcome}",
+            }
+        )
+
+    if has_royal_assent_as_of:
+        current_phase = LifecyclePhase.AFTER_ROYAL_ASSENT
+    elif has_entered_parliament_as_of:
+        current_phase = LifecyclePhase.INSIDE_PARLIAMENT
+    else:
+        current_phase = LifecyclePhase.BEFORE_PARLIAMENT
+
+    total_stages = len(tracked_nodes)
+
+    return {
+        "id": str(bill_row.bill_id),
+        "parliament_bill_id": bill_row.bill_id,
+        "short_title": bill_row.short_title,
+        "long_title": (
+            pre_domain.long_title
+            if pre_domain is not None
+            else (
+                f"UK Government Bill #{bill_row.bill_id} originating in the House of "
+                f"{bill_row.originating_house} (Session {bill_row.introduced_session_id})."
+            )
+        ),
+        "sponsoring_department": (
+            bill_row.department
+            or (pre_domain.sponsoring_department if pre_domain else "HM Government")
+        ),
+        "originating_house": bill_row.originating_house,
+        "introduced_session_id": bill_row.introduced_session_id,
+        "outcome": bill_row.outcome,
+        "outcome_date": bill_row.outcome_date,
+        "stop_reason": bill_row.stop_reason,
+        "as_of_date": eval_date,
+        "earliest_signal_date": earliest_date,
+        "first_reading_date": first_reading_dt,
+        "current_phase": current_phase,
+        "current_stage": current_stage,
+        "current_stage_order": current_order,
+        "total_stages": total_stages,
+        "tracked_nodes": tracked_nodes,
+        "milestone_dates": milestones,
+    }
+
+

@@ -1,5 +1,12 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 21:41 — Merge main into feat/passage-model-tasks-4-11
+
+- **What:** merged latest `main` (government-bills-only rule and ingestion fix #14/#15, three-phase lifecycle view #13). Resolved one conflict in the `model/cli.py` docstring (kept `fetch` without `--gov-only` plus `states`).
+- **Why:** Aleks asked to bring the branch up to date before task 4.
+- **Checks:** `ruff`: clean; `pytest`: 52 passed.
+- **Notes:** bill 3064 labelling issue is still open on `main`.
+
 ## 2026-10-24 21:33 — feat(model): task 3 sanity report, Royal Assent check and duration chart
 
 - **What:** ran `cli states` on the Neon data (586 bills, sessions ≥ 20); added a check that every bill that reached Royal Assent is labelled an Act, with a test; saved `backend/reports/state_durations.png` (MODEL_SPEC §7 chart 5).

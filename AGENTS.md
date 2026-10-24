@@ -81,3 +81,9 @@ Every commit made by an agent must include an entry in the branch's log file, so
   ```
 
 - Keep entries short and factual. Report failures and skipped checks honestly.
+
+---
+
+## 5. Data Scope: Government Bills Only
+
+**This project accepts UK Government Bills only (Bills API `BillType = 1`).** Never download, store, use or display any other bill type (Private Members' Bills, Private Bills, Hybrid Bills, etc.), including for helper data such as the sitting-day calendar. Full rules: [`DATA_SCOPE.md`](./DATA_SCOPE.md). If anything conflicts with this rule, `DATA_SCOPE.md` wins: stop and tell the user.

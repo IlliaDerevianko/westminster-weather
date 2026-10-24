@@ -73,7 +73,7 @@ Facts already verified against the live API (2026-10-24):
 
 Steps:
 1. Extend `clients/parliament_bills.py` (or add `data/bills_api.py`) with a **synchronous** batch downloader using `httpx` with retries, a small concurrency limit (≤ 5 parallel requests) and polite backoff.
-2. Download: all government bills (list + detail + stages), and **all bills of all types** list + stages *(used only to build the sitting-day calendar; optional if slow, then use government bills only)*.
+2. Download: all government bills (list + detail + stages) **only**. Other bill types are never downloaded ([`DATA_SCOPE.md`](../../DATA_SCOPE.md)).
 3. Cache raw JSON per bill in `backend/data/cache/`. Re-running must skip bills whose `lastUpdate` has not changed.
 4. Flatten into parquet: `bills.parquet`, `stage_sittings.parquet` (one row per sitting), matching `DATA_CONTRACT.md` §3.1–3.2 column names.
 
