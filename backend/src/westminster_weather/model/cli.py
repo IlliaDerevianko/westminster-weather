@@ -1,12 +1,15 @@
 """Command-line entry point for ingesting all UK Parliament Bills into Neon Lakebase Postgres.
 
 uv run python -m westminster_weather.model.cli fetch [--gov-only]
+uv run python -m westminster_weather.model.cli states [--as-of YYYY-MM-DD]
 """
 
 from __future__ import annotations
 
 import argparse
 import logging
+from datetime import date
+from pathlib import Path
 
 import pandas as pd
 
@@ -52,6 +55,31 @@ def cmd_fetch(args: argparse.Namespace) -> None:
     )
 
 
+REPORTS_DIR = Path(__file__).resolve().parents[3] / "reports"
+
+
+def cmd_states(args: argparse.Namespace) -> None:
+    from westminster_weather.model import states
+
+    as_of = args.as_of
+    report = states.sanity_report(as_of)
+    print(f"Model population as of {as_of}: {report['bills']} bills (sessions >= 20)\n")
+    print("Bills by final state and how they ended:")
+    print(report["by_final_state"].to_string())
+    print("\nSitting days spent in each completed state:")
+    print(report["durations"].round(1).to_string())
+    print(f"\nBills with ping-pong: {report['bills_with_ping_pong']}")
+
+    print("\nChecks:")
+    for check in states.check_transitions(as_of):
+        print(f"  [{'OK' if check.ok else 'FAIL'}] {check.name}: {len(check.failures)}")
+        if not check.ok:
+            print(check.failures.head(10).to_string(index=False))
+
+    chart = states.plot_durations(report["transitions"], REPORTS_DIR / "state_durations.png")
+    print(f"\nChart saved: {chart}")
+
+
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -65,6 +93,10 @@ def main(argv: list[str] | None = None) -> None:
         help="Skip non-government bills (they are only used for the sitting-day calendar)",
     )
     fetch.set_defaults(func=cmd_fetch)
+
+    st = sub.add_parser("states", help="Sanity report and checks for model state transitions")
+    st.add_argument("--as-of", type=date.fromisoformat, default=date.today())
+    st.set_defaults(func=cmd_states)
 
     args = parser.parse_args(argv)
     args.func(args)
