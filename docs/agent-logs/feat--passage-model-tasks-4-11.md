@@ -1,5 +1,11 @@
 # Agent log: `feat/passage-model-tasks-4-11`
 
+## 2026-10-24 22:41 — feat(model): ping-pong as rounds (MODEL_SPEC §4.4)
+
+- **What:** `model/pingpong.py` now fits rounds (`N − 1 ~ Poisson(λ)`, one round per stage 12/13/42 sitting), empirical gaps between rounds and from the last round to Royal Assent, using `get_stage_sittings`; `sample_duration` combines them. Tests updated; `cli train` re-run.
+- **Why:** replaces the total-duration stand-in now that the interface exposes individual sittings.
+- **Checks:** `ruff`: clean; `pytest`: 89 passed. Live fit: λ = 1.14 (median 2 rounds), round gap median 2 sitting days, final gap median 2; simulated total median within 3 days of observed (6).
+
 ## 2026-10-24 22:39 — feat(data): add get_stage_sittings(as_of) to the model interface
 
 - **What:** added `get_stage_sittings(as_of)` to `data/interface.py` (method on `DatabaseInterface` plus module function): stage sittings dated ≤ `as_of` for bills introduced by `as_of`, with `model_state` from the stage map. Documented as DATA_CONTRACT §5.4a; added leakage and synthetic tests.

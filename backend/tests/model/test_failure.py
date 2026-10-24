@@ -44,6 +44,21 @@ def test_pingpong_on_synthetic_data():
     model = pingpong.fit_pingpong(date(2016, 12, 1), source)
     assert model.n_acts == 1 and model.probability == 1.0
     assert list(model.durations) == [1]  # 07-19 is the next sitting day after 07-14
+    assert list(model.rounds) == [1] and model.extra_rounds_rate == 0
+    assert list(model.final_gaps) == [1]
+
+
+def test_pingpong_duration_adds_round_gaps_and_final_gap():
+    model = pingpong.PingPongModel(
+        probability=0.5, probability_by_house={}, n_acts=2, extra_rounds_rate=2.0,
+        round_gaps=np.array([3]), final_gaps=np.array([1]), rounds=np.array([3]),
+        durations=np.array([7]),
+    )  # fmt: skip
+    rng = np.random.default_rng(0)
+    rounds = model.sample_rounds(np.random.default_rng(0), 5000)
+    durations = model.sample_duration(rng, 5000)
+    assert rounds.min() == 1 and abs(rounds.mean() - 3) < 0.1
+    assert set(np.unique(durations - 1) % 3) == {0}  # gaps of 3 plus a final gap of 1
 
 
 # --- fitted on the real data in Neon Postgres ---------------------------------------------
@@ -73,4 +88,6 @@ def test_withdrawal_rate_is_small(trained):
 def test_pingpong_share_is_about_half():
     model = pingpong.fit_pingpong(TRAIN_CUTOFF, sessions=TRAIN_SESSIONS)
     assert 0.3 < model.probability < 0.7
-    assert (model.durations >= 0).all()
+    assert (model.durations >= 0).all() and model.rounds.min() >= 1
+    simulated = model.sample_duration(np.random.default_rng(0), 20_000)
+    assert abs(np.median(simulated) - np.median(model.durations)) <= 3
