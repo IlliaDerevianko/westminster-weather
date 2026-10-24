@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-24 22:27 — feat(takeup): King's Speech items and links to bills
+
+- **What:** `kings_speech.py` discovers the 13 King's/Queen's Speech briefing notes on GOV.UK (2012–2026), parses their contents pages (incl. one-word-per-line PDFs and bracketed bill tags), flags draft / carried-over / hybrid items and departments, and links items to Government Bills (exact normalised title, then TF-IDF over title + long title; `auto` / `rule` / `none`). `bill_text.py` caches bill long titles and computes first readings. Exports `backend/data/takeup/review/kings_speech_links.csv` for the checkpoint 3 hand-check.
+- **Why:** plan task 4 (Tier B1 structured sources).
+- **Checks:** `pytest tests/takeup/test_kings_speech.py`: 32 passed; `ruff`: clean. Real run: 372 items, 231 auto / 50 rule / 91 none, 29 carried over, 12 hybrid bills excluded.
+- **Notes:** built by a workflow builder, then 2 independent reviewers (13 findings, e.g. wrong carried-over links in Oct 2019, missed bills named only in speech tags, under-flagged carry-overs) and a fixer (12 fixed, 1 threshold change rejected after checking the data). Speech date = PDF cover date (State Opening); `sessions.start_date` is one day later for 12 of 13. Reads production only through a read-only loader; nothing written to any database.
+
 ## 2026-10-24 22:26 — feat(takeup): faster, fault-tolerant Tier B fetch
 
 - **What:** written statements now fetched at up to 20 requests/s (16 parallel); every 429/5xx is logged; Hansard runs 2 searches at a time and a search that still fails after retries is logged and skipped (not cached) so the next run retries it. `triggers.py` reformatted (whitespace only).
