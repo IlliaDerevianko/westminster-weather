@@ -215,9 +215,29 @@ input:hover,select:hover {
   color:var(--muted);
   font-size:.75rem;
   max-width:180px;
+  justify-self:start;
+  padding:2px 8px;
+  border-radius:3px;
 }
 
-.directory-status.active,.row-arrow {
+/* Pale tints by state: in progress (teal), current law (amber, the "sunny" colour),
+   failed (red, the "storm" colour); text is a darker shade of each for contrast */
+.directory-status.active {
+  background:#E3F4F2;
+  color:#0B6A64;
+}
+
+.directory-status.act {
+  background:#FBF3DF;
+  color:#8A6510;
+}
+
+.directory-status.failed {
+  background:#FBEAEA;
+  color:#A93636;
+}
+
+.row-arrow {
   color:var(--deep-teal);
 }
 
