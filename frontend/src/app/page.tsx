@@ -258,10 +258,10 @@ function BillTrackerContent() {
         <header className="bill-heading">
           <p className="eyebrow">{bill.originating_house} · {bill.sponsoring_department}</p>
           <h1>{bill.short_title}</h1>
-          <div className="heading-meta"><span className="status-label">{overallOutcome}</span><span>Bill {bill.parliament_bill_id}</span>
+          <div className="heading-meta"><span className="status-label">{overallOutcome}</span>
             <a className="text-link" href={bill.full_text_url ?? `https://bills.parliament.uk/bills/${bill.parliament_bill_id}/publications`} target="_blank" rel="noopener noreferrer">Read the bill ↗</a>
           </div>
-          <details className="bill-description"><summary>About this bill</summary><p>{bill.long_title}</p><p>First signal: {formatDate(bill.earliest_signal_date)}{bill.outcome_date && ` · Outcome: ${formatDate(bill.outcome_date)}`}{bill.introduced_session_id && ` · Session ${bill.introduced_session_id}`}</p></details>
+          <details className="bill-description"><summary>About this bill</summary><p>{bill.long_title}</p><p>Parliament Bill {bill.parliament_bill_id}</p><p>First signal: {formatDate(bill.earliest_signal_date)}{bill.outcome_date && ` · Outcome: ${formatDate(bill.outcome_date)}`}{bill.introduced_session_id && ` · Session ${bill.introduced_session_id}`}</p></details>
         </header>
         <section className="snapshot-bar" aria-label="Bill position and date">
           <div><p className="eyebrow">{isStopped ? "Stopped at" : "Current position"}</p><strong>{currentStageObj?.label ?? "Before first stage"}</strong><p className="muted">As of {formatDate(bill.as_of_date)}</p></div>
@@ -280,9 +280,12 @@ function BillTrackerContent() {
         <section className="journey" aria-labelledby="journey-title">
           <div className="section-heading"><h2 id="journey-title">The bill’s journey</h2><span className="muted">Stage {bill.current_stage_order} of {bill.total_stages}</span></div>
           <div className="phase-tabs" aria-label="Timeline phase">
-            {PHASE_CONFIG.map((phase, index) => <button key={phase.key} aria-pressed={visiblePhase === phase.key} onClick={() => setSelectedPhase(phase.key)}><span className="phase-number">0{index + 1}</span>{phase.title}{bill.current_phase === phase.key && <span className="phase-current">Current phase</span>}</button>)}
+            {PHASE_CONFIG.map((phase, index) => <button key={phase.key} aria-pressed={visiblePhase === phase.key} onClick={() => setSelectedPhase(phase.key)}><span className="phase-number">0{index + 1}</span>{phase.title}</button>)}
           </div>
-          <p className="phase-description">{PHASE_CONFIG.find(p => p.key === visiblePhase)?.subtitle}</p>
+          <details key={visiblePhase} className="phase-description">
+            <summary>About this phase</summary>
+            <p>{PHASE_CONFIG.find(p => p.key === visiblePhase)?.subtitle}</p>
+          </details>
           <ol className="timeline">
             {stagesByPhase[visiblePhase].map(stage => <li key={stage.stage} className={`timeline-stage stage-${stage.status}`}>
               <span className="stage-marker" aria-hidden="true">{stage.status === "completed" ? "✓" : stage.order}</span>

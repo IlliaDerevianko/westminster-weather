@@ -1,3 +1,10 @@
+## 2026-10-25 — feat(ui): reduce repeated bill context
+
+- **What:** Moved the Parliament bill number into About this bill, placed phase descriptions in a collapsed About this phase disclosure, and removed the Current phase label from phase navigation. Kept current-position indicators in the overview and stage timeline.
+- **Why:** Apply the three information-density changes approved by the user.
+- **Checks:** Frontend production build and type checks passed; backend ruff passed; pytest exited 139 before producing results; diff whitespace check passed.
+- **Notes:** Phase help resets to collapsed when switching phases. Stage counts and forecast percentages remain unchanged. Browser interaction checks remain unverified under the previously observed local-server restriction.
+
 ## 2026-10-25 — feat(ui): refresh typography and enlarge the header logo
 
 - **What:** Unified headings and body text under Avenir Next with local system fallbacks. Increased logo width from 240 to 330 pixels on desktop and 180 to 230 on mobile, preserving proportions and allowing narrow headers to wrap.

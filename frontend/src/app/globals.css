@@ -361,16 +361,20 @@ input:hover,select:hover {
   font-size:.75rem;
 }
 
-.phase-current {
-  display:block;
-  font-size:.65rem;
-  margin:4px 0 0 28px;
-}
 
 .phase-description {
   color:var(--muted);
   font-size:.875rem;
   margin:20px 0 28px;
+}
+
+.phase-description summary {
+  width:fit-content;
+  color:var(--deep-teal);
+}
+
+.phase-description p {
+  margin-top:8px;
 }
 
 .timeline {
@@ -587,10 +591,6 @@ input:hover,select:hover {
   }
   .phase-number {
     display:block;
-  }
-  .phase-current {
-    margin-left:0;
-    font-size:.6rem;
   }
   .timeline-stage {
     gap:12px;
