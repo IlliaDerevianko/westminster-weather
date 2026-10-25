@@ -10,16 +10,12 @@ from westminster_weather import __version__
 from westminster_weather.config import settings
 from westminster_weather.db import check_db_connection
 from westminster_weather.domain.bills import (
-    GovernmentBill,
     TrackedStageNode,
     evaluate_parliament_bill_from_db,
-    get_online_safety_bill_from_live_apis,
     list_all_bills_from_db,
-    sync_online_safety_bill_to_db,
 )
 from westminster_weather.domain.stages import (
     GOVERNMENT_BILL_PIPELINE,
-    LifecyclePhase,
 )
 from westminster_weather.schemas.bills import (
     ApiEvidenceEventSchema,
@@ -89,37 +85,6 @@ def _serialize_tracked_nodes(
     ]
 
 
-def _serialize_bill_at_date(
-    bill: GovernmentBill, as_of_date: date
-) -> GovernmentBillTrackingResponse:
-    current_stage, current_order, tracked_nodes = bill.evaluate_at_date(as_of_date)
-    milestones = [
-        MilestoneDateSchema(
-            label=f"{rec.entered_date.isoformat()} ({node.label})",
-            date=rec.entered_date,
-            note=rec.headline,
-        )
-        for node in GOVERNMENT_BILL_PIPELINE
-        if (rec := bill.stage_records.get(node.stage)) is not None
-    ]
-    return GovernmentBillTrackingResponse(
-        id=bill.id,
-        parliament_bill_id=bill.parliament_bill_id,
-        short_title=bill.short_title,
-        long_title=bill.long_title,
-        sponsoring_department=bill.sponsoring_department,
-        as_of_date=as_of_date,
-        earliest_signal_date=bill.earliest_signal_date,
-        first_reading_date=bill.first_reading_date,
-        current_phase=LifecyclePhase.BEFORE_PARLIAMENT,
-        current_stage=current_stage,
-        current_stage_order=current_order,
-        total_stages=len(GOVERNMENT_BILL_PIPELINE),
-        stages=_serialize_tracked_nodes(tracked_nodes),
-        milestone_dates=milestones,
-    )
-
-
 @app.get("/health", tags=["system"])
 async def health_check() -> dict[str, str]:
     pg_version = await check_db_connection()
@@ -147,19 +112,6 @@ async def list_pipeline_stages() -> list[StageNodeSchema]:
         )
         for node in GOVERNMENT_BILL_PIPELINE
     ]
-
-
-@app.post("/api/v1/bills/online-safety-bill/sync", tags=["bills"])
-async def sync_bill_to_neon() -> dict[str, int | str]:
-    """Fetch live GOV.UK & Parliament API records and persist them into Neon Lakebase Postgres."""
-    stages_saved, events_saved = await sync_online_safety_bill_to_db()
-    return {
-        "status": "synced",
-        "bill_id": "online-safety-bill",
-        "neon_branch": settings.neon_branch,
-        "stages_saved": stages_saved,
-        "events_saved": events_saved,
-    }
 
 
 @app.get("/api/v1/bills", response_model=list[BillSummarySchema], tags=["bills"])
@@ -268,10 +220,6 @@ async def get_tracked_bill(
     ] = None,
 ) -> GovernmentBillTrackingResponse:
     """Return any UK Government Bill's stage tracking state at `as_of_date` from Neon Postgres."""
-    if bill_id == "online-safety-bill":
-        bill = await get_online_safety_bill_from_live_apis()
-        return _serialize_bill_at_date(bill, as_of_date or date(2021, 1, 15))
-
     if bill_id.isdigit():
         evaluated = await evaluate_parliament_bill_from_db(int(bill_id), as_of_date=as_of_date)
         if evaluated is None:

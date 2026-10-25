@@ -46,60 +46,41 @@ def test_phase_one_stop_risks() -> None:
     assert StopReason.STUCK_IN_DRAFTING in drafting_node.stop_risks
 
 
-async def test_sync_bill_to_neon_endpoint() -> None:
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.post("/api/v1/bills/online-safety-bill/sync")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "synced"
-    assert data["bill_id"] == "online-safety-bill"
-    assert data["neon_branch"] == "production"
-    assert data["stages_saved"] == 6
-    assert data["events_saved"] >= 10
-
-
 @pytest.mark.parametrize(
-    ("as_of_date", "expected_stage", "expected_order"),
+    ("as_of_date", "expected_order"),
     [
-        ("2017-11-15", BillStage.SIGNAL_APPEARS, 1),
-        ("2018-07-01", BillStage.GOVERNMENT_COMMITS, 2),
-        ("2019-06-01", BillStage.CONSULTATION, 3),
-        ("2021-01-15", BillStage.DRAFTING, 4),
-        ("2021-06-01", BillStage.SLOT_IN_PROGRAMME, 5),
-        ("2022-03-17", BillStage.READY_FOR_FIRST_READING, 6),
-        ("2026-10-24", BillStage.READY_FOR_FIRST_READING, 6),
+        ("2017-11-15", 1),  # signal appears
+        ("2018-07-01", 2),  # government commits
+        ("2019-06-01", 3),  # consultation
+        ("2021-01-15", 4),  # drafting
+        ("2021-06-01", 5),  # slot in the programme
+        ("2022-03-17", 7),  # all 6 pre-Parliament stages done; Commons 1st reading
+        ("2026-10-24", 7),
     ],
 )
-async def test_online_safety_bill_historical_dates_from_neon_db(
-    as_of_date: str, expected_stage: BillStage, expected_order: int
+async def test_pre_parliament_history_from_tracked_bills_by_bill_id(
+    as_of_date: str, expected_order: int
 ) -> None:
+    # Bill 3137 (Online Safety Bill) has stored pre-Parliament records in `tracked_bills`;
+    # the generic bill endpoint replays them like any other bill's
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get(
-            "/api/v1/bills/online-safety-bill", params={"as_of_date": as_of_date}
-        )
+        response = await client.get("/api/v1/bills/3137", params={"as_of_date": as_of_date})
     assert response.status_code == 200
     bill = response.json()
-
-    assert bill["id"] == "online-safety-bill"
     assert bill["parliament_bill_id"] == 3137
     assert bill["as_of_date"] == as_of_date
-    assert bill["current_stage"] == expected_stage
-    assert bill["current_stage_order"] == expected_order
-    assert len(bill["stages"]) == 6
+    pre = [s for s in bill["stages"] if s["phase"] == LifecyclePhase.BEFORE_PARLIAMENT]
+    assert [s["order"] for s in pre] == [1, 2, 3, 4, 5, 6]
+    if expected_order <= 6:
+        assert bill["current_stage_order"] == expected_order
 
-    for stage_item in bill["stages"]:
+    for stage_item in pre:
         if stage_item["order"] < expected_order:
             assert stage_item["status"] == StageStatus.COMPLETED
             assert stage_item["entered_date"] is not None
         elif stage_item["order"] == expected_order:
-            expected_status = (
-                StageStatus.COMPLETED
-                if expected_stage == BillStage.READY_FOR_FIRST_READING
-                else StageStatus.CURRENT
-            )
-            assert stage_item["status"] == expected_status
+            assert stage_item["status"] == StageStatus.CURRENT
             assert stage_item["entered_date"] <= as_of_date
             assert len(stage_item["visible_events"]) >= 1
             for ev in stage_item["visible_events"]:

@@ -184,9 +184,7 @@ function BillTrackerContent() {
   const queryBillId = searchParams.get("bill_id");
 
   const [allBills, setAllBills] = useState<BillSummary[]>([]);
-  const [activeBillId, setActiveBillId] = useState<string | null>(
-    queryBillId === "online-safety-bill" ? "3137" : queryBillId
-  );
+  const [activeBillId, setActiveBillId] = useState<string | null>(queryBillId);
   const [selectedDate, setSelectedDate] = useState<string>("");
   // The snapshot date the page opened on (latest data); the outlook then forecasts as of today.
   const [latestDate, setLatestDate] = useState<string>("");
@@ -202,9 +200,9 @@ function BillTrackerContent() {
         if (!res.ok) return;
         const data: BillSummary[] = await res.json();
         setAllBills(data);
+        // No bill in the URL: open the most recently introduced bill (the list's first)
         if (!queryBillId && data.length > 0) {
-          const onlineSafety = data.find((b) => b.bill_id === 3137);
-          setActiveBillId(String((onlineSafety ?? data[0]).bill_id));
+          setActiveBillId(String(data[0].bill_id));
         }
       } catch {
         // Handled by main fetch
@@ -216,9 +214,7 @@ function BillTrackerContent() {
   // Sync activeBillId when URL query parameter changes
   useEffect(() => {
     if (queryBillId) {
-      setActiveBillId(
-        queryBillId === "online-safety-bill" ? "3137" : queryBillId
-      );
+      setActiveBillId(queryBillId);
       setSelectedDate("");
     }
   }, [queryBillId]);
