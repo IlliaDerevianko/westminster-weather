@@ -338,7 +338,7 @@ def run() -> dict:
 STAGE2_DIR = REPORTS / "remaining_time_tails_75_25"
 STAGE2_MODEL = "+ long title, bill weights"
 STAGE3_MODEL = "XGBoost (two step)"
-STAGE3_CHART_CHECKPOINTS = ["Royal Assent", "+30 days", "+90 days"]  # 25+ Acts each
+STAGE3_CHART_CHECKPOINTS = ["Royal Assent"]  # every Act; later checkpoints only cover slow ones
 
 
 def stage2_to_3_chart(report_dir: Path = REPORT_DIR) -> Path:
@@ -378,10 +378,10 @@ def stage2_to_3_chart(report_dir: Path = REPORT_DIR) -> Path:
     n2, n3 = s2["bill_id"].nunique(), s3["bill_id"].nunique()
 
     labels = [PLAIN_LABELS[a] for a in STAGE_ANCHORS] + [
-        "Royal\nAssent",
-        f"+30 days\n({g3.loc['+30 days', 'n']:.0f} Acts\nstill waiting)",
-        f"+90 days\n({g3.loc['+90 days', 'n']:.0f} Acts\nstill waiting)",
+        f"Royal Assent\n(all {g3.loc['Royal Assent', 'n']:.0f} Acts)"
     ]
+    at_ra = s3[s3["checkpoint"] == "Royal Assent"]
+    waiting = at_ra[at_ra["target_days"] > 0]
     left = list(g2["left"]) + list(g3["left"])
     miss = list(g2["miss"]) + list(g3["miss"])
     k = len(g2)
@@ -437,9 +437,9 @@ def stage2_to_3_chart(report_dir: Path = REPORT_DIR) -> Path:
         fontweight="bold",
     )
     ax.text(
-        k + 1,
+        k,
         top * 0.93,
-        "Stage 3 · after Royal Assent\nforecast: day the law applies",
+        "Stage 3 · after\nRoyal Assent\nforecast: day the\nlaw applies",
         ha="center",
         va="top",
         color=INK,
@@ -447,7 +447,7 @@ def stage2_to_3_chart(report_dir: Path = REPORT_DIR) -> Path:
         fontweight="bold",
     )
     ax.set_xticks(list(x), labels, fontsize=9.5, color=INK_SOFT)
-    ax.set_xlim(-0.6, len(labels) - 0.4)
+    ax.set_xlim(-0.6, len(labels) - 0.25)
     ax.set_ylim(0, top)
     ax.set_ylabel("Days", color=INK_SOFT)
     leg = ax.legend(
@@ -513,8 +513,9 @@ def stage2_to_3_chart(report_dir: Path = REPORT_DIR) -> Path:
         "Stage 2 = Illia's tuned XGBoost plus what the bill's long title says it does. "
         "Stage 3 = XGBoost reading the Act's commencement wording (two steps: applies on "
         "Royal Assent day? then how long).\nBoth trained on bills from 2006–2021 only. "
-        "Later stage 3 checkpoints (+180 days, +1 year) are left out: only 10 and 6 Acts "
-        "were still waiting by then.",
+        f"At Royal Assent, the {len(waiting)} Acts that wait for a commencement order are less "
+        f"certain (typical miss ±{waiting['e'].median():.0f} days); the "
+        f"{len(at_ra) - len(waiting)} that apply the same day are almost always right.",
         fontsize=9,
         color=INK_SOFT,
     )

@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 05:34 — docs(analysis): stage 2 to 3 stakeholder chart on all test data only
+
+- **What:** `0_stage2_to_stage3_for_stakeholders.png` now shows stage 3 at Royal Assent only (all 131 test Acts), dropping the +30 / +90 day checkpoints that cover only the slow Acts still waiting; the footnote gives the split at Royal Assent (68 Acts waiting for a commencement order, typical miss ±44 days; 63 applying the same day).
+- **Why:** Roman asked for the stage 2 to stage 3 stakeholder graph on general test data. Also tried improving stage 3 at +30 / +90 days (16 model settings, department typical wait, recency of regulations; chosen on validation sessions 32-35): no gain on test (+30: 32 days, +90: 69-72), not adopted.
+- **Checks:** `ruff check`: clean; rendered and checked. ±72 days at introduction, ±9 at second-House 3rd reading, ±13 at Royal Assent.
+
 ## 2026-10-25 05:29 — docs(analysis): stakeholder chart from stage 2 to stage 3 on test data
 
 - **What:** `commencement_xgb.py --chart` draws `backend/reports/commencement_xgb/0_stage2_to_stage3_for_stakeholders.png`: test data only (same 75/25 split), from first reading through Parliament (stage 2, new XGBoost, 142 bills: forecast of Royal Assent) to Royal Assent, +30 and +90 days (stage 3, two-step XGBoost, 131 Acts: forecast of the day the law applies). Grey bars = typical days still to go, line = typical miss. +180 days and +1 year left out (10 and 6 Acts).
