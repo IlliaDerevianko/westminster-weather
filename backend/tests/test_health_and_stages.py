@@ -128,7 +128,7 @@ async def test_get_any_parliament_bill_by_numeric_id_from_neon_db() -> None:
     data = response.json()
     assert data["parliament_bill_id"] == 3137
     assert "Online Safety" in data["short_title"]
-    assert len(data["stages"]) == 22
+    assert len(data["stages"]) == 21
     phases = {s["phase"] for s in data["stages"]}
     assert phases == {"before_parliament", "inside_parliament", "after_royal_assent"}
     assert len(data["milestone_dates"]) >= 8

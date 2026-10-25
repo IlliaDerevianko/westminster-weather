@@ -1,5 +1,12 @@
 # Agent log: `chore/remove-promises-page`
 
+## 2026-10-25 07:13 — Merge main (PR #24 remove-amended-stage, PR #25 bill-outlook) into chore/remove-promises-page
+
+- **What:** Brought in main's weather outlook panel, outlook endpoint/generation/calibration and the removal of the "Amended or repealed" stage. No conflicts.
+- **Why:** User asked where the predictions were; local branches predated PR #25.
+- **Checks:** `uv run ruff check .`: clean; `uv run pytest`: 389 passed; `npx tsc --noEmit`: clean.
+- **Notes:** The user's uncommitted UI edits were stashed before the merge and restored after it.
+
 ## 2026-10-25 07:10 — chore(frontend): remove the "Back to Tracker Page" button from the bills directory
 
 - **What:** Removed the "← Back to Tracker Page" button and its now-empty wrapper from the bills directory header.

@@ -61,8 +61,6 @@ class StopReason(StrEnum):
     ANNULLED = "annulled"
 
 
-
-
 @dataclass(frozen=True)
 class StageNode:
     stage: BillStage
@@ -206,9 +204,7 @@ PARLIAMENTARY_STAGE_INFO: dict[
     ),
 }
 
-POST_ROYAL_ASSENT_STAGE_INFO: tuple[
-    tuple[BillStage, str, str, tuple[StopReason, ...]], ...
-] = (
+POST_ROYAL_ASSENT_STAGE_INFO: tuple[tuple[BillStage, str, str, tuple[StopReason, ...]], ...] = (
     (
         BillStage.SOME_SECTIONS_START,
         "Some sections start",
@@ -227,7 +223,6 @@ POST_ROYAL_ASSENT_STAGE_INFO: tuple[
         "Department drafts secondary legislation (Statutory Instruments) to fill detail",
         (),
     ),
-
     (
         BillStage.REGULATIONS_LAID,
         "Regulations laid",
@@ -240,12 +235,4 @@ POST_ROYAL_ASSENT_STAGE_INFO: tuple[
         "All commenced provisions and secondary regulations apply across the UK",
         (),
     ),
-    (
-        BillStage.AMENDED_OR_REPEALED,
-        "Amended or repealed",
-        "Post-legislative review or amendment by subsequent Acts of Parliament",
-        (),
-    ),
 )
-
-

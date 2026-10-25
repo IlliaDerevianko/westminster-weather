@@ -18,6 +18,7 @@ model exists.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, timedelta
 from functools import cache
 from pathlib import Path
@@ -270,6 +271,51 @@ def summarise(result: SimResult, entered_current: date) -> dict[str, Any]:
     }
 
 
+@dataclass
+class PathRun:
+    """The simulated paths behind one forecast (``start`` and ``result`` are None when the bill
+    had already reached Royal Assent or failed by ``as_of``)."""
+
+    start: StartState | None
+    bill: pd.Series
+    trans: pd.DataFrame
+    result: SimResult | None
+    variant: str
+    models: Models
+    src: Any
+
+
+def run_paths(
+    bill_id: int,
+    as_of: date,
+    data: DataSource | None = None,
+    variant: str | None = None,
+    n: int = N_PATHS,
+    models_dir: Path = MODELS_DIR,
+    models: Models | None = None,
+    next_entry: tuple[int, date] | None = None,
+    use_schedule: bool = True,
+) -> PathRun:
+    """Simulate ``n`` paths exactly as ``forecast_bill`` does. ``next_entry`` (chain index,
+    date) forces a later stage to start on that date (what-if); ``use_schedule=False`` ignores
+    scheduled sittings."""
+    src = states._source(data)
+    if models is None:
+        variant = variant or choose_variant(as_of, models_dir)
+        models = load_models(variant, models_dir)
+    else:
+        variant = variant or "custom"
+    start, bill, trans = start_state(bill_id, as_of, src, models.hazard)
+    if start is None:
+        return PathRun(None, bill, trans, None, variant, models, src)
+    if next_entry is not None:
+        start.scheduled_entry = next_entry
+    elif variant == "live" and use_schedule:
+        start.scheduled_entry = scheduled_entry(start, bill_id, as_of, src)
+    result = simulate(start, models, src.get_calendar(as_of)["sitting_days"], n=n)
+    return PathRun(start, bill, trans, result, variant, models, src)
+
+
 def forecast_bill(
     bill_id: int,
     as_of: date,
@@ -281,13 +327,15 @@ def forecast_bill(
 ) -> BillForecastResponse:
     """Forecast one bill as of ``as_of`` (MODEL_SPEC §5). ``models`` overrides the saved model
     sets (the rolling backtest passes models fitted on data before ``as_of``)."""
-    src = states._source(data)
-    if models is None:
-        variant = variant or choose_variant(as_of, models_dir)
-        models = load_models(variant, models_dir)
-    else:
-        variant = variant or "custom"
-    start, bill, trans = start_state(bill_id, as_of, src, models.hazard)
+    run = run_paths(bill_id, as_of, data, variant, n, models_dir, models)
+    start, bill, trans, result, variant, models = (
+        run.start,
+        run.bill,
+        run.trans,
+        run.result,
+        run.variant,
+        run.models,
+    )
     common = {
         "bill_id": bill_id,
         "short_title": bill["short_title"],
@@ -297,9 +345,6 @@ def forecast_bill(
     if start is None:
         return _resolved(trans.iloc[-1], as_of, common)
 
-    if variant == "live":
-        start.scheduled_entry = scheduled_entry(start, bill_id, as_of, src)
-    result = simulate(start, models, src.get_calendar(as_of)["sitting_days"], n=n)
     summary = summarise(result, trans.iloc[-1]["entered_date"])
     if models.quantile is not None and summary["time_to_royal_assent"] is not None:
         summary["time_to_royal_assent"] = _average_with_quantile_model(

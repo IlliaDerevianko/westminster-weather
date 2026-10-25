@@ -261,6 +261,23 @@ class ActInForceStatusRow(Base):
     checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class BillOutlookRow(Base):
+    """Presentation-ready outlook per bill and forecast date (DATA_CONTRACT §6.6)."""
+
+    __tablename__ = "bill_outlooks"
+
+    bill_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    forecast_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    target_date: Mapped[date] = mapped_column(Date, nullable=False)
+    model_version: Mapped[str] = mapped_column(String(200), nullable=False)
+    weather_status: Mapped[str] = mapped_column(String(32), nullable=False)
+    p_royal_assent: Mapped[float] = mapped_column(Float, nullable=False)
+    p_by_target: Mapped[float] = mapped_column(Float, nullable=False)
+    recalibrated: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    outlook: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class PostRoyalAssentEventRow(Base):
     """Phase 3 (After Royal Assent) events: Commencement Orders, Draft SIs, Laid SIs, Amendments."""
 
