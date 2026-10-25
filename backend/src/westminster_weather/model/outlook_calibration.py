@@ -240,7 +240,7 @@ def chart(before: pd.DataFrame, after: pd.DataFrame | None, metrics: dict[str, A
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    from westminster_weather.analysis.stakeholder_chart import (
+    from westminster_weather.analysis.chart_style import (
         BASELINE_COLOUR,
         GRID,
         INK,

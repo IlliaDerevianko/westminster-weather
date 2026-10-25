@@ -1,11 +1,10 @@
 """Stage 3 with XGBoost: days from Royal Assent until the law applies.
 
-The stage 2 set-up (``remaining_time_tails``) with a new target, new checkpoints and new
-features; the error is measured the same way so the two stages compare directly.
+Built on the stage 2 remaining-time experiments (since removed; see git history) with a new
+target, new checkpoints and new features.
 
 - **Target:** days from the checkpoint until the law applies: the first commencement order if
-  the Act needed one, else the day its sections started (same definition as
-  ``journey.journey_test``).
+  the Act needed one, else the day its sections started.
 - **Checkpoints:** Royal Assent, then 30, 90, 180 and 365 days after it, for Acts whose law
   has not applied yet.
 - **Features** (all known at the checkpoint; the Act's text is final at Royal Assent):
@@ -17,7 +16,7 @@ features; the error is measured the same way so the two stages compare directly.
   regressor for the rest. Each Act counts once in training.
 - **Compared with:** the rule of thumb (typical days left at the checkpoint for training Acts)
   and the current stage 3 model, ``journey.commencement.forecast_act``.
-- **Split:** by the bill's session, 75/25 as in ``remaining_time_tails --75``: train 20-35,
+- **Split:** by the bill's session, 75/25: train 20-35,
   test 36-39. Acts with no commencement order whose Royal Assent was in the last year of the
   data are left out of the test (their first order may still be coming).
 
@@ -36,10 +35,7 @@ import pandas as pd
 from xgboost import XGBClassifier, XGBRegressor
 
 warnings.filterwarnings("ignore")
-# backend/reports/; the v2 folder holds Illia's tuned XGBoost settings (read, not imported, so
-# serving this model does not load the v2 tuning stack)
 REPORTS = Path(__file__).resolve().parents[3] / "reports"
-V2_DIR = REPORTS / "remaining_time_models_v2"
 REPORT_DIR = REPORTS / "commencement_xgb"
 TRAIN_SESSIONS = frozenset(range(20, 36))
 TEST_SESSIONS = frozenset(range(36, 40))
@@ -175,11 +171,23 @@ DYNAMIC = ["days_since_ra", "regs_laid_so_far", "regs_drafted_so_far"]
 # -------------------------------------------------------------------------------- model
 
 
+# Illia's tuned XGBoost settings (Optuna, 150 trials, CV MAE 42.4 days) from the remaining-time
+# v2 experiment, copied here when that experiment's reports were removed
+XGB_PARAMS = {
+    "n_estimators": 152,
+    "learning_rate": 0.04483432342553568,
+    "max_depth": 6,
+    "min_child_weight": 38.596023091305504,
+    "subsample": 0.5614272056991553,
+    "colsample_bytree": 0.9805096814081286,
+    "reg_lambda": 0.0012337574175209259,
+    "reg_alpha": 0.0034953079096790934,
+    "gamma": 0.011393413712761357,
+}
+
+
 def _params() -> dict:
-    v2 = json.loads((V2_DIR / "metrics.json").read_text())
-    p = dict(v2["tuned"]["XGBoost"]["params"])
-    p.pop("objective")
-    return p
+    return dict(XGB_PARAMS)
 
 
 def _weights(df: pd.DataFrame) -> np.ndarray:
@@ -335,195 +343,8 @@ def run() -> dict:
     return metrics
 
 
-STAGE2_DIR = REPORTS / "remaining_time_tails_75_25"
-STAGE2_MODEL = "+ long title, bill weights"
 STAGE3_MODEL = "XGBoost (two step)"
 STAGE3_CHART_CHECKPOINTS = ["Royal Assent"]  # every Act; later checkpoints only cover slow ones
-
-
-def stage2_to_3_chart(report_dir: Path = REPORT_DIR) -> Path:
-    """Stakeholder chart over the test bills from first reading to the law applying: at each
-    checkpoint, typical days still to go and the typical miss of that stage's forecast (stage 2:
-    Royal Assent date; stage 3: the day the law applies). Same 75/25 split for both stages."""
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    from westminster_weather.analysis.remaining_time_dataset import STAGE_ANCHORS
-    from westminster_weather.analysis.stakeholder_chart import (
-        GRID,
-        INK,
-        INK_SOFT,
-        MODEL_COLOUR,
-        PLAIN_LABELS,
-        SURFACE,
-    )
-
-    s2 = pd.read_csv(STAGE2_DIR / "test_predictions.csv")
-    s2 = s2[s2["anchor"].isin(STAGE_ANCHORS)]
-    s2 = s2.assign(e=(s2[STAGE2_MODEL] - s2["target_days"]).abs())
-    g2 = (
-        s2.groupby("anchor")
-        .agg(left=("target_days", "median"), miss=("e", "median"), n=("e", "size"))
-        .reindex(STAGE_ANCHORS)
-    )
-    s3 = pd.read_csv(report_dir / "test_predictions.csv")
-    s3 = s3.assign(e=(s3[STAGE3_MODEL] - s3["target_days"]).abs())
-    g3 = (
-        s3.groupby("checkpoint")
-        .agg(left=("target_days", "median"), miss=("e", "median"), n=("e", "size"))
-        .reindex(STAGE3_CHART_CHECKPOINTS)
-    )
-    n2, n3 = s2["bill_id"].nunique(), s3["bill_id"].nunique()
-
-    labels = [PLAIN_LABELS[a] for a in STAGE_ANCHORS] + [
-        f"Royal Assent\n(all {g3.loc['Royal Assent', 'n']:.0f} Acts)"
-    ]
-    at_ra = s3[s3["checkpoint"] == "Royal Assent"]
-    waiting = at_ra[at_ra["target_days"] > 0]
-    left = list(g2["left"]) + list(g3["left"])
-    miss = list(g2["miss"]) + list(g3["miss"])
-    k = len(g2)
-    x = np.arange(len(labels))
-
-    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11})
-    fig, ax = plt.subplots(figsize=(14, 6.6), facecolor=SURFACE)
-    ax.set_facecolor(SURFACE)
-    ax.bar(x, left, 0.62, color="#e6e5e1", label="Days still to go (typical bill)")
-    ax.plot(
-        x[:k],
-        miss[:k],
-        color=MODEL_COLOUR,
-        lw=3,
-        marker="o",
-        ms=8,
-        markeredgecolor=SURFACE,
-        markeredgewidth=2,
-        label="How far off the forecast is (typical miss)",
-    )
-    ax.plot(
-        x[k:],
-        miss[k:],
-        color=MODEL_COLOUR,
-        lw=3,
-        marker="o",
-        ms=8,
-        markeredgecolor=SURFACE,
-        markeredgewidth=2,
-    )
-    for i, (lft, m) in enumerate(zip(left, miss, strict=True)):
-        ax.text(
-            i,
-            m + 5,
-            f"±{m:.0f}",
-            ha="center",
-            va="bottom",
-            color=MODEL_COLOUR,
-            fontsize=10,
-            fontweight="bold",
-        )
-        ax.text(i, max(lft, m + 18) + 3, f"{lft:.0f}", ha="center", color=INK_SOFT, fontsize=9.5)
-    ax.axvline(k - 0.5, color=INK_SOFT, lw=1, ls=(0, (3, 3)))
-    top = max(left) * 1.22
-    ax.text(
-        k / 2 - 0.5,
-        top * 0.93,
-        "Stage 2 · in Parliament\nforecast: Royal Assent date",
-        ha="center",
-        va="top",
-        color=INK,
-        fontsize=10.5,
-        fontweight="bold",
-    )
-    ax.text(
-        k,
-        top * 0.93,
-        "Stage 3 · after\nRoyal Assent\nforecast: day the\nlaw applies",
-        ha="center",
-        va="top",
-        color=INK,
-        fontsize=10.5,
-        fontweight="bold",
-    )
-    ax.set_xticks(list(x), labels, fontsize=9.5, color=INK_SOFT)
-    ax.set_xlim(-0.6, len(labels) - 0.25)
-    ax.set_ylim(0, top)
-    ax.set_ylabel("Days", color=INK_SOFT)
-    leg = ax.legend(
-        loc="lower left",
-        bbox_to_anchor=(0.0, 1.0),
-        ncol=2,
-        frameon=False,
-        fontsize=10.5,
-        labelcolor=INK_SOFT,
-    )
-    leg.get_texts()[0].set_color(INK)
-    leg.get_texts()[0].set_fontweight("bold")
-    ax.yaxis.grid(True, color=GRID, lw=1)
-    ax.set_axisbelow(True)
-    for side in ("top", "right", "left"):
-        ax.spines[side].set_visible(False)
-    ax.spines["bottom"].set_color(GRID)
-    ax.tick_params(axis="both", length=0, colors=INK_SOFT)
-    for start, end, label in (
-        (0, 4, "First House"),
-        (5, 9, "Second House"),
-        (k, len(labels) - 1, "After Royal Assent"),
-    ):
-        ax.annotate(
-            "",
-            xy=(start - 0.3, -0.155),
-            xytext=(end + 0.3, -0.155),
-            xycoords=("data", "axes fraction"),
-            textcoords=("data", "axes fraction"),
-            arrowprops={"arrowstyle": "-", "color": GRID, "lw": 1.5},
-        )
-        ax.text(
-            (start + end) / 2,
-            -0.17,
-            label,
-            transform=ax.get_xaxis_transform(),
-            ha="center",
-            va="top",
-            color=INK_SOFT,
-            fontsize=10,
-        )
-
-    fig.text(
-        0.05,
-        0.95,
-        f"From introduction to the law applying: ±{miss[0]:.0f} days at the start, "
-        f"±{miss[k]:.0f} at Royal Assent",
-        fontsize=16,
-        fontweight="bold",
-        color=INK,
-    )
-    fig.text(
-        0.05,
-        0.905,
-        "Typical days still to go, and how far off the forecast made at that point is. "
-        f"Test data only: {n2} bills and {n3} Acts introduced in 2021–2026.",
-        fontsize=11,
-        color=INK_SOFT,
-    )
-    fig.text(
-        0.05,
-        0.02,
-        "Stage 2 = Illia's tuned XGBoost plus what the bill's long title says it does. "
-        "Stage 3 = XGBoost reading the Act's commencement wording (two steps: applies on "
-        "Royal Assent day? then how long).\nBoth trained on bills from 2006–2021 only. "
-        f"At Royal Assent, the {len(waiting)} Acts that wait for a commencement order are less "
-        f"certain (typical miss ±{waiting['e'].median():.0f} days); the "
-        f"{len(at_ra) - len(waiting)} that apply the same day are almost always right.",
-        fontsize=9,
-        color=INK_SOFT,
-    )
-    fig.subplots_adjust(left=0.06, right=0.98, top=0.85, bottom=0.25)
-    path = report_dir / "0_stage2_to_stage3_for_stakeholders.png"
-    fig.savefig(path, dpi=200, facecolor=SURFACE)
-    plt.close(fig)
-    return path
 
 
 def stage3_chart(report_dir: Path = REPORT_DIR) -> Path:
@@ -535,7 +356,7 @@ def stage3_chart(report_dir: Path = REPORT_DIR) -> Path:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    from westminster_weather.analysis.stakeholder_chart import (
+    from westminster_weather.analysis.chart_style import (
         BASELINE_COLOUR,
         GRID,
         INK,
@@ -699,5 +520,4 @@ if __name__ == "__main__":
 
     if "--chart" not in sys.argv:
         main()
-    print(stage2_to_3_chart())
     print(stage3_chart())
