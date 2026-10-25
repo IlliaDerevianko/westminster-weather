@@ -27,10 +27,10 @@ function Curve({
   points: CurvePoint[];
   targetDate: string;
 }) {
-  const W = 640;
-  const H = 200;
-  const pad = { l: 46, r: 12, t: 10, b: 40 };
-  const axisFont = 13;
+  const W = 1000;
+  const H = 300;
+  const pad = { l: 56, r: 16, t: 16, b: 52 };
+  const axisFont = 15;
   // Show one year from the forecast date, with a tick at the start of each month
   const start = new Date(allPoints[0].date);
   const end = new Date(start);
@@ -70,11 +70,11 @@ function Curve({
           <g key={m.toISOString()}>
             <line x1={mx} x2={mx} y1={pad.t} y2={H - pad.b} stroke="#f1f5f9" />
             <line x1={mx} x2={mx} y1={H - pad.b} y2={H - pad.b + 4} stroke="#94a3b8" />
-            <text x={mx} y={H - pad.b + 17} textAnchor="middle" fontSize={axisFont} fill="#64748b">
+            <text x={mx} y={H - pad.b + 21} textAnchor="middle" fontSize={axisFont} fill="#64748b">
               {m.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" })}
             </text>
             {showYear && (
-              <text x={mx} y={H - pad.b + 33} textAnchor="middle" fontSize={axisFont} fontWeight="600" fill="#475569">
+              <text x={mx} y={H - pad.b + 41} textAnchor="middle" fontSize={axisFont} fontWeight="600" fill="#475569">
                 {m.getUTCFullYear()}
               </text>
             )}
@@ -83,13 +83,13 @@ function Curve({
       })}
       {tx >= pad.l && tx <= W - pad.r && (
         <g>
-          <line x1={tx} x2={tx} y1={pad.t} y2={H - pad.b} stroke="#f59e0b" strokeWidth="1.5" />
-          <text x={tx + 4} y={pad.t + 10} fontSize="10" fill="#b45309">
+          <line x1={tx} x2={tx} y1={pad.t} y2={H - pad.b} stroke="#f59e0b" strokeWidth="2" />
+          <text x={tx + 6} y={pad.t + 14} fontSize={axisFont} fontWeight="600" fill="#b45309">
             target
           </text>
         </g>
       )}
-      <path d={path} fill="none" stroke="#2563eb" strokeWidth="2.5" />
+      <path d={path} fill="none" stroke="#2563eb" strokeWidth="3.5" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -161,7 +161,7 @@ export default function BillOutlookPanel({
             </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="mt-5 grid grid-cols-1 gap-8">
             {/* Curve */}
             <div>
               <h3 className="text-sm font-bold text-slate-800">Chance of becoming law by date</h3>
@@ -172,7 +172,7 @@ export default function BillOutlookPanel({
             {/* Deadlines */}
             <div>
               <h3 className="text-sm font-bold text-slate-800">Deadlines</h3>
-              <ul className="mt-2 space-y-1.5">
+              <ul className="mt-2 grid grid-cols-1 gap-x-10 gap-y-1.5 md:grid-cols-2">
                 {outlook.deadlines.map((d) => (
                   <li key={d.kind} className="text-sm text-slate-700">
                     <div className="flex items-center gap-3">
