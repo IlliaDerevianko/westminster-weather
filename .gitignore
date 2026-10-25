@@ -49,3 +49,6 @@ build/
 # Passage model local data and fitted models
 backend/data/
 backend/models/
+
+# Vercel CLI project link
+.vercel/

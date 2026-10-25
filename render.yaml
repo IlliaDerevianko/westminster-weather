@@ -1,0 +1,30 @@
+# Render blueprint for the backend API (free web service).
+# Dashboard: New > Blueprint > this repository; enter DATABASE_URL and DATABASE_URL_UNPOOLED
+# (Neon connection strings) when prompted. The free plan sleeps after 15 idle minutes and
+# takes about a minute to wake on the next request.
+services:
+  - type: web
+    name: westminster-weather-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    # The fitted passage models (backend/models/) are gitignored, so train them during the build
+    buildCommand: >-
+      pip install uv &&
+      uv sync --frozen --no-dev &&
+      uv run --no-sync python -m westminster_weather.model.cli train
+    startCommand: uv run --no-sync uvicorn westminster_weather.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_UNPOOLED
+        sync: false
+      - key: NEON_BRANCH
+        value: production
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"

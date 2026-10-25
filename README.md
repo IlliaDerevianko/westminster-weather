@@ -61,6 +61,15 @@ uv run pytest
 uv run ruff check .
 ```
 
+## Deploying a free demo (Render + Vercel)
+
+The backend runs on Render's free plan and the frontend on Vercel's free Hobby plan; both deploy from `main`. The Neon database stays where it is.
+
+1. **Backend on Render:** New → Blueprint → this repository. Render reads [`render.yaml`](./render.yaml) and asks for `DATABASE_URL` and `DATABASE_URL_UNPOOLED` (the Neon connection strings from `.env.local`). The build installs dependencies and trains the passage models (~1 minute). Note the service URL, e.g. `https://westminster-weather-api.onrender.com`; `/health` should return `"status": "ok"`.
+2. **Frontend on Vercel:** Add New → Project → import this repository, set **Root Directory** to `frontend`, and add the environment variable `BACKEND_URL` = the Render URL (no trailing slash). Deploy. The site calls `/api/v1/*` on its own domain and Vercel forwards it to `BACKEND_URL`.
+
+The free Render service sleeps after 15 idle minutes and takes about a minute to wake: open the site (or `<render-url>/health`) shortly before a demo. The `/forecast` endpoint (not used by the site) needs about 750 MB on first call, above the free plan's 512 MB.
+
 ## Development Workflow
 
 All contributors and AI agents must follow the repository conventions defined in [`AGENTS.md`](./AGENTS.md) and [`CLAUDE.md`](./CLAUDE.md):
