@@ -1,5 +1,12 @@
 # Agent log: `feat/stage-duration-correlation`
 
+## 2026-10-25 — docs(reports): add originating House comparison charts and findings
+
+- **What:** Committed the generated outputs in `backend/reports/origin_comparison/`: 3 PNG charts, per-bill CSV, `metrics.json` and a `README.md` with method, findings and caveats.
+- **Why:** User asked to see progress differences by starting House; BUILD_PLAN says report charts and metrics are committed.
+- **Checks:** none (generated outputs and docs). Charts were checked visually and label overlaps fixed.
+- **Notes:** Regular bills: Lords-first take a median 254 vs 217 days to Royal Assent (p=0.018); the Lords is slower as first House (110 vs 95 days, p<0.001), the Commons is not (98 vs 96); pass rates 92% vs 89% (p=0.22, not significant).
+
 ## 2026-10-25 — feat(analysis): compare bill progress by originating House
 
 - **What:** New module `backend/src/westminster_weather/analysis/origin_comparison.py`. For every Government Bill it measures time in the first House, the second House, the end-game (second House 3rd reading → Royal Assent) and the total to Royal Assent. It compares Commons-first with Lords-first bills (medians and Mann-Whitney U tests), for all bills and regular bills (first House > 14 days), plus outcome shares by origin (Fisher's exact test on Royal Assent rate). Outputs go to `backend/reports/origin_comparison/`.
