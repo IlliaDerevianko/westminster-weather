@@ -47,12 +47,53 @@ const OUTCOME_BADGES: Record<string, { label: string; className: string }> = {
   },
 };
 
+// Summary boxes double as the outcome filter; "all" is selected by default
+const OUTCOME_GROUPS = [
+  {
+    key: "all",
+    label: "Total Government Bills",
+    matches: () => true,
+    box: "border-slate-200 bg-slate-50",
+    ring: "ring-slate-400",
+    labelText: "text-slate-500",
+    valueText: "text-slate-900",
+  },
+  {
+    key: "acts",
+    label: "Royal Assent (Acts)",
+    matches: (outcome: string) => outcome === "royal_assent",
+    box: "border-emerald-200 bg-emerald-50/60",
+    ring: "ring-emerald-400",
+    labelText: "text-emerald-700",
+    valueText: "text-emerald-900",
+  },
+  {
+    key: "in_progress",
+    label: "Currently In Progress",
+    matches: (outcome: string) => outcome === "in_progress",
+    box: "border-amber-200 bg-amber-50/60",
+    ring: "ring-amber-400",
+    labelText: "text-amber-700",
+    valueText: "text-amber-900",
+  },
+  {
+    key: "stopped",
+    label: "Fell / Withdrawn",
+    matches: (outcome: string) => outcome !== "royal_assent" && outcome !== "in_progress",
+    box: "border-rose-200 bg-rose-50/60",
+    ring: "ring-rose-400",
+    labelText: "text-rose-700",
+    valueText: "text-rose-900",
+  },
+] as const;
+type OutcomeGroupKey = (typeof OUTCOME_GROUPS)[number]["key"];
+
 export default function BillsDirectoryPage() {
   const [bills, setBills] = useState<BillSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState<string>("");
-  const [outcomeFilter, setOutcomeFilter] = useState<string>("all");
+  const [outcomeGroup, setOutcomeGroup] = useState<OutcomeGroupKey>("all");
   const [houseFilter, setHouseFilter] = useState<string>("all");
 
   useEffect(() => {
@@ -81,8 +122,9 @@ export default function BillsDirectoryPage() {
 
   const filteredBills = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const group = OUTCOME_GROUPS.find((g) => g.key === outcomeGroup) ?? OUTCOME_GROUPS[0];
     return bills.filter((b) => {
-      if (outcomeFilter !== "all" && b.outcome !== outcomeFilter) {
+      if (!group.matches(b.outcome)) {
         return false;
       }
       if (houseFilter !== "all" && b.originating_house !== houseFilter) {
@@ -97,18 +139,15 @@ export default function BillsDirectoryPage() {
         String(b.bill_id).includes(q)
       );
     });
-  }, [bills, search, outcomeFilter, houseFilter]);
+  }, [bills, search, outcomeGroup, houseFilter]);
 
-  const counts = useMemo(() => {
-    return {
-      total: bills.length,
-      acts: bills.filter((b) => b.outcome === "royal_assent").length,
-      inProgress: bills.filter((b) => b.outcome === "in_progress").length,
-      stopped: bills.filter(
-        (b) => b.outcome !== "royal_assent" && b.outcome !== "in_progress"
-      ).length,
-    };
-  }, [bills]);
+  const counts = useMemo(
+    () =>
+      Object.fromEntries(
+        OUTCOME_GROUPS.map((g) => [g.key, bills.filter((b) => g.matches(b.outcome)).length])
+      ) as Record<OutcomeGroupKey, number>,
+    [bills]
+  );
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
@@ -117,7 +156,7 @@ export default function BillsDirectoryPage() {
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider">
               <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">
-                {counts.total} UK Government Bills
+                {counts.all} UK Government Bills
               </span>
             </div>
             <h1 className="mt-2 text-2xl font-bold text-slate-900">
@@ -131,45 +170,30 @@ export default function BillsDirectoryPage() {
           </div>
         </div>
 
-        {/* Summary Counters */}
+        {/* Summary Counters (click to filter by outcome) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <div className="text-xs font-medium text-slate-500">
-              Total Government Bills
-            </div>
-            <div className="text-xl font-bold text-slate-900">
-              {counts.total}
-            </div>
-          </div>
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
-            <div className="text-xs font-medium text-emerald-700">
-              Royal Assent (Acts)
-            </div>
-            <div className="text-xl font-bold text-emerald-900">
-              {counts.acts}
-            </div>
-          </div>
-          <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3">
-            <div className="text-xs font-medium text-amber-700">
-              Currently In Progress
-            </div>
-            <div className="text-xl font-bold text-amber-900">
-              {counts.inProgress}
-            </div>
-          </div>
-          <div className="rounded-lg border border-rose-200 bg-rose-50/60 p-3">
-            <div className="text-xs font-medium text-rose-700">
-              Fell / Withdrawn
-            </div>
-            <div className="text-xl font-bold text-rose-900">
-              {counts.stopped}
-            </div>
-          </div>
+          {OUTCOME_GROUPS.map((g) => {
+            const selected = outcomeGroup === g.key;
+            return (
+              <button
+                key={g.key}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => setOutcomeGroup(g.key)}
+                className={`rounded-lg border p-3 text-left transition-all hover:shadow-sm ${g.box} ${
+                  selected ? `ring-2 ${g.ring} shadow-sm` : "opacity-75 hover:opacity-100"
+                }`}
+              >
+                <div className={`text-xs font-medium ${g.labelText}`}>{g.label}</div>
+                <div className={`text-xl font-bold ${g.valueText}`}>{counts[g.key]}</div>
+              </button>
+            );
+          })}
         </div>
 
         {/* Search & Filters */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-2">
-          <div className="md:col-span-6">
+          <div className="md:col-span-9">
             <label
               htmlFor="bill-search"
               className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1"
@@ -184,27 +208,6 @@ export default function BillsDirectoryPage() {
               placeholder="e.g. Online Safety, Railways, Home Office, 3137..."
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
-          </div>
-          <div className="md:col-span-3">
-            <label
-              htmlFor="outcome-filter"
-              className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1"
-            >
-              Outcome
-            </label>
-            <select
-              id="outcome-filter"
-              value={outcomeFilter}
-              onChange={(e) => setOutcomeFilter(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none"
-            >
-              <option value="all">All Outcomes</option>
-              <option value="in_progress">In Progress</option>
-              <option value="royal_assent">Royal Assent (Act)</option>
-              <option value="fell_dissolution">Fell (Dissolution)</option>
-              <option value="fell_session_end">Fell (Session End)</option>
-              <option value="withdrawn">Withdrawn</option>
-            </select>
           </div>
           <div className="md:col-span-3">
             <label

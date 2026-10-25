@@ -1,5 +1,12 @@
 # Agent log: `chore/remove-promises-page`
 
+## 2026-10-25 07:17 — feat(frontend): summary boxes filter the bills directory by outcome
+
+- **What:** The four summary boxes on `/bills` (Total, Royal Assent, In Progress, Fell / Withdrawn) are now toggle buttons that filter the list; "Total Government Bills" (all bills) is selected by default. The Outcome dropdown is removed and the search box widened to fill its space. Box definitions, counts and filtering share one `OUTCOME_GROUPS` list.
+- **Why:** User asked to remove the outcome selector and make the summary boxes clickable, defaulting to all bills.
+- **Checks:** `npx tsc --noEmit`: clean; `/bills` loads (200). Not clicked through in a browser.
+- **Notes:** The dropdown's finer choices (fell at dissolution vs session end, withdrawn) are now one "Fell / Withdrawn" group, matching the box count. The house filter is unchanged. The user's own uncommitted edit in this file was left out.
+
 ## 2026-10-25 07:15 — chore(frontend): remove the target-date picker from the weather outlook panel
 
 - **What:** Removed the "Target date" input and its "next recess" reset link from `BillOutlookPanel`, and the `targetDate` state; the panel always uses the API's default target (next recess more than 30 days away).
