@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import BillOutlookPanel from "./BillOutlookPanel";
 
@@ -179,11 +178,9 @@ const PHASE_CONFIG: {
 ];
 
 function BillTrackerContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const queryBillId = searchParams.get("bill_id");
 
-  const [allBills, setAllBills] = useState<BillSummary[]>([]);
   const [activeBillId, setActiveBillId] = useState<string | null>(queryBillId);
   const [selectedDate, setSelectedDate] = useState<string>("");
   // The snapshot date the page opened on (latest data); the outlook then forecasts as of today.
@@ -199,7 +196,6 @@ function BillTrackerContent() {
         const res = await fetch("/api/v1/bills");
         if (!res.ok) return;
         const data: BillSummary[] = await res.json();
-        setAllBills(data);
         // No bill in the URL: open the most recently introduced bill (the list's first)
         if (!queryBillId && data.length > 0) {
           setActiveBillId(String(data[0].bill_id));
@@ -300,43 +296,6 @@ function BillTrackerContent() {
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-      {/* Top Navigation & Bill Switcher Bar */}
-      <nav className="rounded-xl border border-slate-200 bg-slate-900 text-white px-5 py-3.5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-            Bill Selector
-          </span>
-          <select
-            aria-label="Select a bill"
-            value={activeBillId ?? ""}
-            onChange={(e) => {
-              const nextId = e.target.value;
-              if (nextId) {
-                setSelectedDate("");
-                router.push(`/?bill_id=${encodeURIComponent(nextId)}`);
-              }
-            }}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-medium text-white focus:border-amber-400 focus:outline-none max-w-xs sm:max-w-md"
-          >
-            {allBills.map((b) => (
-              <option key={b.bill_id} value={String(b.bill_id)}>
-                #{b.bill_id} — {b.short_title} (Session {b.introduced_session_id},{" "}
-                {b.outcome})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <Link
-            href="/bills"
-            className="rounded-lg bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-colors"
-          >
-            Browse All {allBills.length || ""} Bills →
-          </Link>
-        </div>
-      </nav>
-
       {/* Header & Historical Date Selector */}
       <header className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
