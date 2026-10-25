@@ -411,46 +411,6 @@ function BillTrackerContent() {
           )}
         </div>
 
-        {/* 3-Phase Overview Progress Bar */}
-        {bill && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-            {PHASE_CONFIG.map((phaseCfg) => {
-              const phaseStages = stagesByPhase[phaseCfg.key] ?? [];
-              const completedCount = phaseStages.filter(
-                (s) =>
-                  s.status === "completed" ||
-                  s.status === "fast_tracked" ||
-                  s.status === "skipped"
-              ).length;
-              const isActivePhase = bill.current_phase === phaseCfg.key;
-              return (
-                <div
-                  key={phaseCfg.key}
-                  className={`rounded-lg border p-3 transition-all ${
-                    isActivePhase
-                      ? "border-2 border-slate-900 bg-slate-50 shadow-sm"
-                      : "border-slate-200 bg-white"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${phaseCfg.badgeClass}`}
-                    >
-                      {phaseCfg.title}
-                    </span>
-                    <span className="text-xs font-mono font-semibold text-slate-600">
-                      {completedCount}/{phaseStages.length} done
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[11px] text-slate-500">
-                    {phaseCfg.subtitle}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
         {/* Date Picker Controls */}
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

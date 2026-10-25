@@ -1,5 +1,12 @@
 # Agent log: `feat/simplify-bill-view`
 
+## 2026-10-25 — feat(ui): remove phase overview boxes from bill view header
+
+- **What:** Removed the row of three phase boxes (Before Parliament / Inside Parliament / After Royal Assent with "x/y done" counts) from the top of the single bill page.
+- **Why:** User asked to remove the three boxes showing how many stages passed.
+- **Checks:** `npx tsc --noEmit`: clean; `/?bill_id=3137` returns 200 and no longer contains the "done" counts.
+- **Notes:** Each phase column below still shows its own completed count.
+
 ## 2026-10-25 — feat(ui): remove Neon database mentions from the interface
 
 - **What:** Removed every user-visible mention of Neon / Lakebase Postgres from the bill view and bills list: the selector label and aria-label, date-picker hint, milestone heading, loading and error messages, and the blue "Neon Lakebase Postgres Database" badge.
