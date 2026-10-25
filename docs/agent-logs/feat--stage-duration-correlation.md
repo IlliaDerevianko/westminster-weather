@@ -1,5 +1,12 @@
 # Agent log: `feat/stage-duration-correlation`
 
+## 2026-10-25 — feat(analysis): compare bill progress by originating House
+
+- **What:** New module `backend/src/westminster_weather/analysis/origin_comparison.py`. For every Government Bill it measures time in the first House, the second House, the end-game (second House 3rd reading → Royal Assent) and the total to Royal Assent. It compares Commons-first with Lords-first bills (medians and Mann-Whitney U tests), for all bills and regular bills (first House > 14 days), plus outcome shares by origin (Fisher's exact test on Royal Assent rate). Outputs go to `backend/reports/origin_comparison/`.
+- **Why:** User asked to see the differences in progress through the Commons, the Lords and to Royal Assent depending on where a bill starts.
+- **Checks:** `uv run ruff check .`: clean; `uv run pytest -q`: 52 passed (1 new in `tests/model/test_origin_comparison.py`).
+- **Notes:** All 79 finance/supply-type bills start in the Commons and 108 Commons-first bills are fast-tracked vs 1 Lords-first, so the all-bills comparison overstates how much faster Commons-first bills are.
+
 ## 2026-10-25 — docs(reports): add stage duration correlation charts and findings
 
 - **What:** Committed the generated outputs in `backend/reports/stage_correlation/`: 3 PNG charts, per-bill CSV, `metrics.json`, and a `README.md` with the method, findings and caveats.
