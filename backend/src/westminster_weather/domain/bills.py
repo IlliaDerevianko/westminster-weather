@@ -539,6 +539,56 @@ async def get_online_safety_bill_from_live_apis() -> GovernmentBill:
             return _row_to_domain(row)
 
 
+def fully_in_force_date(
+    act_comm: ActCommencementRow | None,
+    in_force_status: ActInForceStatusRow | None,
+    ra_date: date | None,
+) -> date | None:
+    """Date an Act became fully in force, or ``None`` if provisions are still prospective."""
+    in_force_dt = (
+        act_comm.law_fully_in_force_date
+        if act_comm is not None and act_comm.law_fully_in_force_date is not None
+        else ra_date
+    )
+    # legislation.gov.uk's current version (`act_in_force_status`) overrides the estimate above:
+    # fully in force only once no provision is still prospective, on the latest start date.
+    if in_force_status is not None:
+        in_force_dt = (
+            (in_force_status.latest_in_force_start_date or in_force_dt)
+            if in_force_status.fully_in_force
+            else None
+        )
+    return in_force_dt
+
+
+POST_ROYAL_ASSENT_LABELS: dict[BillStage, str] = {
+    BillStage.ROYAL_ASSENT: "Royal Assent",
+    **{st: label for st, label, _, _ in POST_ROYAL_ASSENT_STAGE_INFO},
+}
+
+
+def latest_confirmed_post_ra_stage(
+    in_force_dt: date | None, event_stages: set[str], as_of: date
+) -> BillStage:
+    """Furthest stage an Act has completed by ``as_of``, with the same rules as the bill
+    page: fully in force, else the latest SI stage with any instrument, else "some sections
+    start" once anything after it has happened, else Royal Assent. ``event_stages`` are the
+    `post_royal_assent_events` stages with an event on or before ``as_of``."""
+    if in_force_dt is not None and in_force_dt <= as_of:
+        return BillStage.LAW_FULLY_IN_FORCE
+    for st in (
+        BillStage.REGULATIONS_LAID,
+        BillStage.REGULATIONS_DRAFTED,
+        BillStage.COMMENCEMENT_ORDERS,
+    ):
+        if st.value in event_stages:
+            return st
+    early = {BillStage.ROYAL_ASSENT.value, BillStage.SOME_SECTIONS_START.value}
+    if event_stages - early:
+        return BillStage.SOME_SECTIONS_START
+    return BillStage.ROYAL_ASSENT
+
+
 async def list_all_bills_from_db(
     search: str | None = None,
     outcome: str | None = None,
@@ -569,6 +619,36 @@ async def list_all_bills_from_db(
 
         stmt = stmt.order_by(BillRow.introduced_date.desc().nulls_last(), BillRow.bill_id.desc())
         rows = (await session.execute(stmt)).scalars().all()
+
+        # Latest confirmed stage for Acts (as of today), from the same tables as the bill page
+        today = date.today()
+        act_comms = {
+            r.bill_id: r for r in (await session.execute(select(ActCommencementRow))).scalars()
+        }
+        in_force = {
+            r.bill_id: r for r in (await session.execute(select(ActInForceStatusRow))).scalars()
+        }
+        event_stages: dict[int, set[str]] = {}
+        for bid, st in (
+            await session.execute(
+                select(PostRoyalAssentEventRow.bill_id, PostRoyalAssentEventRow.stage)
+                .where(PostRoyalAssentEventRow.event_date <= today)
+                .distinct()
+            )
+        ).all():
+            event_stages.setdefault(bid, set()).add(st)
+
+        def latest_stage(r: BillRow) -> BillStage | None:
+            if r.outcome != "royal_assent":
+                return None
+            ac = act_comms.get(r.bill_id)
+            ra_date = ac.royal_assent_date if ac is not None else r.outcome_date
+            in_force_dt = fully_in_force_date(ac, in_force.get(r.bill_id), ra_date)
+            return latest_confirmed_post_ra_stage(
+                in_force_dt, event_stages.get(r.bill_id, set()), today
+            )
+
+        latest = {r.bill_id: latest_stage(r) for r in rows}
         return [
             {
                 "bill_id": r.bill_id,
@@ -585,6 +665,10 @@ async def list_all_bills_from_db(
                 "is_defeated": r.is_defeated,
                 "withdrawn_date": r.withdrawn_date,
                 "has_pre_parliament_data": r.bill_id in pre_parl_dates,
+                "latest_stage": latest[r.bill_id],
+                "latest_stage_label": (
+                    POST_ROYAL_ASSENT_LABELS[latest[r.bill_id]] if latest[r.bill_id] else None
+                ),
             }
             for r in rows
         ]
@@ -933,19 +1017,7 @@ async def evaluate_parliament_bill_from_db(
                 f"{act_comm.ukpga_number}) on {act_comm.royal_assent_date.isoformat()}."
             )
 
-    in_force_dt = (
-        act_comm.law_fully_in_force_date
-        if act_comm is not None and act_comm.law_fully_in_force_date is not None
-        else ra_date
-    )
-    # legislation.gov.uk's current version (`act_in_force_status`) overrides the estimate above:
-    # fully in force only once no provision is still prospective, on the latest start date.
-    if in_force_status is not None:
-        in_force_dt = (
-            (in_force_status.latest_in_force_start_date or in_force_dt)
-            if in_force_status.fully_in_force
-            else None
-        )
+    in_force_dt = fully_in_force_date(act_comm, in_force_status, ra_date)
     is_in_force_as_of = (
         has_royal_assent_as_of and in_force_dt is not None and in_force_dt <= eval_date
     )

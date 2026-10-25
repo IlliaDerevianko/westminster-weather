@@ -18,6 +18,8 @@ interface BillSummary {
   is_defeated: boolean;
   withdrawn_date: string | null;
   has_pre_parliament_data: boolean;
+  latest_stage?: string | null; // Acts only: furthest stage completed after Royal Assent
+  latest_stage_label?: string | null;
 }
 
 const OUTCOME_BADGES: Record<string, { label: string; className: string }> = {
@@ -250,10 +252,15 @@ export default function BillsDirectoryPage() {
 
         <div className="divide-y divide-slate-200">
           {filteredBills.map((b) => {
-            const badge = OUTCOME_BADGES[b.outcome] ?? {
+            const outcomeBadge = OUTCOME_BADGES[b.outcome] ?? {
               label: b.outcome,
               className: "bg-slate-100 text-slate-700 border-slate-200",
             };
+            // Acts show the latest confirmed stage after Royal Assent (e.g. "Law fully in force")
+            const badge =
+              b.latest_stage && b.latest_stage !== "royal_assent" && b.latest_stage_label
+                ? { ...outcomeBadge, label: b.latest_stage_label }
+                : outcomeBadge;
             return (
               <div
                 key={b.bill_id}

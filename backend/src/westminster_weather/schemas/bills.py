@@ -60,6 +60,10 @@ class BillSummarySchema(BaseModel):
     is_defeated: bool
     withdrawn_date: date | None = None
     has_pre_parliament_data: bool = False
+    latest_stage: BillStage | None = Field(
+        None, description="Acts only: furthest stage completed after Royal Assent, as of today"
+    )
+    latest_stage_label: str | None = None
 
 
 class GovernmentBillTrackingResponse(BaseModel):
