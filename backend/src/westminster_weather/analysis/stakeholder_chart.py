@@ -119,5 +119,96 @@ def plot(report_dir: Path = REPORT_DIR) -> Path:
     return path
 
 
+V1_COLOUR = "#eb6834"
+
+
+def plot_v2(v2_dir: Path, title: str) -> Path:
+    """Stakeholder chart for v2: new model vs the previous best (v1 XGBoost) vs rule of thumb."""
+    metrics = json.loads((v2_dir / "metrics.json").read_text())
+    final = metrics["final_model"]
+    bills = metrics["data"]["bills_test"]
+    table = pd.read_csv(v2_dir / "mae_by_stage.csv", index_col=0).reindex(STAGE_ANCHORS)
+    new, old, base = (table[final], table["v1 XGBoost (previous best)"],
+                      table["Rule of thumb (B1)"])
+    overall = metrics["test_stage_points"]
+    x = range(len(table))
+    last = len(table) - 1
+
+    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11})
+    fig, ax = plt.subplots(figsize=(12, 6.4), facecolor=SURFACE)
+    ax.set_facecolor(SURFACE)
+    ax.fill_between(x, new, base, color=MODEL_COLOUR, alpha=0.07, lw=0)
+    for series, colour, lw, ms in ((base, BASELINE_COLOUR, 2, 6), (old, V1_COLOUR, 2, 6),
+                                   (new, MODEL_COLOUR, 3, 8)):
+        ax.plot(x, series, color=colour, lw=lw, marker="o", ms=ms, markeredgecolor=SURFACE,
+                markeredgewidth=1.5, solid_capstyle="round")
+
+    # Legend with each line's overall average error (the three lines converge at the end, so
+    # end-of-line labels would not sit next to their lines).
+    def avg(k: str) -> float:
+        return overall[k]["mae_days"]
+
+    handles = [
+        plt.Line2D([], [], color=MODEL_COLOUR, lw=3, marker="o", ms=8,
+                   markeredgecolor=SURFACE),
+        plt.Line2D([], [], color=V1_COLOUR, lw=2, marker="o", ms=6, markeredgecolor=SURFACE),
+        plt.Line2D([], [], color=BASELINE_COLOUR, lw=2, marker="o", ms=6,
+                   markeredgecolor=SURFACE),
+    ]
+    labels = [
+        f"New model  ·  average ±{avg(final):.0f} days",
+        f"Previous model  ·  average ±{avg('v1 XGBoost (previous best)'):.0f} days",
+        f"Rule of thumb  ·  average ±{avg('Rule of thumb (B1)'):.0f} days",
+    ]
+    leg = ax.legend(handles, labels, loc="upper right", frameon=False, fontsize=11,
+                    handlelength=2.6, labelcolor=INK_SOFT)
+    leg.get_texts()[0].set_color(INK)
+    leg.get_texts()[0].set_fontweight("bold")
+
+    ax.annotate(f"±{new.iloc[0]:.0f} days at introduction\n(previous model ±{old.iloc[0]:.0f})",
+                (0, new.iloc[0]), xytext=(0.25, new.iloc[0] * 0.5), textcoords="data",
+                color=INK, fontsize=10.5, fontweight="bold", va="top",
+                arrowprops={"arrowstyle": "-", "color": INK_SOFT, "lw": 0.8})
+
+    ax.set_xticks(list(x), [PLAIN_LABELS[a] for a in STAGE_ANCHORS], fontsize=10,
+                  color=INK_SOFT)
+    ax.set_xlim(-0.4, last + 0.5)
+    ax.set_ylim(0, max(base.max(), old.max(), new.max()) * 1.12)
+    ax.set_ylabel("Average forecast error (days)", color=INK_SOFT)
+    ax.yaxis.grid(True, color=GRID, lw=1)
+    ax.set_axisbelow(True)
+    for side in ("top", "right", "left"):
+        ax.spines[side].set_visible(False)
+    ax.spines["bottom"].set_color(GRID)
+    ax.tick_params(axis="both", length=0, colors=INK_SOFT)
+    for start, end, label in ((0, 4, "First House"), (5, 9, "Second House")):
+        ax.annotate("", xy=(start - 0.3, -0.155), xytext=(end + 0.3, -0.155),
+                    xycoords=("data", "axes fraction"), textcoords=("data", "axes fraction"),
+                    arrowprops={"arrowstyle": "-", "color": GRID, "lw": 1.5})
+        ax.text((start + end) / 2, -0.17, label, transform=ax.get_xaxis_transform(),
+                ha="center", va="top", color=INK_SOFT, fontsize=10)
+
+    fig.text(0.06, 0.95, title, fontsize=16, fontweight="bold", color=INK)
+    fig.text(0.06, 0.905,
+             "Average error in predicted days to Royal Assent, by the stage at which the "
+             f"forecast is made. Tested on {bills} bills that passed in 2019–2026.",
+             fontsize=11, color=INK_SOFT)
+    fig.text(0.06, 0.02,
+             "Rule of thumb = typical time left for past bills at the same stage. "
+             "Previous model = v1 XGBoost.\nNew model = blend of tuned boosted trees (mainly "
+             "LightGBM and XGBoost) with new features. All trained on 2006–2019 bills only.",
+             fontsize=9, color=INK_SOFT)
+    fig.subplots_adjust(left=0.07, right=0.97, top=0.85, bottom=0.25)
+    path = v2_dir / "0_summary_for_stakeholders.png"
+    fig.savefig(path, dpi=200, facecolor=SURFACE)
+    plt.close(fig)
+    return path
+
+
 if __name__ == "__main__":
-    print(plot())
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] == "v2":
+        print(plot_v2(REPORT_DIR.parent / "remaining_time_models_v2", sys.argv[2]))
+    else:
+        print(plot())

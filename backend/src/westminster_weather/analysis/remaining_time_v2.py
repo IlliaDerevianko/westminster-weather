@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import time
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -71,8 +72,11 @@ from westminster_weather.analysis.remaining_time_models import (
 )
 
 REPORT_DIR = V1_REPORT_DIR.parent / "remaining_time_models_v2"
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
 SEED = 42
-N_JOBS = -1
+N_JOBS = -1  # threads per model for final fits and sequential runs
+PARALLEL_TRIALS = 8  # Optuna trials run at once during tuning, each model on 1 thread
 
 # Five expanding-window folds: always train on earlier sessions, validate on later ones.
 CV_FOLDS: tuple[tuple[frozenset[int], frozenset[int]], ...] = tuple(
@@ -208,7 +212,9 @@ def matrix(df: pd.DataFrame, cols: list[str]) -> np.ndarray:
     return df[cols].astype(float).fillna(MISSING).to_numpy()
 
 
-def make_model(family: str, p: dict, d: Design, cols: list[str], seed: int = SEED):
+def make_model(
+    family: str, p: dict, d: Design, cols: list[str], seed: int = SEED, threads: int = N_JOBS
+):
     mono = None
     if d.monotone:
         # Later in the pipeline can only mean the same or fewer days left, all else equal.
@@ -221,7 +227,7 @@ def make_model(family: str, p: dict, d: Design, cols: list[str], seed: int = SEE
             subsample=p["subsample"], subsample_freq=1, colsample_bytree=p["colsample_bytree"],
             reg_lambda=p["reg_lambda"], reg_alpha=p.get("reg_alpha", 0.0),
             objective=p["objective"], max_bin=p.get("max_bin", 255),
-            monotone_constraints=mono, random_state=seed, n_jobs=N_JOBS, verbose=-1,
+            monotone_constraints=mono, random_state=seed, n_jobs=threads, verbose=-1,
         )
     if family == "XGBoost":
         return XGBRegressor(
@@ -232,14 +238,14 @@ def make_model(family: str, p: dict, d: Design, cols: list[str], seed: int = SEE
             gamma=p.get("gamma", 0.0),
             objective=p["objective"], tree_method="hist",
             monotone_constraints=tuple(mono) if mono else None,
-            random_state=seed, n_jobs=N_JOBS,
+            random_state=seed, n_jobs=threads,
         )
     if family == "CatBoost":
         return CatBoostRegressor(
             iterations=p["iterations"], learning_rate=p["learning_rate"], depth=p["depth"],
             l2_leaf_reg=p["l2_leaf_reg"], random_strength=p["random_strength"],
             bagging_temperature=p["bagging_temperature"], loss_function=p["loss_function"],
-            random_seed=seed, thread_count=N_JOBS, verbose=0, allow_writing_files=False,
+            random_seed=seed, thread_count=threads, verbose=0, allow_writing_files=False,
         )
     if family == "Hist gradient boosting":
         return HistGradientBoostingRegressor(
@@ -253,7 +259,7 @@ def make_model(family: str, p: dict, d: Design, cols: list[str], seed: int = SEE
         return cls(
             n_estimators=p["n_estimators"], max_depth=p["max_depth"],
             min_samples_leaf=p["min_samples_leaf"], max_features=p["max_features"],
-            random_state=seed, n_jobs=N_JOBS,
+            random_state=seed, n_jobs=threads,
         )
     raise ValueError(family)
 
@@ -340,26 +346,54 @@ class Folds:
             tr = train[train["session_id"].isin(tr_s)]
             va = train[train["session_id"].isin(va_s)]
             self.folds.append(prepare(tr, va))
+        self._cache: dict = {}
+
+    def _arrays(self, d: Design) -> list[tuple]:
+        """Feature matrices, targets and weights per fold, cached per design."""
+        key = (tuple(d.features), d.target, d.weights)
+        if key not in self._cache:
+            self._cache[key] = [
+                (matrix(tr, d.features), target_of(tr, d), weights_of(tr, d),
+                 matrix(va, d.features), va, va["target_days"].to_numpy(float))
+                for tr, va in self.folds
+            ]
+        return self._cache[key]
 
     def score(
-        self, family: str, params: dict, d: Design, return_oof: bool = False, seed: int = SEED
+        self, family: str, params: dict, d: Design, return_oof: bool = False, seed: int = SEED,
+        trial: optuna.Trial | None = None, threads: int = N_JOBS,
     ):
         maes, oof = [], []
-        for tr, va in self.folds:
-            model = make_model(family, params, d, d.features, seed)
-            model.fit(matrix(tr, d.features), target_of(tr, d), sample_weight=weights_of(tr, d))
-            pred = to_days(model.predict(matrix(va, d.features)), va, d)
-            maes.append(np.abs(pred - va["target_days"].to_numpy(float)).mean())
+        for k, (x_tr, y_tr, w_tr, x_va, va, y_va) in enumerate(self._arrays(d)):
+            model = make_model(family, params, d, d.features, seed, threads)
+            model.fit(x_tr, y_tr, sample_weight=w_tr)
+            pred = to_days(model.predict(x_va), va, d)
+            maes.append(np.abs(pred - y_va).mean())
             oof.append(pred)
+            if trial is not None:
+                # Every trial sees the folds in the same order, so running means compare fairly.
+                trial.report(float(np.mean(maes)), k)
+                if trial.should_prune():
+                    raise optuna.TrialPruned()
         return (float(np.mean(maes)), oof) if return_oof else float(np.mean(maes))
 
 
 def tune(folds: Folds, family: str, d: Design, n_trials: int) -> tuple[dict, float, optuna.Study]:
+    """Optuna TPE search. Trials run in parallel (one thread each); clearly bad trials are
+    pruned only after 3 of the 5 folds and only once 15 trials have finished."""
     optuna.logging.set_verbosity(optuna.logging.WARNING)
+    sequential = family == "Hist gradient boosting"  # uses OpenMP across all cores itself
     study = optuna.create_study(
-        direction="minimize", sampler=optuna.samplers.TPESampler(seed=SEED, multivariate=True),
+        direction="minimize",
+        sampler=optuna.samplers.TPESampler(
+            seed=SEED, multivariate=True, constant_liar=not sequential),
+        pruner=optuna.pruners.MedianPruner(n_startup_trials=15, n_warmup_steps=2),
     )
-    study.optimize(lambda t: folds.score(family, search_space(family, t), d), n_trials=n_trials)
+    threads = N_JOBS if sequential else 1
+    study.optimize(
+        lambda t: folds.score(family, search_space(family, t), d, trial=t, threads=threads),
+        n_trials=n_trials, n_jobs=1 if sequential else PARALLEL_TRIALS,
+    )
     return study.best_params, float(study.best_value), study
 
 
@@ -435,9 +469,12 @@ def run(report_dir: Path = REPORT_DIR) -> dict:
     tuned: dict[str, dict] = {}
     for family, n in N_TRIALS.items():
         t = time.time()
-        params, cv, _ = tune(folds, family, design, n)
-        tuned[family] = {"params": params, "cv_mae": cv, "seconds": round(time.time() - t)}
-        note(f"tuned {family:24s} CV MAE {cv:6.2f}  ({tuned[family]['seconds']}s)")
+        params, cv, study = tune(folds, family, design, n)
+        pruned = sum(tr.state == optuna.trial.TrialState.PRUNED for tr in study.trials)
+        tuned[family] = {"params": params, "cv_mae": cv, "seconds": round(time.time() - t),
+                         "trials": n, "pruned": pruned}
+        note(f"tuned {family:24s} CV MAE {cv:6.2f}  ({tuned[family]['seconds']}s, "
+             f"{pruned}/{n} trials pruned)")
 
     # ---- Stage C: ensembles on CV ------------------------------------------------------
     oof = {f: folds.score(f, tuned[f]["params"], design, return_oof=True)[1] for f in tuned}
