@@ -421,3 +421,88 @@ def pace_block(
         "n_comparison_bills": len(peer_days),
         "sentence": sentence,
     }
+
+
+# ------------------------------------------------------------- 7. next milestone, what-if
+
+
+def _change(before: float, after: float) -> str:
+    if round(100 * after) > round(100 * before):
+        return f"rises from {pct(before)} to {pct(after)}"
+    if round(100 * after) < round(100 * before):
+        return f"falls from {pct(before)} to {pct(after)}"
+    return f"stays at {pct(after)}"
+
+
+def next_milestone_block(
+    bill_id: int, as_of: date, base: Any, target: dict[str, Any], n: int
+) -> dict[str, Any] | None:
+    """The next stage and its date (scheduled sitting, else the model's median entry date),
+    and how the chance by the target date changes if it happens on that date."""
+    from westminster_weather.model.forecast import run_paths, scheduled_entry
+
+    start = base.start
+    k = start.k0 + 1
+    if k >= len(start.chain):
+        return None
+    state = start.chain[k]
+    sched = scheduled_entry(start, bill_id, as_of, base.src)
+    if sched is not None and sched[0] == k:
+        when, kind = sched[1], "scheduled"
+    else:
+        reached = base.result.entry_day[:, k] >= 0
+        if not reached.any():
+            return None
+        day = int(np.percentile(base.result.entry_day[reached, k], 50, method="lower"))
+        when, kind = pd.Timestamp(base.result.date_of(day)).date(), "expected"
+    out = {
+        "stage": state,
+        "stage_name": stage_name(state),
+        "date": when,
+        "date_kind": kind,
+        "p_by_target_without": None,
+        "p_by_target_with": None,
+    }
+    shown = f"{fmt_date(when)}" + (" (expected)" if kind == "expected" else "")
+    out["sentence"] = f"Next: {stage_name(state)}, {shown}."
+    if state == "royal_assent" or when <= as_of:
+        return out
+    free = run_paths(
+        bill_id, as_of, variant=base.variant, n=n, models=base.models, use_schedule=False
+    )
+    forced = run_paths(
+        bill_id, as_of, variant=base.variant, n=n, models=base.models, next_entry=(k, when)
+    )
+    before = calibrate(Distribution.from_result(free.result).p_by(target["date"]))
+    after = calibrate(Distribution.from_result(forced.result).p_by(target["date"]))
+    if kind == "scheduled":
+        lead = f"If {stage_name(state)} happens on {fmt_date(when)} as scheduled"
+    else:  # pinning the median date rules out the faster paths
+        lead = f"If {stage_name(state)} only happens on {fmt_date(when)} (its expected date)"
+    out.update(
+        p_by_target_without=before,
+        p_by_target_with=after,
+        what_if_sentence=f"{lead}, the chance of law {target['label']} {_change(before, after)}.",
+    )
+    return out
+
+
+# ------------------------------------------------------------------ recalibration hook
+
+_CALIBRATOR: Any = None
+
+
+def calibrate(p: float) -> float:
+    """Deadline probabilities after isotonic recalibration (fitted on training-era forecasts
+    only, ``outlook_calibration``), or unchanged when none was saved."""
+    global _CALIBRATOR
+    if _CALIBRATOR is None:
+        import joblib
+
+        from westminster_weather.model.forecast import MODELS_DIR
+
+        path = MODELS_DIR / "deadline_isotonic.joblib"
+        _CALIBRATOR = joblib.load(path) if path.exists() else False
+    if _CALIBRATOR is False:
+        return float(p)
+    return float(_CALIBRATOR.predict([p])[0])

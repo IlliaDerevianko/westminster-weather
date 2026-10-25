@@ -1,5 +1,11 @@
 # Agent log: `feat/bill-outlook`
 
+## 2026-10-25 06:26 — feat(outlook): next milestone and what-if
+
+- **What:** `outlook.next_milestone_block`: the next stage and its date (a future scheduled sitting if one exists, else the median entry date of the simulated paths, marked expected), and a what-if: the chance by the target date from paths with no scheduled date vs paths with the next stage forced to that date (`run_paths(next_entry=...)`). Sentences: "If X happens on D as scheduled, the chance of law before ... rises from A to B"; for expected dates "only happens on D (its expected date)", since pinning the median date removes the faster paths. `calibrate()` hook applies a saved isotonic recalibration (identity until one is fitted).
+- **Why:** section 7 of the outlook spec.
+- **Checks:** `ruff check`: clean; on 2026-10-25, bill 4035 (Lords report and 3rd reading scheduled 26 Oct 2026): chance of law before the Christmas recess rises from 34% to 71%.
+
 ## 2026-10-25 06:25 — feat(outlook): pace compared with typical bills
 
 - **What:** `outlook.pace_block`: sitting days (either House) from 1st reading to the entry of the bill's current stage, against bills from the same originating House that had finished before the forecast date and reached the same stage. Outputs `weeks_ahead_or_behind` (positive = behind; sitting days converted with the sitting days per sitting week of the past year), `pace_percentile` (share of past bills that were faster) and a sentence; "too early" for bills still at their first stage, "too few" under 10 comparison bills.
