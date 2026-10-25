@@ -327,12 +327,6 @@ function BillTrackerContent() {
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           <Link
-            href="/promises"
-            className="rounded-lg border border-amber-500 px-3.5 py-1.5 text-xs font-bold text-amber-400 hover:bg-amber-500 hover:text-slate-950 transition-colors"
-          >
-            Promises → Bills
-          </Link>
-          <Link
             href="/bills"
             className="rounded-lg bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-colors"
           >
