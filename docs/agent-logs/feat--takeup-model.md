@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 05:42 — docs(readme): add the one-off model training step to running locally
+
+- **What:** README "Start the backend" now runs `uv run python -m westminster_weather.model.cli train` once before `uvicorn`, and says why (fitted passage models live in gitignored `backend/models/`; without them the forecast endpoint errors).
+- **Why:** Roman asked for the must-do items before the deadline; a fresh clone could not serve bill forecasts.
+- **Checks:** ran the same command earlier this session (models built in ~6 s; forecast endpoint then returned 200); docs only.
+
 ## 2026-10-25 05:38 — docs(analysis): stage 3 stakeholder chart
 
 - **What:** `commencement_xgb.py --chart` also draws `backend/reports/commencement_xgb/1_stage3_for_stakeholders.png`: the 131 test Acts forecast on Royal Assent day; left, typical miss by how long the law really took (rule of thumb / current stage 3 model / new XGBoost, log scale); right, share forecast within 20 days.

@@ -27,8 +27,11 @@ The project has two parts that run side by side: a FastAPI backend in [`backend/
 ```bash
 cd backend
 uv sync
+uv run python -m westminster_weather.model.cli train   # once: builds the passage model files (~10 s)
 uv run uvicorn westminster_weather.main:app --reload --port 8000
 ```
+
+The `train` step writes the fitted passage models to `backend/models/` (gitignored). Without it, `/api/v1/bills/{id}/forecast` returns an error ("model set 'live' not found"). Rerun it after new data is ingested.
 
 - Health check (including Neon Postgres connectivity): <http://127.0.0.1:8000/health>
 - Interactive API docs: <http://127.0.0.1:8000/docs>
