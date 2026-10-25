@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 05:29 — docs(analysis): stakeholder chart from stage 2 to stage 3 on test data
+
+- **What:** `commencement_xgb.py --chart` draws `backend/reports/commencement_xgb/0_stage2_to_stage3_for_stakeholders.png`: test data only (same 75/25 split), from first reading through Parliament (stage 2, new XGBoost, 142 bills: forecast of Royal Assent) to Royal Assent, +30 and +90 days (stage 3, two-step XGBoost, 131 Acts: forecast of the day the law applies). Grey bars = typical days still to go, line = typical miss. +180 days and +1 year left out (10 and 6 Acts).
+- **Why:** Roman asked for a general stakeholder graph on test data from stage 2 to stage 3.
+- **Checks:** `ruff check`: clean; rendered and checked. ±72 days at introduction, ±9 at second-House 3rd reading, ±13 at Royal Assent (stage 3), ±31 at +30 days (51 Acts), ±66 at +90 days (29 Acts).
+
 ## 2026-10-25 05:27 — feat(journey): journey test and stage durations use the stage 3 XGBoost
 
 - **What:** `journey/journey_test.py` (S3 checkpoints) and `journey/stage_durations.py` (stage 3 at Royal Assent) now predict with `journey.stage3_xgb` (median days until the law applies) instead of `journey.commencement.forecast_act`. Regenerated `backend/reports/journey/journey_test.csv`, `journey_error_by_stage.png` and `stage_durations_predicted.csv` (the earlier `ra` and `*_improved` columns carried over).

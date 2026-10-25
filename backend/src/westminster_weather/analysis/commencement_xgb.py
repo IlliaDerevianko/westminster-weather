@@ -335,6 +335,196 @@ def run() -> dict:
     return metrics
 
 
+STAGE2_DIR = REPORTS / "remaining_time_tails_75_25"
+STAGE2_MODEL = "+ long title, bill weights"
+STAGE3_MODEL = "XGBoost (two step)"
+STAGE3_CHART_CHECKPOINTS = ["Royal Assent", "+30 days", "+90 days"]  # 25+ Acts each
+
+
+def stage2_to_3_chart(report_dir: Path = REPORT_DIR) -> Path:
+    """Stakeholder chart over the test bills from first reading to the law applying: at each
+    checkpoint, typical days still to go and the typical miss of that stage's forecast (stage 2:
+    Royal Assent date; stage 3: the day the law applies). Same 75/25 split for both stages."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    from westminster_weather.analysis.remaining_time_dataset import STAGE_ANCHORS
+    from westminster_weather.analysis.stakeholder_chart import (
+        GRID,
+        INK,
+        INK_SOFT,
+        MODEL_COLOUR,
+        PLAIN_LABELS,
+        SURFACE,
+    )
+
+    s2 = pd.read_csv(STAGE2_DIR / "test_predictions.csv")
+    s2 = s2[s2["anchor"].isin(STAGE_ANCHORS)]
+    s2 = s2.assign(e=(s2[STAGE2_MODEL] - s2["target_days"]).abs())
+    g2 = (
+        s2.groupby("anchor")
+        .agg(left=("target_days", "median"), miss=("e", "median"), n=("e", "size"))
+        .reindex(STAGE_ANCHORS)
+    )
+    s3 = pd.read_csv(report_dir / "test_predictions.csv")
+    s3 = s3.assign(e=(s3[STAGE3_MODEL] - s3["target_days"]).abs())
+    g3 = (
+        s3.groupby("checkpoint")
+        .agg(left=("target_days", "median"), miss=("e", "median"), n=("e", "size"))
+        .reindex(STAGE3_CHART_CHECKPOINTS)
+    )
+    n2, n3 = s2["bill_id"].nunique(), s3["bill_id"].nunique()
+
+    labels = [PLAIN_LABELS[a] for a in STAGE_ANCHORS] + [
+        "Royal\nAssent",
+        f"+30 days\n({g3.loc['+30 days', 'n']:.0f} Acts\nstill waiting)",
+        f"+90 days\n({g3.loc['+90 days', 'n']:.0f} Acts\nstill waiting)",
+    ]
+    left = list(g2["left"]) + list(g3["left"])
+    miss = list(g2["miss"]) + list(g3["miss"])
+    k = len(g2)
+    x = np.arange(len(labels))
+
+    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11})
+    fig, ax = plt.subplots(figsize=(14, 6.6), facecolor=SURFACE)
+    ax.set_facecolor(SURFACE)
+    ax.bar(x, left, 0.62, color="#e6e5e1", label="Days still to go (typical bill)")
+    ax.plot(
+        x[:k],
+        miss[:k],
+        color=MODEL_COLOUR,
+        lw=3,
+        marker="o",
+        ms=8,
+        markeredgecolor=SURFACE,
+        markeredgewidth=2,
+        label="How far off the forecast is (typical miss)",
+    )
+    ax.plot(
+        x[k:],
+        miss[k:],
+        color=MODEL_COLOUR,
+        lw=3,
+        marker="o",
+        ms=8,
+        markeredgecolor=SURFACE,
+        markeredgewidth=2,
+    )
+    for i, (lft, m) in enumerate(zip(left, miss, strict=True)):
+        ax.text(
+            i,
+            m + 5,
+            f"±{m:.0f}",
+            ha="center",
+            va="bottom",
+            color=MODEL_COLOUR,
+            fontsize=10,
+            fontweight="bold",
+        )
+        ax.text(i, max(lft, m + 18) + 3, f"{lft:.0f}", ha="center", color=INK_SOFT, fontsize=9.5)
+    ax.axvline(k - 0.5, color=INK_SOFT, lw=1, ls=(0, (3, 3)))
+    top = max(left) * 1.22
+    ax.text(
+        k / 2 - 0.5,
+        top * 0.93,
+        "Stage 2 · in Parliament\nforecast: Royal Assent date",
+        ha="center",
+        va="top",
+        color=INK,
+        fontsize=10.5,
+        fontweight="bold",
+    )
+    ax.text(
+        k + 1,
+        top * 0.93,
+        "Stage 3 · after Royal Assent\nforecast: day the law applies",
+        ha="center",
+        va="top",
+        color=INK,
+        fontsize=10.5,
+        fontweight="bold",
+    )
+    ax.set_xticks(list(x), labels, fontsize=9.5, color=INK_SOFT)
+    ax.set_xlim(-0.6, len(labels) - 0.4)
+    ax.set_ylim(0, top)
+    ax.set_ylabel("Days", color=INK_SOFT)
+    leg = ax.legend(
+        loc="lower left",
+        bbox_to_anchor=(0.0, 1.0),
+        ncol=2,
+        frameon=False,
+        fontsize=10.5,
+        labelcolor=INK_SOFT,
+    )
+    leg.get_texts()[0].set_color(INK)
+    leg.get_texts()[0].set_fontweight("bold")
+    ax.yaxis.grid(True, color=GRID, lw=1)
+    ax.set_axisbelow(True)
+    for side in ("top", "right", "left"):
+        ax.spines[side].set_visible(False)
+    ax.spines["bottom"].set_color(GRID)
+    ax.tick_params(axis="both", length=0, colors=INK_SOFT)
+    for start, end, label in (
+        (0, 4, "First House"),
+        (5, 9, "Second House"),
+        (k, len(labels) - 1, "After Royal Assent"),
+    ):
+        ax.annotate(
+            "",
+            xy=(start - 0.3, -0.155),
+            xytext=(end + 0.3, -0.155),
+            xycoords=("data", "axes fraction"),
+            textcoords=("data", "axes fraction"),
+            arrowprops={"arrowstyle": "-", "color": GRID, "lw": 1.5},
+        )
+        ax.text(
+            (start + end) / 2,
+            -0.17,
+            label,
+            transform=ax.get_xaxis_transform(),
+            ha="center",
+            va="top",
+            color=INK_SOFT,
+            fontsize=10,
+        )
+
+    fig.text(
+        0.05,
+        0.95,
+        f"From introduction to the law applying: ±{miss[0]:.0f} days at the start, "
+        f"±{miss[k]:.0f} at Royal Assent",
+        fontsize=16,
+        fontweight="bold",
+        color=INK,
+    )
+    fig.text(
+        0.05,
+        0.905,
+        "Typical days still to go, and how far off the forecast made at that point is. "
+        f"Test data only: {n2} bills and {n3} Acts introduced in 2021–2026.",
+        fontsize=11,
+        color=INK_SOFT,
+    )
+    fig.text(
+        0.05,
+        0.02,
+        "Stage 2 = Illia's tuned XGBoost plus what the bill's long title says it does. "
+        "Stage 3 = XGBoost reading the Act's commencement wording (two steps: applies on "
+        "Royal Assent day? then how long).\nBoth trained on bills from 2006–2021 only. "
+        "Later stage 3 checkpoints (+180 days, +1 year) are left out: only 10 and 6 Acts "
+        "were still waiting by then.",
+        fontsize=9,
+        color=INK_SOFT,
+    )
+    fig.subplots_adjust(left=0.06, right=0.98, top=0.85, bottom=0.25)
+    path = report_dir / "0_stage2_to_stage3_for_stakeholders.png"
+    fig.savefig(path, dpi=200, facecolor=SURFACE)
+    plt.close(fig)
+    return path
+
+
 def main() -> None:
     m = run()
     print("Split:", m["split"])
@@ -356,4 +546,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    if "--chart" not in sys.argv:
+        main()
+    print(stage2_to_3_chart())
