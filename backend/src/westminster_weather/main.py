@@ -30,6 +30,7 @@ from westminster_weather.schemas.bills import (
     StageNodeSchema,
     TrackedStageNodeSchema,
 )
+from westminster_weather.schemas.outlook import BillOutlook
 from westminster_weather.takeup.api import router as takeup_router
 
 app = FastAPI(
@@ -222,6 +223,36 @@ def _with_stage3(response: BillForecastResponse, bill_id: int, as_of: date) -> B
             ),
         }
     )
+
+
+@app.get(
+    "/api/v1/bills/{bill_id}/outlook",
+    response_model=BillOutlook,
+    tags=["forecast"],
+)
+def get_bill_outlook(
+    bill_id: int,
+    target_date: Annotated[
+        date | None,
+        Query(
+            description="Weather-status target date (YYYY-MM-DD); default: next recess "
+            "at least 30 days away"
+        ),
+    ] = None,
+    as_of: Annotated[
+        date | None,
+        Query(description="Forecast date (YYYY-MM-DD); defaults to today"),
+    ] = None,
+) -> BillOutlook:
+    """Presentation-ready outlook for a bill in Parliament: chance of law by deadlines,
+    weather status, weekly curve, pace and next milestone, with sentences ready to show."""
+    from westminster_weather.model.forecast import ForecastUnavailable
+    from westminster_weather.model.outlook import NotInParliament, build_outlook
+
+    try:
+        return build_outlook(bill_id, as_of or date.today(), target_date)
+    except (ForecastUnavailable, NotInParliament) as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @app.get(

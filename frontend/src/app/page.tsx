@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
+import BillOutlookPanel from "./BillOutlookPanel";
 
 type StageStatus =
   | "completed"
@@ -175,6 +176,8 @@ function BillTrackerContent() {
     queryBillId === "online-safety-bill" ? "3137" : queryBillId
   );
   const [selectedDate, setSelectedDate] = useState<string>("");
+  // The snapshot date the page opened on (latest data); the outlook then forecasts as of today.
+  const [latestDate, setLatestDate] = useState<string>("");
   const [bill, setBill] = useState<GovernmentBillTracking | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -230,6 +233,7 @@ function BillTrackerContent() {
           setBill(data);
           if (!selectedDate) {
             setSelectedDate(data.as_of_date);
+            setLatestDate(data.as_of_date);
           }
           setError(null);
         }
@@ -527,6 +531,14 @@ function BillTrackerContent() {
         <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-800">
           <strong>Error:</strong> {error}
         </div>
+      )}
+
+      {/* Weather outlook (bills in Parliament on the snapshot date only) */}
+      {activeBillId && (
+        <BillOutlookPanel
+          billId={activeBillId}
+          asOf={selectedDate && selectedDate !== latestDate ? selectedDate : undefined}
+        />
       )}
 
       {/* 3-Phase Pipeline Grid (1. Before Parliament | 2. Inside Parliament | 3. After Royal Assent) */}

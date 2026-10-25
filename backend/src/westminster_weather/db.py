@@ -557,6 +557,20 @@ def save_act_texts_to_db(texts_df: pd.DataFrame, in_force_df: pd.DataFrame) -> d
         engine.dispose()
 
 
+def save_bill_outlooks_to_db(rows: list[dict[str, Any]]) -> int:
+    """Upsert `bill_outlooks` rows (one per bill and forecast date) into Neon Postgres."""
+    from westminster_weather.models import BillOutlookRow
+
+    engine = get_sync_direct_engine()
+    try:
+        with engine.begin() as conn:
+            Base.metadata.create_all(conn, tables=[BillOutlookRow.__table__])
+            _upsert_rows(conn, BillOutlookRow.__table__, rows, batch_size=50)
+        return len(rows)
+    finally:
+        engine.dispose()
+
+
 def fetch_act_commencements_df() -> pd.DataFrame:
     """DB adapter: read `act_commencements` table from Neon Lakebase Postgres."""
     from westminster_weather.models import ActCommencementRow
