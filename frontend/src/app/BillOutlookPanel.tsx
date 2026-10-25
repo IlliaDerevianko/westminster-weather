@@ -212,13 +212,6 @@ export default function BillOutlookPanel({
             )}
           </div>
 
-          <p className="mt-4 text-xs text-slate-500">
-            From {outlook.distribution.n_paths.toLocaleString("en-GB")} simulated paths of the passage
-            model ({outlook.model_version})
-            {outlook.recalibrated &&
-              "; deadline chances recalibrated on 2014–2019 bills (when we said about 70%, it happened 70% of the time on 2019–2026 bills)"}
-            . Recess dates marked estimated are typical dates from past years.
-          </p>
         </div>
       )}
     </section>

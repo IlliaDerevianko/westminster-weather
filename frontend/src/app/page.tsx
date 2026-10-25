@@ -454,7 +454,7 @@ function BillTrackerContent() {
                 htmlFor="historical-date-picker"
                 className="block text-sm font-semibold text-slate-800"
               >
-                Select Historical Snapshot Date (`as_of_date`)
+                Select Historical Snapshot Date
               </label>
               <p className="text-xs text-slate-500">
                 Time-travel across all phases of{" "}
@@ -515,11 +515,7 @@ function BillTrackerContent() {
 
         {/* Legend */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-slate-600 border-t border-slate-100">
-          <span>
-            Each phase column shows the main legislative path, with a{" "}
-            <strong className="text-red-700">red stop branch</strong> on the
-            right only when a bill actually stopped at that stage.
-          </span>
+          
           <div className="flex flex-wrap items-center gap-4">
             <span className="flex items-center gap-1.5">
               <span className="inline-block h-3 w-3 rounded-full bg-emerald-500"></span>
@@ -776,7 +772,6 @@ function BillTrackerContent() {
                                   !isFastTracked && (
                                   <div className="flex flex-wrap items-center justify-between gap-1 text-slate-700 font-medium">
                                     <span>
-                                      {stage.entered_date}
                                       {stage.completed_date &&
                                       stage.completed_date !== stage.entered_date
                                         ? ` → ${stage.completed_date}`
@@ -792,7 +787,7 @@ function BillTrackerContent() {
                                       {stage.visible_events.length === 1
                                         ? "event/sitting"
                                         : "events/sittings"}{" "}
-                                      ≤ {bill.as_of_date}
+                                      
                                     </summary>
                                     <ul className="mt-1.5 space-y-1 max-h-48 overflow-y-auto pr-1">
                                       {stage.visible_events.map((ev, evIdx) => (
