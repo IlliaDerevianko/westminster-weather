@@ -1,5 +1,11 @@
 # Agent log: `feat/bill-outlook`
 
+## 2026-10-25 06:31 — feat(outlook): deadline calibration check and recalibration
+
+- **What:** `model/outlook_calibration.py` re-simulates every rolling-backtest point (models refitted before each session, 4,000 paths) in the training era (sessions 27-30: 825 forecasts, 136 bills) and the test era (sessions 34-39: 1,281 forecasts, 222 bills), and scores the chance of Royal Assent before the next Christmas recess, next summer recess and session end against what happened. Outputs `backend/reports/deadline_calibration.png`, `deadline_calibration.json` (tables, Brier, isotonic curves) and `deadline_calibration_points.csv`. Raw test calibration is poor (underconfident: 40-50% happened 67% of the time; session end mean 71% vs 92%), so isotonic recalibration was fitted on training-era forecasts only: one curve for session end, one for date deadlines, chosen over a pooled curve by cross-validation inside the training era (Brier 0.110 vs 0.124 vs 0.137 none). `outlook.calibrate(p, group)` applies it.
+- **Why:** calibration check required by the outlook spec before using the numbers in the pitch.
+- **Checks:** `ruff check .`: clean. Test-era Brier: model 0.123, recalibrated 0.097, historical-average baseline 0.180. After recalibration, 70-80% forecasts happened 70% of the time (94); still off by >10 points: 40-50% (38%, n=121) and 50-60% (45%, n=148). Nothing tuned on test-era data.
+
 ## 2026-10-25 06:29 — feat(outlook): BillOutlook schema and assembler
 
 - **What:** `schemas/outlook.py` (Pydantic `BillOutlook` with distribution, deadlines, weather, curve, pace, next milestone and all sentences in display order) and `outlook.build_outlook(bill_id, as_of, target_date)`. Every "chance by a date" (deadlines, weather, curve, what-if) goes through `calibrate()`, which applies the isotonic recalibration stored in `reports/deadline_calibration.json` when the calibration check calls for it (tracked, so fresh clones match); `p_royal_assent` stays the model's raw value. `model_version` = passage model set and fit date + `outlook-v1`.

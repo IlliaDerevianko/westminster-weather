@@ -247,7 +247,8 @@ def deadline_list(
             {"kind": "custom", "label": "by the chosen date", "date": custom, "estimated": False}
         )
     for it in sorted(items, key=lambda x: x["date"]):
-        it["p"] = dist.p_law_by(it["date"])
+        group = "session_end" if it["kind"] == "session_end" else "dates"
+        it["p"] = calibrate(dist.p_by(it["date"]), group)
         note = ", estimated" if it["estimated"] else ""
         what = it["label"].replace("before ", "").replace("by ", "")
         it["sentence"] = (
@@ -497,23 +498,28 @@ def next_milestone_block(
 _CALIBRATOR: Any = None
 
 
-def calibrate(p: float) -> float:
-    """Deadline probabilities after isotonic recalibration (fitted on training-era forecasts
-    only by ``outlook_calibration``, stored in ``reports/deadline_calibration.json``), or
-    unchanged when the calibration check did not call for it."""
+def calibrate(p: float, group: str = "dates") -> float:
+    """A deadline probability after isotonic recalibration (fitted on training-era forecasts
+    only by ``outlook_calibration``, stored in ``reports/deadline_calibration.json``): one
+    curve for the session end (``group="session_end"``), one for date deadlines; unchanged
+    when the calibration check did not call for it."""
     global _CALIBRATOR
     if _CALIBRATOR is None:
         import json
 
         from westminster_weather.model.outlook_calibration import METRICS_JSON
 
-        iso = None
+        curves = None
         if METRICS_JSON.exists():
-            iso = json.loads(METRICS_JSON.read_text()).get("isotonic")
-        _CALIBRATOR = (np.array(iso["x"]), np.array(iso["y"])) if iso else False
+            curves = json.loads(METRICS_JSON.read_text()).get("isotonic")
+        _CALIBRATOR = (
+            {g: (np.array(c["x"]), np.array(c["y"])) for g, c in curves.items()}
+            if curves
+            else False
+        )
     if _CALIBRATOR is False:
         return float(p)
-    x, y = _CALIBRATOR
+    x, y = _CALIBRATOR[group if group in _CALIBRATOR else "dates"]
     return float(np.interp(p, x, y))
 
 
