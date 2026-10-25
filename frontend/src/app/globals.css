@@ -218,14 +218,14 @@ input:hover,select:hover {
   max-width:180px;
 }
 
-/* Status text colour by state: in progress (teal), current law (amber, the "sunny" colour),
+/* Status text colour by state: in progress (amber), current law (green),
    failed (red, the "storm" colour) */
 .directory-status.active {
-  color:#0B6A64;
+  color:#8A6510;
 }
 
 .directory-status.act {
-  color:#8A6510;
+  color:#2E7D3A;
 }
 
 .directory-status.failed {
