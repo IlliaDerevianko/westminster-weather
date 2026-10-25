@@ -1,5 +1,12 @@
 # Agent log: `chore/remove-promises-page`
 
+## 2026-10-25 07:10 — chore(frontend): remove the "Back to Tracker Page" button from the bills directory
+
+- **What:** Removed the "← Back to Tracker Page" button and its now-empty wrapper from the bills directory header.
+- **Why:** User asked to remove the back to tracker page button.
+- **Checks:** `npx tsc --noEmit`: clean; `/bills` loads (200).
+- **Notes:** Same nav clean-up as the previous commit, so kept on this branch. The user's own uncommitted edits were left out.
+
 ## 2026-10-25 07:08 — chore(frontend): remove the promise take-up forecasts pages and their buttons
 
 - **What:** Deleted `/promises` and `/promises/[ideaId]`, the front-end take-up client `lib/takeup.ts` (used only by those pages), the "Promises → Bills" button on the tracker page and the "Promise Take-up Forecasts →" button on the bills directory.
