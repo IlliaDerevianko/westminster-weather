@@ -1,5 +1,11 @@
 # Agent log: `feat/pale-status-colours`
 
+## 2026-10-25 10:11 — feat(ui): status as coloured, slightly bolder text instead of tinted boxes
+
+- **What:** Removed the pale background boxes; the status text keeps its colour (in progress teal #0B6A64, current law amber #8A6510, failed red #A93636) and is now weight 500.
+- **Why:** User: "don't put boxes around, just change the font colour slightly, maybe make it a bit thicker".
+- **Checks:** Contrast on white 6.4:1, 5.3:1, 6.4:1. Screenshot of `/bills` checked.
+
 ## 2026-10-25 10:10 — feat(ui): pale status tints on the bill directory
 
 - **What:** Each bill's status on `/bills` gets a pale tint: in progress = pale teal (text #0B6A64), Acts / current law = pale amber, the "sunny" colour (text #8A6510), failed (fell, withdrawn, defeated) = pale red, the "storm" colour (text #A93636).
