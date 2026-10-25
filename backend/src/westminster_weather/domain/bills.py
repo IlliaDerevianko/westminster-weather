@@ -1163,66 +1163,6 @@ async def evaluate_parliament_bill_from_db(
             else:
                 tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
 
-        elif post_st == BillStage.AMENDED_OR_REPEALED:
-            if vis_stage_events:
-                first_ev_dt = min(e.event_date for e in vis_stage_events)
-                last_ev_dt = max(e.event_date for e in vis_stage_events)
-                ev_models = [
-                    ApiEvidenceEvent(
-                        event_date=e.event_date,
-                        title=e.title,
-                        note=e.note,
-                        source_api_url=e.source_api_url,
-                        web_url=e.web_url,
-                        document_type=e.document_type,
-                    )
-                    for e in vis_stage_events
-                ]
-                plural = "s" if len(vis_stage_events) != 1 else ""
-                rep_note = (
-                    " (Act marked repealed on legislation.gov.uk)"
-                    if (act_comm and act_comm.is_repealed)
-                    else ""
-                )
-                tracked_nodes.append(
-                    TrackedStageNode(
-                        node=node,
-                        status=StageStatus.COMPLETED,
-                        entered_date=first_ev_dt,
-                        completed_date=last_ev_dt,
-                        summary=(
-                            f"{len(vis_stage_events)} amending/repealing instrument{plural} "
-                            f"recorded ≤ {eval_date.isoformat()}{rep_note}."
-                        ),
-                        source_reference=vis_stage_events[-1].web_url,
-                        source_api_url=vis_stage_events[-1].source_api_url,
-                        web_url=vis_stage_events[-1].web_url,
-                        visible_events=ev_models,
-                        sitting_count=len(vis_stage_events),
-                    )
-                )
-                current_stage = post_st
-                current_order = order
-            elif has_royal_assent_as_of:
-                tracked_nodes.append(
-                    TrackedStageNode(
-                        node=node,
-                        status=StageStatus.SKIPPED,
-                        entered_date=ra_date,
-                        summary=(
-                            "No amending or repealing instrument recorded on "
-                            f"legislation.gov.uk ≤ {eval_date.isoformat()}."
-                        ),
-                        source_reference=leg_base_url,
-                        source_api_url=leg_xml_url,
-                        web_url=leg_base_url,
-                        visible_events=[],
-                        sitting_count=0,
-                    )
-                )
-            else:
-                tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
-
     # Build dynamic database-driven milestone dates across all phases.
     # Milestones on the same date are merged into one entry (one button per date).
     milestone_parts: dict[date, list[tuple[str, str]]] = {}
@@ -1260,7 +1200,6 @@ async def evaluate_parliament_bill_from_db(
             (act_comm.first_draft_regulation_date, "3. 1st Draft Regulation"),
             (act_comm.first_laid_regulation_date, "3. 1st Laid Regulation"),
             (act_comm.law_fully_in_force_date, "3. Law in Force"),
-            (act_comm.latest_amendment_or_repeal_date, "3. Amended / Repealed"),
         ):
             add_milestone(post_dt, post_lbl, f"{act_comm.act_title}: {post_lbl}")
 
