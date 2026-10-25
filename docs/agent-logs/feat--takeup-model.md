@@ -1,5 +1,12 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 01:11 — feat(journey): end-to-end journey test (promise → law applied) with error chart
+
+- **What:** `journey/journey_test.py`: for 30 sampled past cases (promise → Government Bill → Act, Royal Assent by mid-2025), predicts "when will this law apply?" at 7 checkpoints across stages 1–3 using only information known that day (stage 1 hazard model trained on earlier promises + historical medians; Aleks's rolling stage-2 backtest + median Royal Assent → applied; stage-3 `forecast_act`). Writes `backend/reports/journey/journey_test.csv` and `journey_error_by_stage.png`.
+- **Why:** Roman asked for one test through all stages showing the error shrinking towards the end, with the stage-3 "weeks until the law applies".
+- **Checks:** mean |error| in weeks: promise 89.5 → +1 year 59.7 → first reading 22.6 → middle stage 14.6 → last stage 10.9 → Royal Assent 7.7 (median 1.9); "+3 months" 23.0 (only 6 slow cases remain). `ruff`: clean.
+- **Notes:** "law applied" = first commencement order, or start on Royal Assent when no orders are needed.
+
 ## 2026-10-25 00:59 — feat(takeup): day-one and one-year-later checks on the training data; pitch
 
 - **What:** `takeup/insample.py`: forecasts at each promise's trigger vs reality (`stage1_insample.csv`) and, with `--updating`, forecasts one year later for promises still waiting, using the data as it stood that month (`stage1_updating.csv`); `docs/model/TAKEUP_PITCH.md`.
