@@ -1,5 +1,11 @@
 # Agent log: `feat/larger-text-and-logo`
 
+## 2026-10-25 09:27 — feat(frontend): bigger prediction chart
+
+- **What:** `BillOutlookPanel.tsx`: the chance-of-law chart takes the full panel width (was half) and a taller canvas (1000x380, was 640x200), with larger axis labels (16), a thicker line and a bolder target marker; the deadlines list moves below it in two columns.
+- **Why:** Roman asked for a bigger prediction graph.
+- **Checks:** `npx tsc --noEmit`: clean; screenshot of bill 4035's outlook checked.
+
 ## 2026-10-25 09:26 — feat(frontend): bigger logo; remove the Tracker link and the black bill-selector bar
 
 - **What:** `SiteHeader.tsx`: logo height 64 -> 96 px (header 80 -> 112 px), "Tracker" link removed ("All bills" stays). `page.tsx`: removed the black top bar (bill selector and the yellow "Browse All Bills" button) and the state and imports only it used; bills are picked from the directory.
