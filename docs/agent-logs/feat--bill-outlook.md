@@ -1,5 +1,11 @@
 # Agent log: `feat/bill-outlook`
 
+## 2026-10-25 06:39 — feat(frontend): weather outlook panel on the bill page
+
+- **What:** `frontend/src/lib/outlook.ts` (types for `GET /api/v1/bills/{id}/outlook`, fetch helper, weather icons/colours) and `frontend/src/app/BillOutlookPanel.tsx`: weather headline with chance of ever passing / failing, weekly two-year curve (SVG, target-date line), deadline list with bars, pace and next milestone with the what-if, model and calibration footnote, and a target-date picker. Shown above the three phase columns in `page.tsx` only when the bill is in Parliament on the snapshot date (404 hides it); the page's default snapshot forecasts as of today, a picked past snapshot as of that date. Backend: `calibrate(0)` stays 0, so the curve starts at 0% on the forecast date.
+- **Why:** Roman asked to show the outlook JSON on the frontend.
+- **Checks:** `npx tsc --noEmit`: clean; `ruff check`: clean; screenshots of bills 4035 and 4083 checked (4083: "Delays likely: 21% ... before the Christmas recess", live model 2026-10-25). Known: the session-end chance uses its own recalibration curve, so it can be higher than a later quarter end (4083: 94% by 10 Jun vs 80% by 30 Jun).
+
 ## 2026-10-25 06:33 — feat(outlook): bill_outlooks table, endpoint and generation for bills in Parliament
 
 - **What:** `BillOutlookRow` (`bill_outlooks`, PK bill_id + forecast_date; key fields plus the full outlook as JSON) in `models.py`, `save_bill_outlooks_to_db` in `db.py`, DATA_CONTRACT §6.6. `GET /api/v1/bills/{bill_id}/outlook?target_date=YYYY-MM-DD[&as_of=...]` computes it on request (404 if the bill is not in Parliament). `model/outlook_generate.py` writes outlooks for every bill in Parliament; ran it for 2026-10-25: 18 bills saved to production. Tests in `tests/model/test_outlook.py` (weather thresholds and storm override, path counting, quarter ends, recess dates, curve sentence).

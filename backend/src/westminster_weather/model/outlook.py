@@ -517,8 +517,8 @@ def calibrate(p: float, group: str = "dates") -> float:
             if curves
             else False
         )
-    if _CALIBRATOR is False:
-        return float(p)
+    if _CALIBRATOR is False or p <= 0.0:
+        return float(p)  # no path has passed by then: stays 0 after recalibration too
     x, y = _CALIBRATOR[group if group in _CALIBRATOR else "dates"]
     return float(np.interp(p, x, y))
 
