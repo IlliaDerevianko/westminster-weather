@@ -1,5 +1,11 @@
 # Agent log: `feat/bill-outlook`
 
+## 2026-10-25 06:33 — feat(outlook): bill_outlooks table, endpoint and generation for bills in Parliament
+
+- **What:** `BillOutlookRow` (`bill_outlooks`, PK bill_id + forecast_date; key fields plus the full outlook as JSON) in `models.py`, `save_bill_outlooks_to_db` in `db.py`, DATA_CONTRACT §6.6. `GET /api/v1/bills/{bill_id}/outlook?target_date=YYYY-MM-DD[&as_of=...]` computes it on request (404 if the bill is not in Parliament). `model/outlook_generate.py` writes outlooks for every bill in Parliament; ran it for 2026-10-25: 18 bills saved to production. Tests in `tests/model/test_outlook.py` (weather thresholds and storm override, path counting, quarter ends, recess dates, curve sentence).
+- **Why:** output format and generation steps of the outlook spec.
+- **Checks:** `ruff check .`: clean; `pytest`: 384 passed. API: 4035, 4124, 4083 -> 200; 4035 with target_date 2027-03-31 -> "On track: 97% ..."; 3137 (an Act) -> 404.
+
 ## 2026-10-25 06:31 — feat(outlook): deadline calibration check and recalibration
 
 - **What:** `model/outlook_calibration.py` re-simulates every rolling-backtest point (models refitted before each session, 4,000 paths) in the training era (sessions 27-30: 825 forecasts, 136 bills) and the test era (sessions 34-39: 1,281 forecasts, 222 bills), and scores the chance of Royal Assent before the next Christmas recess, next summer recess and session end against what happened. Outputs `backend/reports/deadline_calibration.png`, `deadline_calibration.json` (tables, Brier, isotonic curves) and `deadline_calibration_points.csv`. Raw test calibration is poor (underconfident: 40-50% happened 67% of the time; session end mean 71% vs 92%), so isotonic recalibration was fitted on training-era forecasts only: one curve for session end, one for date deadlines, chosen over a pooled curve by cross-validation inside the training era (Brier 0.110 vs 0.124 vs 0.137 none). `outlook.calibrate(p, group)` applies it.
