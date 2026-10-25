@@ -260,3 +260,55 @@ async def test_full_text_url_for_acts_and_bills(
     data = response.json()
     assert data["full_text_url"] == expected_url
     assert data["full_text_label"].startswith("Read the full ")
+
+
+def test_latest_confirmed_post_ra_stage_rules() -> None:
+    from datetime import date
+
+    from westminster_weather.domain.bills import latest_confirmed_post_ra_stage
+
+    today = date(2026, 10, 25)
+    # Fully in force wins over everything else
+    assert latest_confirmed_post_ra_stage(date(2025, 1, 1), {"regulations_laid"}, today) == (
+        BillStage.LAW_FULLY_IN_FORCE
+    )
+    # In force only in the future: not yet
+    assert latest_confirmed_post_ra_stage(date(2027, 1, 1), set(), today) == (
+        BillStage.ROYAL_ASSENT
+    )
+    # Not fully in force: the latest SI stage with an instrument
+    assert latest_confirmed_post_ra_stage(
+        None, {"commencement_orders", "regulations_drafted"}, today
+    ) == BillStage.REGULATIONS_DRAFTED
+    assert latest_confirmed_post_ra_stage(None, {"commencement_orders"}, today) == (
+        BillStage.COMMENCEMENT_ORDERS
+    )
+    # Only a later in-force event: "some sections start" is complete
+    assert latest_confirmed_post_ra_stage(None, {"law_fully_in_force"}, today) == (
+        BillStage.SOME_SECTIONS_START
+    )
+    assert latest_confirmed_post_ra_stage(None, {"some_sections_start"}, today) == (
+        BillStage.ROYAL_ASSENT
+    )
+
+
+async def test_bill_list_latest_stage_matches_bill_page() -> None:
+    from datetime import date
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        listed = (await client.get("/api/v1/bills", params={"outcome": "royal_assent"})).json()
+        assert len(listed) >= 500
+        assert all(b["latest_stage"] for b in listed)
+        # Acts at different stages: fully in force, commencement orders, regulations laid
+        by_id = {b["bill_id"]: b for b in listed}
+        for bill_id in (4207, 3751, 45, 33, 40, 57):
+            page = (
+                await client.get(
+                    f"/api/v1/bills/{bill_id}", params={"as_of_date": date.today().isoformat()}
+                )
+            ).json()
+            done = [s["stage"] for s in page["stages"] if s["status"] == StageStatus.COMPLETED]
+            assert by_id[bill_id]["latest_stage"] == done[-1], bill_id
+        not_acts = (await client.get("/api/v1/bills", params={"outcome": "in_progress"})).json()
+        assert all(b["latest_stage"] is None for b in not_acts)
