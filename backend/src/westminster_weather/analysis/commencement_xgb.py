@@ -73,7 +73,7 @@ def load_tables() -> dict[str, pd.DataFrame]:
 
     queries = {
         "acts": "select * from act_commencements",
-        "texts": "select bill_id, text from bill_texts where text_type = 'act_as_enacted'",
+        "texts": "select bill_id, text from act_texts",
         "bills": "select bill_id, short_title, introduced_session_id, department, "
         "originating_house from bills",
         "events": "select bill_id, stage, event_date from post_royal_assent_events",

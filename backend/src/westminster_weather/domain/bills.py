@@ -25,6 +25,7 @@ from westminster_weather.domain.stages import (
 )
 from westminster_weather.models import (
     ActCommencementRow,
+    ActInForceStatusRow,
     ApiEvidenceEventRow,
     BillRow,
     PostRoyalAssentEventRow,
@@ -42,7 +43,6 @@ class StageStatus(StrEnum):
     CURRENT = "current"
     UPCOMING = "upcoming"
     STOPPED = "stopped"
-
 
 
 @dataclass(frozen=True)
@@ -84,7 +84,6 @@ class TrackedStageNode:
     visible_events: list[ApiEvidenceEvent] = field(default_factory=list)
     active_stop_reason: StopReason | None = None
     sitting_count: int = 0
-
 
 
 @dataclass
@@ -174,9 +173,7 @@ async def fetch_online_safety_bill_from_uk_apis() -> GovernmentBill:
     green_paper_path = "/government/consultations/internet-safety-strategy-green-paper"
     white_paper_path = "/government/consultations/online-harms-white-paper"
     draft_bill_path = "/government/publications/draft-online-safety-bill"
-    queens_speech_path = (
-        "/government/publications/queens-speech-2021-background-briefing-notes"
-    )
+    queens_speech_path = "/government/publications/queens-speech-2021-background-briefing-notes"
     joint_comm_resp_path = (
         "/government/publications/"
         "joint-committee-report-on-the-draft-online-safety-bill-government-response"
@@ -306,8 +303,7 @@ async def fetch_online_safety_bill_from_uk_apis() -> GovernmentBill:
             event_date=draft_pub_date,
             title=draft_bill["title"],
             note=(
-                "Draft Online Safety Bill published for Joint Committee "
-                "pre-legislative scrutiny."
+                "Draft Online Safety Bill published for Joint Committee pre-legislative scrutiny."
             ),
             source_api_url=s4_api_url,
             web_url=s4_web_url,
@@ -429,9 +425,7 @@ async def sync_online_safety_bill_to_db() -> tuple[int, int]:
 
     async with SessionLocal() as session:
         async with session.begin():
-            await session.execute(
-                delete(TrackedBillRow).where(TrackedBillRow.id == bill.id)
-            )
+            await session.execute(delete(TrackedBillRow).where(TrackedBillRow.id == bill.id))
 
             bill_row = TrackedBillRow(
                 id=bill.id,
@@ -556,9 +550,7 @@ async def list_all_bills_from_db(
         tracked_res = await session.execute(
             select(TrackedBillRow.parliament_bill_id, TrackedBillRow.earliest_signal_date)
         )
-        pre_parl_dates = {
-            pid: sig_dt for pid, sig_dt in tracked_res.all() if pid is not None
-        }
+        pre_parl_dates = {pid: sig_dt for pid, sig_dt in tracked_res.all() if pid is not None}
 
         stmt = select(BillRow)
         if search and search.strip():
@@ -638,6 +630,11 @@ async def evaluate_parliament_bill_from_db(
                 select(ActCommencementRow).where(ActCommencementRow.bill_id == bill_id)
             )
         ).scalar_one_or_none()
+        in_force_status = (
+            await session.execute(
+                select(ActInForceStatusRow).where(ActInForceStatusRow.bill_id == bill_id)
+            )
+        ).scalar_one_or_none()
         post_event_rows = (
             (
                 await session.execute(
@@ -653,18 +650,12 @@ async def evaluate_parliament_bill_from_db(
     pre_domain = _row_to_domain(tracked_pre_row) if tracked_pre_row is not None else None
     all_dates = [s.event_date for s in sittings]
     post_dates = [e.event_date for e in post_event_rows]
-    first_reading_dt = bill_row.introduced_date or (
-        min(all_dates) if all_dates else date.today()
-    )
-    earliest_date = (
-        pre_domain.earliest_signal_date if pre_domain is not None else first_reading_dt
-    )
+    first_reading_dt = bill_row.introduced_date or (min(all_dates) if all_dates else date.today())
+    earliest_date = pre_domain.earliest_signal_date if pre_domain is not None else first_reading_dt
     latest_sitting_date = max(all_dates) if all_dates else first_reading_dt
     latest_post_date = max(post_dates) if post_dates else None
     default_as_of = max(
-        d
-        for d in (bill_row.outcome_date, latest_sitting_date, latest_post_date)
-        if d is not None
+        d for d in (bill_row.outcome_date, latest_sitting_date, latest_post_date) if d is not None
     )
     eval_date = as_of_date or default_as_of
 
@@ -714,9 +705,7 @@ async def evaluate_parliament_bill_from_db(
         and bill_row.outcome_date <= eval_date
     )
     active_stop = (
-        StopReason(bill_row.stop_reason)
-        if (is_stopped_as_of and bill_row.stop_reason)
-        else None
+        StopReason(bill_row.stop_reason) if (is_stopped_as_of and bill_row.stop_reason) else None
     )
 
     api_url = f"https://bills-api.parliament.uk/api/v1/Bills/{bill_row.bill_id}/Stages"
@@ -729,9 +718,7 @@ async def evaluate_parliament_bill_from_db(
     # ------------------------------------------------------------------
     # PHASE 1: BEFORE PARLIAMENT (Orders 1..6)
     # ------------------------------------------------------------------
-    has_entered_parliament_as_of = len(entered_parl_as_of) > 0 or (
-        first_reading_dt <= eval_date
-    )
+    has_entered_parliament_as_of = len(entered_parl_as_of) > 0 or (first_reading_dt <= eval_date)
     if pre_domain is not None:
         pre_stage, pre_order, pre_nodes = pre_domain.evaluate_at_date(eval_date)
         if has_entered_parliament_as_of:
@@ -751,9 +738,7 @@ async def evaluate_parliament_bill_from_db(
                     TrackedStageNode(
                         node=node,
                         status=(
-                            StageStatus.COMPLETED
-                            if is_ready_stage
-                            else StageStatus.FAST_TRACKED
+                            StageStatus.COMPLETED if is_ready_stage else StageStatus.FAST_TRACKED
                         ),
                         entered_date=first_reading_dt if is_ready_stage else None,
                         completed_date=first_reading_dt,
@@ -791,9 +776,7 @@ async def evaluate_parliament_bill_from_db(
                     )
                 )
             else:
-                tracked_nodes.append(
-                    TrackedStageNode(node=node, status=StageStatus.UPCOMING)
-                )
+                tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
 
     # The very first signal is the date of the first Phase 1 stage (`signal_appears`).
     first_pre_node = tracked_nodes[0] if tracked_nodes else None
@@ -846,9 +829,7 @@ async def evaluate_parliament_bill_from_db(
                 tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
             continue
 
-        st_sittings = [
-            s for s in sittings_by_state.get(st, []) if s.event_date <= eval_date
-        ]
+        st_sittings = [s for s in sittings_by_state.get(st, []) if s.event_date <= eval_date]
         idx_in_entered = entered_parl_as_of.index(st)
         if len(st_sittings) == 0:
             # Stage had 0 formal sittings and was fast-tracked/dispensed with on entry_dt
@@ -929,7 +910,6 @@ async def evaluate_parliament_bill_from_db(
             )
         )
 
-
     # ------------------------------------------------------------------
     # PHASE 3: AFTER ROYAL ASSENT (Orders 17..22)
     # ------------------------------------------------------------------
@@ -958,6 +938,14 @@ async def evaluate_parliament_bill_from_db(
         if act_comm is not None and act_comm.law_fully_in_force_date is not None
         else ra_date
     )
+    # legislation.gov.uk's current version (`act_in_force_status`) overrides the estimate above:
+    # fully in force only once no provision is still prospective, on the latest start date.
+    if in_force_status is not None:
+        in_force_dt = (
+            (in_force_status.latest_in_force_start_date or in_force_dt)
+            if in_force_status.fully_in_force
+            else None
+        )
     is_in_force_as_of = (
         has_royal_assent_as_of and in_force_dt is not None and in_force_dt <= eval_date
     )
@@ -1065,9 +1053,7 @@ async def evaluate_parliament_bill_from_db(
                         )
                     )
                 else:
-                    tracked_nodes.append(
-                        TrackedStageNode(node=node, status=StageStatus.UPCOMING)
-                    )
+                    tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
             elif not vis_stage_events:
                 tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
             else:
@@ -1151,6 +1137,29 @@ async def evaluate_parliament_bill_from_db(
                 )
                 current_stage = post_st
                 current_order = order
+            elif (
+                has_royal_assent_as_of
+                and in_force_status is not None
+                and not in_force_status.fully_in_force
+            ):
+                pending = in_force_status.n_section_groups_prospective
+                total = in_force_status.n_section_groups
+                tracked_nodes.append(
+                    TrackedStageNode(
+                        node=node,
+                        status=StageStatus.CURRENT,
+                        summary=(
+                            f"Not fully in force: {pending} of {total} sections still "
+                            "prospective (not yet in force) on legislation.gov.uk, checked "
+                            f"{in_force_status.checked_at.date().isoformat()}."
+                        ),
+                        source_reference=in_force_status.source_url,
+                        source_api_url=f"{in_force_status.source_url}/data.xml",
+                        web_url=in_force_status.source_url,
+                        visible_events=[],
+                        sitting_count=0,
+                    )
+                )
             else:
                 tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
 
@@ -1194,6 +1203,23 @@ async def evaluate_parliament_bill_from_db(
                 )
                 current_stage = post_st
                 current_order = order
+            elif has_royal_assent_as_of:
+                tracked_nodes.append(
+                    TrackedStageNode(
+                        node=node,
+                        status=StageStatus.SKIPPED,
+                        entered_date=ra_date,
+                        summary=(
+                            "No amending or repealing instrument recorded on "
+                            f"legislation.gov.uk ≤ {eval_date.isoformat()}."
+                        ),
+                        source_reference=leg_base_url,
+                        source_api_url=leg_xml_url,
+                        web_url=leg_base_url,
+                        visible_events=[],
+                        sitting_count=0,
+                    )
+                )
             else:
                 tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
 
@@ -1289,5 +1315,3 @@ async def evaluate_parliament_bill_from_db(
         "tracked_nodes": tracked_nodes,
         "milestone_dates": milestones,
     }
-
-

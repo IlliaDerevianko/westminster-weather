@@ -3,7 +3,7 @@
 Serves the two-step model evaluated in ``analysis.commencement_xgb`` (same features and
 target): a classifier for "applies on Royal Assent day", a median regressor for the days left
 otherwise, and p10 / p90 quantile regressors for the window. Reads the database only
-(``act_commencements``, ``bill_texts``, ``post_royal_assent_events`` and reference tables).
+(``act_commencements``, ``act_texts``, ``post_royal_assent_events`` and reference tables).
 
 No future data: models are fitted per month on checkpoints before the month's first day whose
 outcome was known by then, and each forecast uses only events dated on or before ``as_of``.
@@ -13,6 +13,7 @@ main input, does not exist yet).
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import date
 from functools import cache
@@ -20,10 +21,12 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from sqlalchemy.exc import SQLAlchemyError
 from xgboost import XGBClassifier, XGBRegressor
 
 from westminster_weather.analysis import commencement_xgb as cx
 
+log = logging.getLogger(__name__)
 MIN_TRAIN_ACTS = 50
 
 
@@ -36,12 +39,24 @@ class Stage3Models:
     q: dict[float, XGBRegressor]  # 0.1, 0.5, 0.9 on log1p(days) for "not applied yet" rows
 
 
-@cache
-def _data() -> tuple[pd.DataFrame, pd.DataFrame]:
-    """(Acts with features, post-Royal-Assent events), loaded once per process."""
-    t = cx.load_tables()
-    events = t["events"].assign(event_date=pd.to_datetime(t["events"]["event_date"]))
-    return cx.act_features(t), events
+_DATA: tuple[pd.DataFrame, pd.DataFrame] | None = None
+
+
+def _data() -> tuple[pd.DataFrame, pd.DataFrame] | None:
+    """(Acts with features, post-Royal-Assent events), loaded once per process. None, and
+    retried on the next call, if a source table is missing or the database is unreachable
+    (e.g. ``act_texts`` before `clients.legislation_texts` has run): stage 3 then has no forecast
+    instead of failing the whole bill forecast."""
+    global _DATA
+    if _DATA is None:
+        try:
+            t = cx.load_tables()
+        except SQLAlchemyError as exc:
+            log.warning("stage 3 forecast unavailable: %s", str(exc).splitlines()[0])
+            return None
+        events = t["events"].assign(event_date=pd.to_datetime(t["events"]["event_date"]))
+        _DATA = cx.act_features(t), events
+    return _DATA
 
 
 def _dept_cols(df: pd.DataFrame, departments: list[str]) -> pd.DataFrame:
@@ -53,7 +68,10 @@ def _dept_cols(df: pd.DataFrame, departments: list[str]) -> pd.DataFrame:
 
 @cache
 def _models(cut: pd.Timestamp) -> Stage3Models | None:
-    acts, events = _data()
+    data = _data()
+    if data is None:
+        return None
+    acts, events = data
     rows = cx.build_rows(acts, events)
     known = rows[(rows["as_of"] < cut) & (rows["applied"] < cut)]
     if known["bill_id"].nunique() < MIN_TRAIN_ACTS:
@@ -113,7 +131,10 @@ def forecast(bill_id: int, as_of: date) -> dict[str, Any] | None:
     """Stage 3 for ``bill_id`` at ``as_of``: ``p_applies_on_royal_assent`` and ``days``
     (p10 / p50 / p90 days from ``as_of`` until the law applies; negative once it has applied).
     None if the bill has no Royal Assent by ``as_of`` or too little earlier data."""
-    acts, events = _data()
+    data = _data()
+    if data is None:
+        return None
+    acts, events = data
     match = acts[acts["bill_id"] == bill_id]
     if match.empty:
         return None

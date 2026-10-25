@@ -156,9 +156,7 @@ class BillRow(Base):
     outcome: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     outcome_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     stop_reason: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    last_api_update: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_api_update: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     is_act: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_defeated: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -229,6 +227,38 @@ class ActCommencementRow(Base):
     amendment_and_repeal_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_repealed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ActTextRow(Base):
+    """Text of each UK Government Act as enacted (legislation.gov.uk XML, plain text)."""
+
+    __tablename__ = "act_texts"
+
+    bill_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    ukpga_year: Mapped[int] = mapped_column(Integer, nullable=False)
+    ukpga_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    act_title: Mapped[str] = mapped_column(Text, nullable=False)
+    source_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    number_of_provisions: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    n_characters: Mapped[int] = mapped_column(Integer, nullable=False)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ActInForceStatusRow(Base):
+    """Which parts of each Act are in force, from the current revised version on
+    legislation.gov.uk: provisions marked ``Status="Prospective"`` are not in force yet."""
+
+    __tablename__ = "act_in_force_status"
+
+    bill_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    source_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    n_section_groups: Mapped[int] = mapped_column(Integer, nullable=False)
+    n_section_groups_prospective: Mapped[int] = mapped_column(Integer, nullable=False)
+    n_prospective_elements: Mapped[int] = mapped_column(Integer, nullable=False)
+    fully_in_force: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    latest_in_force_start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class PostRoyalAssentEventRow(Base):
