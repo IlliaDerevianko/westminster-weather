@@ -22,6 +22,8 @@ dependencies = [
     "lifelines>=0.30.0",
     "matplotlib>=3.11.2",
     "xgboost>=3.4.1",
+    "optuna>=5.0.0",
+    "catboost>=1.2.10",
 ]
 
 [dependency-groups]

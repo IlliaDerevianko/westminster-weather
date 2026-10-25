@@ -210,7 +210,173 @@ def _slug(text: str) -> str:
     return "".join(c if c.isalnum() else "_" for c in str(text).lower()).strip("_")[:40]
 
 
-def build_dataset(src: SourceData, train_sessions: set[int] | None = None) -> pd.DataFrame:
+# ---------------------------------------------------------------------------
+# Extended features (``build_dataset(..., extended=True)``)
+# ---------------------------------------------------------------------------
+
+# Departments are renamed often (e.g. DCLG → MHCLG → DLUHC → MHCLG), which splits their bills
+# across names. Map them to stable policy areas so each area has enough bills to learn from.
+POLICY_AREAS: dict[str, str] = {
+    "HM Treasury": "treasury",
+    "Northern Ireland Office": "northern_ireland",
+    "Scotland Office": "scotland_wales",
+    "Wales Office": "scotland_wales",
+    "Home Office": "home_affairs",
+    "Ministry of Justice": "justice",
+    "Cabinet Office": "constitution",
+    "Office of the Leader of the House of Commons": "constitution",
+    "Prime Minister": "constitution",
+    "Office of the Deputy Prime Minister": "housing_local",
+    "Government Equalities Office": "constitution",
+    "Department for Exiting the European Union": "constitution",
+    "Department of Trade and Industry": "business_energy",
+    "Department for Business, Enterprise and Regulatory Reform": "business_energy",
+    "Department for Business, Innovation and Skills": "business_energy",
+    "Department for Business, Energy and Industrial Strategy": "business_energy",
+    "Department for Business and Trade": "business_energy",
+    "Department for International Trade": "business_energy",
+    "Department for Energy Security and Net Zero": "business_energy",
+    "Department of Energy and Climate Change": "business_energy",
+    "Department for Communities and Local Government": "housing_local",
+    "Ministry of Housing, Communities and Local Government": "housing_local",
+    "Department for Levelling Up, Housing and Communities": "housing_local",
+    "Department of Health": "health",
+    "Department of Health and Social Care": "health",
+    "Department for Education": "education",
+    "Department for Children, Schools and Families": "education",
+    "Department for Education and Skills": "education",
+    "Department for Innovation, Universities and Skills": "education",
+    "Department for Culture, Media and Sport": "culture_digital",
+    "Department for Digital, Culture, Media and Sport": "culture_digital",
+    "Department for Science, Innovation and Technology": "culture_digital",
+    "Department for Transport": "transport",
+    "Department for Environment, Food and Rural Affairs": "environment",
+    "Department for Work and Pensions": "work_pensions",
+    "Ministry of Defence": "defence",
+    "Foreign and Commonwealth Office": "foreign",
+    "Foreign, Commonwealth and Development Office": "foreign",
+    "Department for International Development": "foreign",
+}
+POLICY_AREA_NAMES = tuple(sorted(set(POLICY_AREAS.values()) | {"other"}))
+
+# Commons majority won at the general election that started each Parliament, and whether the
+# government was a coalition or a minority (public election results, known from day one).
+GOVERNMENT_MAJORITY = {1: 167, 2: 66, 3: 76, 4: 12, 5: -16, 6: 80, 7: 174}
+COALITION_OR_MINORITY = {3: 1, 5: 1}
+
+TITLE_FLAGS: dict[str, str] = {
+    "title_northern_ireland": r"northern ireland",
+    "title_numbered": r"\(no\. ?\d\)",
+    "title_amendment": r"amendment",
+    "title_finance": r"finance|supply|appropriation|consolidated fund|national insurance|tax",
+    "title_emergency": r"emergency|coronavirus|covid|urgent",
+    "title_scotland_wales": r"scotland|wales|welsh|scottish",
+    "title_eu": r"european union|withdrawal|brexit|retained eu",
+    "title_repeal": r"repeal",
+}
+SUMMER_RECESS_START = (7, 21)  # Houses usually rise for the summer in late July...
+SUMMER_RECESS_END = (9, 4)  # ...and return in early September.
+
+
+class _Context:
+    """Whole-dataset lookups for extended features (congestion uses all Government Bills)."""
+
+    def __init__(self, src: SourceData) -> None:
+        first = src.sittings.groupby("bill_id")["event_date"].min()
+        ra = src.sittings[src.sittings["api_stage_id"] == ROYAL_ASSENT_ID].groupby("bill_id")[
+            "event_date"
+        ].min()
+        b = src.bills.set_index("bill_id")
+        end = ra.reindex(first.index).fillna(pd.to_datetime(b["outcome_date"]).reindex(first.index))
+        # Bills still in progress are active until further notice.
+        end = end.where(b["outcome"].reindex(first.index) != "in_progress", pd.Timestamp.max)
+        self.start = first.values
+        self.end = end.fillna(pd.Timestamp.max).values
+        self.session = b["introduced_session_id"].reindex(first.index).values
+        self.parl_of_session = src.sessions.set_index("session_id")["parliament_id"].to_dict()
+        self.parl_start = src.parliaments.set_index("parliament_id")["first_meeting_date"].to_dict()
+
+    def active_bills(self, as_of: pd.Timestamp) -> int:
+        t = as_of.to_datetime64()
+        return int(((self.start <= t) & (self.end > t)).sum())
+
+    def session_order(self, session_id: int, intro: pd.Timestamp) -> int:
+        t = intro.to_datetime64()
+        return int(((self.session == session_id) & (self.start < t)).sum())
+
+
+def _days_to_summer_recess(d: pd.Timestamp) -> tuple[int, int]:
+    start = pd.Timestamp(d.year, *SUMMER_RECESS_START)
+    end = pd.Timestamp(d.year, *SUMMER_RECESS_END)
+    if start <= d <= end:
+        return 0, 1
+    nxt = start if d < start else pd.Timestamp(d.year + 1, *SUMMER_RECESS_START)
+    return (nxt - d).days, 0
+
+
+def _extra_features(
+    bill: pd.Series, known: pd.DataFrame, as_of: pd.Timestamp, clock: _Clock, ctx: _Context
+) -> dict:
+    origin = bill["originating_house"]
+    first_by_step = known.dropna(subset=["step"]).groupby("step")["event_date"].min()
+    steps = known["step"]
+
+    def house_days(position: str) -> float:
+        start = first_by_step.get(f"{position}: 1st reading")
+        if start is None:
+            return np.nan
+        end = first_by_step.get(f"{position}: 3rd reading", as_of)
+        return float((end - start).days)
+
+    h1, h2 = house_days("1st House"), house_days("2nd House")
+    in_h2 = not np.isnan(h2)
+    furthest_step = max(
+        (a for a in first_by_step.index if a in STAGE_ANCHORS), key=STAGE_ANCHORS.index,
+        default=None,
+    )
+    stage_start = first_by_step.get(furthest_step, as_of) if furthest_step else as_of
+    recess_days, in_recess = _days_to_summer_recess(as_of)
+    parl = ctx.parl_of_session.get(bill["introduced_session_id"])
+    limit = ctx.parl_start.get(parl, as_of) + pd.DateOffset(years=5)
+    area = POLICY_AREAS.get(bill["department"], "other")
+    title = str(bill["short_title"]).lower()
+
+    row: dict = {
+        "policy_area": area,  # string; encoded later from training data only
+        "commons_days_so_far": h1 if origin == "Commons" else h2,
+        "lords_days_so_far": h1 if origin == "Lords" else h2,
+        "first_house_days_so_far": h1,
+        "second_house_days_so_far": h2,
+        "current_house_days_so_far": h2 if in_h2 else h1,
+        "first_house_finished": int("1st House: 3rd reading" in first_by_step.index),
+        "days_in_current_stage": (as_of - stage_start).days,
+        "n_h1_2r_sittings": int((steps == "1st House: 2nd reading").sum()),
+        "n_h1_committee_sittings": int((steps == "1st House: committee").sum()),
+        "n_h1_report_sittings": int((steps == "1st House: report").sum()),
+        "n_h2_committee_sittings": int((steps == "2nd House: committee").sum()),
+        "n_h2_report_sittings": int((steps == "2nd House: report").sum()),
+        "n_ping_pong_rounds": int(known.loc[steps == "Ping-pong", "event_date"].nunique()),
+        "days_to_summer_recess": recess_days,
+        "in_summer_recess": in_recess,
+        "days_to_parliament_5yr_limit": (limit - as_of).days,
+        "active_government_bills": ctx.active_bills(as_of),
+        "bills_before_in_session": ctx.session_order(
+            bill["introduced_session_id"], known["event_date"].min()
+        ),
+        "government_majority": GOVERNMENT_MAJORITY.get(parl, np.nan),
+        "coalition_or_minority": COALITION_OR_MINORITY.get(parl, 0),
+        "title_words": len(title.split()),
+    }
+    for name, pattern in TITLE_FLAGS.items():
+        row[name] = int(pd.Series([title]).str.contains(pattern, regex=True)[0])
+    for a in POLICY_AREA_NAMES:
+        row[f"area_{a}"] = int(area == a)
+    return row
+
+
+def build_dataset(
+    src: SourceData, train_sessions: set[int] | None = None, extended: bool = False
+) -> pd.DataFrame:
     """One row per (finished bill, forecast point) with features, target and anchor labels.
 
     ``train_sessions`` picks which bills define the top departments, so test bills never
@@ -224,7 +390,11 @@ def build_dataset(src: SourceData, train_sessions: set[int] | None = None) -> pd
     )
     departments = ref["department"].value_counts().head(TOP_DEPARTMENTS).index.tolist()
     clock = _Clock(src)
+    ctx = _Context(src) if extended else None
     rows: list[dict] = []
+
+    def extra(bill: pd.Series, known: pd.DataFrame, as_of: pd.Timestamp) -> dict:
+        return _extra_features(bill, known, as_of, clock, ctx) if ctx is not None else {}
 
     for _, bill in bills.iterrows():
         s = src.sittings[src.sittings["bill_id"] == bill["bill_id"]].sort_values(
@@ -260,6 +430,7 @@ def build_dataset(src: SourceData, train_sessions: set[int] | None = None) -> pd
                 {
                     **base, "anchor_type": "stage", "anchor": anchor, "as_of": as_of,
                     **_features(bill, known, as_of, clock, departments),
+                    **extra(bill, known, as_of),
                     "target_days": target,
                 }
             )
@@ -274,6 +445,7 @@ def build_dataset(src: SourceData, train_sessions: set[int] | None = None) -> pd
                 {
                     **base, "anchor_type": "time", "anchor": f"{n} days in", "as_of": as_of,
                     **_features(bill, known, as_of, clock, departments),
+                    **extra(bill, known, as_of),
                     "target_days": (ra_date - as_of).days,
                 }
             )
@@ -282,6 +454,7 @@ def build_dataset(src: SourceData, train_sessions: set[int] | None = None) -> pd
 
 NON_FEATURE_COLUMNS = (
     "bill_id", "session_id", "short_title", "anchor_type", "anchor", "as_of", "target_days",
+    "policy_area",
 )
 
 
