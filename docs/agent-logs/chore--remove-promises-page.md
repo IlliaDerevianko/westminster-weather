@@ -1,5 +1,12 @@
 # Agent log: `chore/remove-promises-page`
 
+## 2026-10-25 07:15 — chore(frontend): remove the target-date picker from the weather outlook panel
+
+- **What:** Removed the "Target date" input and its "next recess" reset link from `BillOutlookPanel`, and the `targetDate` state; the panel always uses the API's default target (next recess more than 30 days away).
+- **Why:** User asked to remove the date selector and "next recess" from the prediction window.
+- **Checks:** `npx tsc --noEmit`: clean; `/?bill_id=4305` loads (200).
+- **Notes:** `fetchOutlook`'s optional `targetDate` argument and the API's `target_date` parameter are kept (now unused by the UI). The user's own uncommitted edit to this file (footnote removal) was left out.
+
 ## 2026-10-25 07:13 — Merge main (PR #24 remove-amended-stage, PR #25 bill-outlook) into chore/remove-promises-page
 
 - **What:** Brought in main's weather outlook panel, outlook endpoint/generation/calibration and the removal of the "Amended or repealed" stage. No conflicts.

@@ -81,14 +81,13 @@ export default function BillOutlookPanel({
   asOf?: string;
 }) {
   const [outlook, setOutlook] = useState<BillOutlook | null>(null);
-  const [targetDate, setTargetDate] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetchOutlook(billId, asOf, targetDate || undefined)
+    fetchOutlook(billId, asOf)
       .then((o) => {
         if (!cancelled) {
           setOutlook(o);
@@ -100,9 +99,7 @@ export default function BillOutlookPanel({
     return () => {
       cancelled = true;
     };
-  }, [billId, asOf, targetDate]);
-
-  useEffect(() => setTargetDate(""), [billId]);
+  }, [billId, asOf]);
 
   if (!loading && !error && outlook === null) return null; // not in Parliament on that date
 
@@ -119,20 +116,6 @@ export default function BillOutlookPanel({
           )}
           {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         </div>
-        <label className="flex items-center gap-2 text-xs font-semibold text-slate-600">
-          Target date
-          <input
-            type="date"
-            value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
-            className="rounded-lg border border-slate-300 px-2 py-1 text-xs"
-          />
-          {targetDate && (
-            <button onClick={() => setTargetDate("")} className="text-slate-500 underline">
-              next recess
-            </button>
-          )}
-        </label>
       </div>
 
       {outlook && (
