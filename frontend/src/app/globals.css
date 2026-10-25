@@ -606,3 +606,75 @@ input:hover,select:hover {
   }
 }
 
+
+.results-heading {
+  scroll-margin-top:24px;
+}
+
+.pagination {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:28px;
+  font-size:.8rem;
+}
+
+.pagination button {
+  min-height:44px;
+  min-width:44px;
+  padding:8px 12px;
+  border:1px solid var(--border);
+  border-radius:5px;
+}
+
+.pagination button:hover:not(:disabled) {
+  background:var(--surface);
+}
+
+.pagination button[aria-current="page"] {
+  background:var(--deep-teal);
+  border-color:var(--deep-teal);
+  color:#FFFFFF;
+}
+
+.pagination button[aria-current="page"]:hover {
+  background:var(--deep-teal);
+}
+
+.pagination button:disabled {
+  color:var(--muted);
+  opacity:.5;
+  cursor:default;
+}
+
+.pagination-pages {
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.pagination-gap {
+  color:var(--muted);
+}
+
+.pagination-summary {
+  display:none;
+  color:var(--muted);
+}
+
+@media(max-width:640px) {
+  .pagination-pages {
+    display:none;
+  }
+  .pagination-summary {
+    display:block;
+    text-align:center;
+  }
+  .pagination {
+    gap:8px;
+  }
+  .pagination button {
+    padding:8px;
+  }
+}

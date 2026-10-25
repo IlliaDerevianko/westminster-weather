@@ -1,3 +1,10 @@
+## 2026-10-25 — feat(ui): paginate the government bill directory
+
+- **What:** Added client-side pagination with 20 bills per page, visible result ranges, numbered desktop navigation and compact mobile Previous/Next controls. Search and filters run over the complete in-memory list and reset to page one. Page changes focus and scroll to the results heading.
+- **Why:** User requested pagination while retaining all bills in memory.
+- **Checks:** Production build and TypeScript passed. Component logic exercised in a Node harness with mocked React hooks and 45 synthetic government-bill summaries: first and final pages, disabled next, filter reset, empty results, clearing filters and a single API fetch all passed. Backend ruff passed; required pytest invocation retains the previously diagnosed readline exit 139. Diff whitespace check passed.
+- **Notes:** Browser layout and real DOM focus behavior were not verified in this sandbox.
+
 ## 2026-10-25 — feat(ui): increase the base font size by 1.5 pixels
 
 - **What:** Increased the root font size from 16px to 17.5px, scaling rem-based interface typography proportionally.
