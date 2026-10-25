@@ -40,8 +40,6 @@ class Settings(BaseSettings):
 
     # UK Public Legislative Data Sources
     parliament_bills_api_base_url: str = "https://bills-api.parliament.uk/api/v1"
-    legislation_gov_uk_base_url: str = "https://www.legislation.gov.uk"
-    gov_uk_content_api_base_url: str = "https://www.gov.uk/api/content"
 
     # Government Bill type ID in UK Parliament Bills API (1 = Government Bill)
     government_bill_type_id: int = 1

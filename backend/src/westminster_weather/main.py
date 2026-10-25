@@ -27,7 +27,6 @@ from westminster_weather.schemas.bills import (
     TrackedStageNodeSchema,
 )
 from westminster_weather.schemas.outlook import BillOutlook
-from westminster_weather.takeup.api import router as takeup_router
 
 app = FastAPI(
     title=settings.app_name,
@@ -46,7 +45,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(takeup_router)
 
 
 def _serialize_tracked_nodes(

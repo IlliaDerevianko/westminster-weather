@@ -369,21 +369,6 @@ Backtest results of any model, one row per forecast. Each model writes under its
 | `actual_ra_date` | DATE NULL | Actual Royal Assent date; `NULL` if the bill did not pass |
 | `created_at` | TIMESTAMP | When the row was written |
 
-### 6.6 `bill_outlooks`
-Presentation-ready outlook per bill in Parliament (`model/outlook.py`), computed from the passage model's simulated paths without changing its predictions: chance of law by deadlines (recesses, quarter ends, session end), weather status, weekly curve, pace and next milestone, with every sentence ready to show. Written by `uv run python -m westminster_weather.model.outlook_generate`; served by `GET /api/v1/bills/{bill_id}/outlook?target_date=YYYY-MM-DD` (computed on request). Forecasts use only data available on `forecast_date`; deadline chances are isotonic-recalibrated only when the backtest calibration check calls for it (fitted on training-era forecasts).
-| Column | Type | Notes |
-|---|---|---|
-| `bill_id` | INTEGER FK | Part of PK |
-| `forecast_date` | DATE | Part of PK; the `as_of` of the forecast |
-| `target_date` | DATE | Target date of the weather status (default: next recess at least 30 days away) |
-| `model_version` | TEXT | Passage model set and fit date + outlook version |
-| `weather_status` | TEXT | `sunny`, `partly_cloudy`, `rain` or `storm` |
-| `p_royal_assent` | REAL | Chance the bill ever becomes law |
-| `p_by_target` | REAL | Chance of Royal Assent on or before `target_date` |
-| `recalibrated` | BOOLEAN | Deadline chances isotonic-recalibrated |
-| `outlook` | JSON | Full `BillOutlook` (`schemas/outlook.py`) |
-| `generated_at` | TIMESTAMP | When the row was written |
-
 ---
 
 ## 7. Update cycle
