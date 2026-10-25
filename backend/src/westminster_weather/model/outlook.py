@@ -330,3 +330,94 @@ def curve_block(dist: Distribution) -> dict[str, Any]:
     else:
         sentence = f"Most likely by {m50:%B %Y}; very likely by {m90:%B %Y}."
     return {"points": points, "month_50": m50, "month_90": m90, "sentence": sentence}
+
+
+# -------------------------------------------------------------------------- 5. pace
+
+STAGE_NAMES = {
+    "commons_1st_reading": "Commons 1st reading",
+    "commons_2nd_reading": "Commons 2nd reading",
+    "commons_committee": "Commons committee stage",
+    "commons_report_stage": "Commons report stage",
+    "commons_3rd_reading": "Commons 3rd reading",
+    "lords_1st_and_2nd_reading": "Lords 1st and 2nd reading",
+    "lords_committee": "Lords committee stage",
+    "lords_report_and_3rd_reading": "Lords report and 3rd reading",
+    "ping_pong": "ping-pong",
+    "royal_assent": "Royal Assent",
+}
+
+
+def stage_name(state: str) -> str:
+    return STAGE_NAMES.get(state, state.replace("_", " "))
+
+
+def pace_block(
+    bill_id: int, as_of: date, trans_all: pd.DataFrame, bills: pd.DataFrame, dates: np.ndarray
+) -> dict[str, Any]:
+    """Sitting days from 1st reading to the bill's current stage, against bills that had
+    finished before ``as_of`` and reached the same stage (same originating House)."""
+    from westminster_weather.data.calendar import count_sitting_days
+
+    mine = trans_all[trans_all["bill_id"] == bill_id].sort_values("state_order")
+    first, current = mine.iloc[0], mine.iloc[-1]
+    state = current["model_state"]
+    base = {"current_stage": state, "current_stage_name": stage_name(state)}
+    if len(mine) == 1:
+        return {
+            **base,
+            "sitting_days_so_far": 0,
+            "typical_sitting_days": None,
+            "weeks_ahead_or_behind": None,
+            "pace_percentile": None,
+            "n_comparison_bills": 0,
+            "sentence": f"Just introduced ({stage_name(state)}): too early to compare its "
+            "pace with past bills.",
+        }
+    mine_days = count_sitting_days(dates, first["entered_date"], current["entered_date"])
+
+    done = bills[(bills["outcome"] != "in_progress") & (bills["outcome_date"] < as_of)]
+    peers = trans_all[
+        trans_all["bill_id"].isin(done["bill_id"])
+        & (trans_all["originating_house"] == current["originating_house"])
+    ]
+    starts = peers.sort_values("state_order").groupby("bill_id")["entered_date"].first()
+    reached = peers[peers["model_state"] == state].groupby("bill_id")["entered_date"].first()
+    peer_days = np.array([count_sitting_days(dates, starts[b], reached[b]) for b in reached.index])
+    if len(peer_days) < 10:
+        return {
+            **base,
+            "sitting_days_so_far": mine_days,
+            "typical_sitting_days": None,
+            "weeks_ahead_or_behind": None,
+            "pace_percentile": None,
+            "n_comparison_bills": len(peer_days),
+            "sentence": f"Too few past bills reached {stage_name(state)} to compare pace.",
+        }
+
+    typical = float(np.median(peer_days))
+    # sitting days per sitting week over the year before as_of
+    year = dates[
+        (dates > np.datetime64(as_of - timedelta(days=365), "D"))
+        & (dates <= np.datetime64(as_of, "D"))
+    ]
+    weeks_with_sittings = len({pd.Timestamp(d).isocalendar()[:2] for d in year}) or 1
+    per_week = max(len(year) / weeks_with_sittings, 1.0)
+    weeks = round((mine_days - typical) / per_week)
+    slower_than = float(np.mean(peer_days < mine_days))
+    if weeks > 0:
+        lead = f"Running {weeks} week{'s' if weeks != 1 else ''} behind a typical bill"
+    elif weeks < 0:
+        lead = f"Running {-weeks} week{'s' if weeks != -1 else ''} ahead of a typical bill"
+    else:
+        lead = "Running at the pace of a typical bill"
+    sentence = f"{lead} at {stage_name(state)} (slower than {pct(slower_than)} of past bills)."
+    return {
+        **base,
+        "sitting_days_so_far": mine_days,
+        "typical_sitting_days": typical,
+        "weeks_ahead_or_behind": weeks,
+        "pace_percentile": slower_than,
+        "n_comparison_bills": len(peer_days),
+        "sentence": sentence,
+    }
