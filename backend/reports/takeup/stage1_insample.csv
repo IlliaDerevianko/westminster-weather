@@ -1,0 +1,986 @@
+signal_id,topic,promised,pred_pi,pred_p52,pred_t50_weeks,pred_t10_weeks,pred_t90_weeks,verdict,real_bill,real_bill_date,real_weeks_to_bill,weeks_followed
+nlp-00001,National Insurance Contributions Bill,2006-01-09,0.41393927061792873,0.1424590877780453,96,7,217,uncertain,True,2007-11-12,97.0,1084
+nlp-00002,over the coming year to raise the education leaving age to 18,2006-01-12,0.4137929022457853,0.14239582514831373,96,7,217,uncertain,True,2009-11-19,202.0,1084
+nlp-00003:g-han-e9c31717-4acd-47a7-834a-1b297b28b82f-5,stronger Assembly with enhanced legislative powers,2006-01-23,0.4102473324788468,0.13955589655751902,97,7,217,uncertain,False,,,220
+nlp-00004,extend their availability,2006-01-30,0.3106402587174763,0.10026420199319944,104,8,219,unlikely,True,2007-11-15,94.0,1081
+nlp-00005:g-han-eb295c1a-f168-4e3c-b9aa-fcd46d5db85c-4,We will introduce the Bill,2006-02-07,0.2826152609781517,0.09002996397986972,105,8,221,unlikely,False,,,217
+nlp-00006,apprenticeships will be published,2006-02-09,0.40846217122268136,0.13850622933847948,97,8,217,uncertain,True,2007-11-28,94.0,1080
+nlp-00007,modernise the Housing Corporation's decision making arrangements as necessary,2006-02-14,0.4075423729253878,0.13777259237161962,99,8,217,uncertain,True,2008-12-04,147.0,1079
+nlp-00008,detail of the precept in planned amendments to the Northern Ireland rates,2006-03-13,0.4085366221799708,0.14089009932209734,97,8,218,uncertain,True,2009-02-23,155.0,1075
+nlp-00009:g-hanw-44598173-f495-4cc8-9d28-01a5ceb47f2c-11,Restructuring Probation,2006-03-30,0.4052024190131087,0.13757923757050144,98,9,218,uncertain,False,,,210
+nlp-00010:g-han-7c5ce378-9ac3-4877-b6c8-1d007015d791-56,if the voluntary approach proves ineffective,2006-05-04,0.3080738480537847,0.10154650017369853,102,9,219,unlikely,False,,,205
+nlp-00011:g-han-9ad210d5-7250-40d3-95c4-e2a6746ad3a7-3,irrespective of the Human Rights Act,2006-05-17,0.4044123823195904,0.13883793863006422,97,8,217,uncertain,False,,,203
+nlp-00012,Pensions Reform,2006-05-25,0.40253685183732796,0.1368482957357094,98,8,217,uncertain,True,2006-11-28,27.0,1065
+nlp-00013:g-hanw-0606122000020-1,draft Bill will be laid and published today,2006-06-12,0.30489870297107735,0.09899479493252542,104,8,224,unlikely,False,,,200
+nlp-00014,Child Support,2006-07-24,0.27493815102548064,0.1049535982334399,87,16,224,unlikely,True,2007-06-05,46.0,1056
+nlp-00015,"Draft Tribunals, Courts and Enforcement Bill",2006-07-25,0.20310523611176856,0.0752990481283249,91,16,225,unlikely,True,2006-11-16,17.0,1056
+nlp-00016,reflects the interests of everyone and provides a legal services market where,2006-10-09,0.21033398648381255,0.08240252857107613,79,6,218,unlikely,True,2006-11-23,7.0,1045
+nlp-00017:g-han-06111632000177-6,establish a single regulatory authority for tissue and embryos,2006-11-16,0.21665170834336087,0.08901404494524458,72,4,215,unlikely,False,,,177
+nlp-00018:g-han-0611209000018-17,"Communities and Local Government/Environment, Food and Rural Affairs",2006-11-20,0.290819873427365,0.12242658176783457,70,4,214,unlikely,False,,,177
+nlp-00019:g-han-06112153000153-36,pre-legislative scrutiny,2006-11-21,0.2154767049581681,0.08809020756371566,74,4,217,unlikely,False,,,176
+nlp-00020,will extend that free off-peak travel to anywhere in England from April,2006-11-21,0.2906812451190207,0.12231830445630983,70,4,214,unlikely,True,2006-11-27,1.0,1039
+nlp-00021:g-han-06120670000144-23,Rehabilitation of Offenders Act 1974: Reform,2006-12-06,0.19164975197156167,0.07613573441770026,77,7,218,unlikely,False,,,174
+nlp-00022,ensure that the progress that we have made for today’s pensioners is,2006-12-07,0.28557804576764684,0.11757097527645324,74,6,216,unlikely,True,2007-12-05,52.0,1037
+nlp-00023:g-hanw-06121825000113-4,Inheritance: Forfeiture Rule and Law of Succession,2006-12-18,0.18795346990657485,0.07277067149133361,80,8,219,unlikely,False,,,173
+nlp-00024:g-han-07010949000050-6,pre-legislative scrutiny,2007-01-09,0.21086207802523804,0.08447186038231778,76,4,217,unlikely,False,,,169
+nlp-00025,update the Human Fertilisation and Embryology Act during the current Session,2007-03-01,0.2052179803062929,0.08097707415932037,86,5,218,unlikely,True,2007-11-08,37.0,1025
+nlp-00026:g-han-07030262000677-3,clearly indicating that we are living up to our manifesto commitments,2007-03-02,0.27713246071423303,0.11266273783080591,80,4,217,unlikely,False,,,162
+nlp-00027,International Corruption (Bribery),2007-03-05,0.2767731076471042,0.11236231583625948,80,4,217,unlikely,True,2009-11-19,142.0,1024
+nlp-00028:g-hanw-07030649000011-19,Avoidance in Financial Products,2007-03-06,0.2766538314086426,0.11226234142359877,80,4,217,unlikely,False,,,161
+nlp-00029:g-han-07030793000688-0,House of Lords Reform,2007-03-07,0.20444739327364778,0.08064065666466179,86,5,219,unlikely,False,,,161
+nlp-00030,work with the insurance industry and others to ensure that if any,2007-03-07,0.27653463864237454,0.11216245004031553,80,4,217,unlikely,True,2009-04-24,112.0,1024
+nlp-00031,final Bill to Parliament in autumn this year,2007-03-13,0.2739093711437903,0.10948419166778733,84,6,218,unlikely,True,2007-11-14,36.0,1023
+nlp-00032:g-hanw-07040321000081-36,enable local authorities to offer equity loans to leaseholders,2007-03-29,0.19878817789544065,0.07541071576930855,90,7,221,unlikely,False,,,158
+nlp-00033:g-han-07042341000043-56,measure in the Bill extends the small and medium-sized enterprises R,2007-04-23,0.2703092050957753,0.10692845278772987,85,5,218,unlikely,False,,,155
+nlp-00034:g-han-07042634000035-0,provide a clear requirement for electors in polling stations to sign,2007-04-26,0.19935788053972683,0.07660208708948636,90,5,219,unlikely,False,,,154
+nlp-00035,Madam Deputy Speaker,2007-04-27,0.1794231611004026,0.06803265191939273,91,7,220,unlikely,False,,,154
+nlp-00036:g-han-07050377000025-52,Stem Cell Research,2007-05-03,0.1977573201376132,0.07529592356525526,91,7,219,unlikely,False,,,153
+nlp-00037,He has said that the draft Bill will be published,2007-05-22,0.19410067639393247,0.07189700953865724,94,7,225,unlikely,True,2009-07-20,113.0,1013
+nlp-00038:g-han-07062155000024-35,substantive Bill will be introduced,2007-06-21,0.1914640192135939,0.06971318688994846,96,5,227,unlikely,False,,,146
+nlp-00039:g-han-07070542000455-1,Essentially,2007-07-05,0.18873894036091038,0.06724787540774001,99,11,228,unlikely,False,,,144
+nlp-00040:g-han-07071867000261-22,raise the participation age to 18,2007-07-18,0.25102028921158837,0.08794816683844515,100,15,228,unlikely,False,,,142
+nlp-00041:g-han-07072567000031-3,Public Companies: Directors’ Remuneration,2007-07-25,0.24684189823138247,0.08351911628581436,102,17,228,unlikely,False,,,141
+nlp-00042:g-han-07072610000072-2,address the security of tenure issues that are of particular concern,2007-07-25,0.24684189823138247,0.08351911628581436,102,17,228,unlikely,False,,,141
+nlp-00043,Children in Care,2007-07-26,0.24675949400196184,0.08344354449702962,102,17,228,unlikely,True,2007-11-14,16.0,1004
+nlp-00044,draft defamation consultation and pre-legislative scrutiny in the first Session of this Parliament,2007-10-11,0.25525553747247903,0.09119281578822376,91,6,222,unlikely,True,2009-11-19,111.0,993
+nlp-00045:g-han-0711067000201-11,again,2007-11-06,0.25335566850357855,0.09047363437610247,96,5,221,unlikely,False,,,126
+nlp-00046:g-han-0711067000201-9,universal right,2007-11-06,0.25335566850357855,0.09047363437610247,96,5,221,unlikely,False,,,126
+nlp-00047:g-han-0711067000204-11,enable the transfer of unclaimed assets of financial institutions to pay,2007-11-06,0.25335566850357855,0.09047363437610247,96,5,221,unlikely,False,,,126
+nlp-00048,strengthen the enforcement of the national minimum wage and sanctions against failure,2007-11-06,0.25335566850357855,0.09047363437610247,96,5,221,unlikely,True,2007-11-08,1.0,989
+nlp-00049:g-han-0711067000204-7,end the free-for-all that left the passenger and the public behind,2007-11-06,0.25335566850357855,0.09047363437610247,96,5,221,unlikely,False,,,126
+nlp-00050:g-han-07110717000109-12,Rights and responsibilities,2007-11-07,0.20870234409074734,0.08475165877658006,74,4,218,unlikely,False,,,126
+nlp-00051,establish the regulator as part of an Education and Skills Bill in,2007-11-13,0.28034675815625365,0.11652560874886217,72,4,215,unlikely,False,,,125
+nlp-00052:g-han-07111351000037-9,but I cannot say,2007-11-13,0.18781433532839928,0.07537328787050099,76,5,219,unlikely,False,,,125
+nlp-00053:g-han-07120553000026-1,combat rape,2007-12-05,0.18334767084396697,0.07154701644563043,80,7,219,unlikely,False,,,122
+nlp-00054:g-han-07120570000164-54,draft Bill will be published in the spring,2007-12-05,0.20254195255686697,0.07960094076528149,80,7,219,unlikely,False,,,122
+nlp-00055,Criminal Justice Act 2003: Sentencing,2007-12-11,0.27151644714371825,0.10815380656592864,78,7,218,unlikely,False,,,121
+nlp-00056,consult on more detailed proposals,2007-12-12,0.27139814587838473,0.1080573379492007,78,7,218,unlikely,True,2008-10-07,43.0,984
+nlp-00057:g-han-0712174000124-2,following the consultation,2007-12-17,0.19879915212620672,0.07608932126400973,82,8,221,unlikely,False,,,121
+nlp-00058:g-han-08020693000042-1,principles of a civil service Act,2008-02-06,0.2662588847569688,0.10414591213189874,85,6,219,unlikely,False,,,113
+nlp-00059,thereafter,2008-02-19,0.2673021360599699,0.10551544216383635,86,5,219,unlikely,True,2008-02-19,1.0,974
+nlp-00060,simplify the immigration system and immigration law,2008-02-25,0.267457070139978,0.10625200570957034,85,5,219,unlikely,True,2009-01-14,47.0,973
+nlp-00061:g-han-08031240000156-146,work with the companies to take forward further action on a voluntary,2008-03-12,0.2637515907684879,0.10291203588953604,88,6,219,unlikely,False,,,108
+nlp-00062:g-han-08031240000156-272,impose a charge on them if we have not seen sufficient progress,2008-03-12,0.2637515907684879,0.10291203588953604,88,6,219,unlikely,False,,,108
+nlp-00063:g-han-0803197000005-29,underpin the tariff,2008-03-18,0.2616929332388182,0.10084886521216753,89,7,221,unlikely,False,,,107
+nlp-00064:g-han-08032678000393-16,We hope that retailers will do it by voluntary agreement,2008-03-26,0.25965110640824046,0.09886835636245521,90,7,221,unlikely,False,,,106
+nlp-00065:g-han-0805122000034-4,All of us would prefer voluntary solutions that are proportionate and balanced,2008-05-12,0.25637925369513315,0.09649543917734704,94,6,220,unlikely,False,,,100
+nlp-00066:g-han-08051449000167-20,Draft Legislative Programme,2008-05-14,0.25619419011099825,0.09632218617433003,94,6,220,unlikely,False,,,99
+nlp-00067:g-han-08063026000156-57,NHS Next Stage Review,2008-06-30,0.2481380834229436,0.088453024831155,100,11,228,unlikely,False,,,93
+nlp-00068:g-han-0806305000164-52,NHS: Next-stage Review,2008-06-30,0.2481380834229436,0.088453024831155,100,11,228,unlikely,False,,,93
+nlp-00069:g-han-080701122000131-21,these aspects,2008-07-01,0.18243655067589892,0.06329171928432614,104,12,229,unlikely,False,,,92
+nlp-00070,will subsume the contents of this Bill and enable full parliamentary scrutiny,2008-07-04,0.03147483564750544,0.010126063746516369,115,16,231,unlikely,True,2008-07-04,1.0,954
+nlp-00071:g-han-08071780000383-23,strengthen the democratic link with the public by introducing local,2008-07-17,0.24291254884856459,0.08260621149157238,105,16,229,unlikely,False,,,90
+nlp-00072:g-han-08100731000116-23,cannabis and we are trying to ensure that the reclassification takes place,2008-10-07,0.24722555250206124,0.08589609636701821,101,7,223,unlikely,False,,,78
+nlp-00073:g-han-08100877000128-10,if necessary to stop the practice of discriminating against those on pre-payment,2008-10-08,0.24715230523913745,0.0858184828478515,101,7,223,unlikely,False,,,78
+nlp-00074:g-han-08100877000913-25,improve the education and training of children in custody we have made,2008-10-08,0.1817396818118663,0.06143571509389666,106,7,224,unlikely,False,,,78
+nlp-00075:g-hanw-08101536000023-8,announced in the draft legislative programme,2008-10-15,0.18213806529499332,0.062174125054312954,105,6,223,unlikely,False,,,77
+nlp-00076:g-han-08110475000091-44,in line with the judgment in a way that trade unions can,2008-11-04,0.18063222130754,0.06088643121120706,106,6,223,unlikely,False,,,74
+nlp-00077:g-han-08111982000165-3,In addition,2008-11-19,0.2435758336161601,0.08297353566399279,105,8,223,unlikely,False,,,72
+nlp-00078:g-han-08120816000034-8,create the new SFA,2008-12-08,0.2663218739663498,0.10467871783809334,81,7,220,unlikely,False,,,70
+nlp-00079:g-han-08120966000130-22,full draft simplification Bill later in the Session,2008-12-09,0.19643924868119977,0.07509944421538006,84,7,221,unlikely,False,,,69
+nlp-00080:g-han-08121022000140-2,right for those with disabilities who want to do so to control,2008-12-10,0.19635377225881967,0.07503116731149068,84,7,221,unlikely,False,,,69
+nlp-00081:g-han-08121022000145-1,basis in the near future,2008-12-10,0.19635377225881967,0.07503116731149068,84,7,221,unlikely,False,,,69
+nlp-00082:g-han-08121022000156-68,We will bring forward legislation,2008-12-10,0.26610096318574494,0.10449167594517907,81,7,220,unlikely,False,,,69
+nlp-00083:g-han-08121022000156-72,disabled people to have the right to exercise choice and control over,2008-12-10,0.26610096318574494,0.10449167594517907,81,7,220,unlikely,False,,,69
+nlp-00084:g-han-08121025000076-66,We will bring forward legislation,2008-12-10,0.26610096318574494,0.10449167594517907,81,7,220,unlikely,False,,,69
+nlp-00085:g-han-08121141000459-129,heritage protection Bill is in a good state of readiness for introduction,2008-12-11,0.1962683769198441,0.07496294984722843,84,7,221,unlikely,False,,,69
+nlp-00086:g-han-08121143000277-7,was the subject of yesterday’s statement by the Secretary of State,2008-12-11,0.2659906512311583,0.1043982726712167,81,7,220,unlikely,False,,,69
+nlp-00087:g-han-08121548000048-4,at an early opportunity to put that change of name into law,2008-12-15,0.19476634134966683,0.07353327937895944,86,8,221,unlikely,False,,,69
+nlp-00088:g-han-08121664000008-74,Sutherland Inquiry,2008-12-16,0.19468278261542749,0.07346636688711346,86,8,221,unlikely,False,,,68
+nlp-00089:g-han-08121682000105-25,if Ofgem does not get the changes it needs through,2008-12-16,0.26394179715386434,0.10234857632721109,82,7,220,unlikely,False,,,68
+nlp-00090:g-han-08121690000115-27,in our fourth Session education and skills Bill,2008-12-16,0.19468278261542749,0.07346636688711346,86,8,221,unlikely,False,,,68
+nlp-00091:g-han-08121767000097-49,it will be seen that a duty of partnership will be laid,2008-12-17,0.1945992938676056,0.07339951275800768,91,8,221,unlikely,False,,,68
+nlp-00092:g-han-0901201000141-3,give qualifying businesses the facility to pay their backdated liability for previous,2009-01-19,0.26360175230052507,0.10135476718913287,86,5,218,unlikely,False,,,64
+nlp-00093:g-han-09012244000131-5,do so,2009-01-22,0.26328629552226707,0.10108272090493493,86,5,218,unlikely,False,,,63
+nlp-00094:g-hanw-09012750000015-0,prevent a recent decision of the High Court from affecting the tax,2009-01-27,0.2620232905827547,0.09993729847526107,87,6,219,unlikely,False,,,62
+nlp-00095:g-hanw-09012750000015-9,together with draft explanatory notes and full background material will be published,2009-01-27,0.19320068011720523,0.07170921962907739,93,6,221,unlikely,False,,,62
+nlp-00096:g-han-09012857000337-24,Heathrow (Third Runway),2009-01-28,0.2619199907483994,0.09984773594165987,87,6,219,unlikely,False,,,62
+nlp-00097:g-han-0902232000201-8,build on the work that now involves pretty much all secondary schools,2009-02-23,0.2620151766605928,0.10123431989683038,89,5,220,unlikely,False,,,59
+nlp-00098:g-han-090310128000072-30,will take longer than we might want,2009-03-10,0.19050000492265193,0.0700917822789396,94,7,222,unlikely,False,,,56
+nlp-00099:g-hanw-09031888000013-10,extending the range of fraud victims who will be eligible for compensation,2009-03-18,0.2563602250856857,0.09553038323802032,93,7,221,unlikely,False,,,55
+nlp-00100:g-hanw-09031977000030-1,stop individuals exploiting these provisions for the purposes of tax avoidance,2009-03-19,0.25626589657996857,0.09544454882705004,93,7,221,unlikely,False,,,55
+nlp-00101:g-hanw-09040165000022-12,will prevent income tax loss relief from being available from transactions on,2009-04-01,0.2529425674853603,0.09219073882995567,97,8,222,unlikely,False,,,53
+nlp-00102:g-han-09051355000001-6,It is absolutely right that we should do something about this in,2009-05-13,0.18492195141055057,0.06531661609230298,101,7,227,unlikely,False,,,47
+nlp-00103:g-han-0905182000002-1,provide additional protection for tenants caught in this situation and we will,2009-05-18,0.18348586475176867,0.06389280535686769,103,7,227,unlikely,False,,,47
+nlp-00104:g-han-09060438000241-55,require internet service providers to inform their subscribers,2009-06-04,0.25050889004740234,0.09125372331222872,99,5,229,unlikely,False,,,44
+nlp-00105:g-han-0906294000153-40,Building Britain's Future,2009-06-29,0.24359531198399664,0.08342936754756139,104,11,229,unlikely,False,,,41
+nlp-00106:g-han-09063049000191-7,make the pupil and parent guarantee statutory,2009-06-30,0.24352076739364042,0.08335388394171424,104,11,229,unlikely,False,,,40
+nlp-00107:g-han-09070881000157-13,introduce a national money guidance service and impose a levy on,2009-07-08,0.24108174321848844,0.08071358837678089,105,15,229,unlikely,False,,,39
+nlp-00108:g-han-09070995000144-3,It is right that we need to get on with it,2009-07-09,0.17702806052106193,0.057682289446929706,108,16,230,unlikely,False,,,39
+nlp-00109:g-han-09071559000176-58,increase the amount spent,2009-07-15,0.2392595818415432,0.07880105374469598,107,16,229,unlikely,False,,,38
+nlp-00110:g-hanw-09071651000127-9,Today I am reconfirming the Government’s policy that all new homes will,2009-07-16,0.2391901943294635,0.07872956451947213,107,16,229,unlikely,False,,,38
+nlp-00111:g-hanw-09072146000059-1,prevent tax avoidance through the transfer of an entitlement to benefit from,2009-07-21,0.23557925375044006,0.0744995246692135,114,18,230,unlikely,False,,,37
+nlp-00112,We remain committed to legislating,2009-10-15,0.24337651268706692,0.08235700974144791,106,6,223,unlikely,False,,,25
+nlp-00113:g-han-09102082000028-12,allowing full debate and scrutiny of the issue in both Houses,2009-10-20,0.17804913582968512,0.05797818221484832,108,6,224,unlikely,False,,,24
+nlp-00114,amending the relevant DTR anti-avoidance provision,2009-10-21,0.242277839624565,0.08097703760672902,106,6,223,unlikely,True,2009-11-19,5.0,887
+nlp-00115:g-hanw-09102128000032-17,effect that to the extent any distribution treated as paid by,2009-10-21,0.242277839624565,0.08097703760672902,106,6,223,unlikely,False,,,24
+nlp-00116,Independent Commission on Banking,2009-11-03,0.24138801159921727,0.08019360183079,106,6,223,unlikely,False,,,22
+nlp-00117,mandatory social price support,2009-11-05,0.177218679297104,0.05725170473681766,108,6,224,unlikely,True,2009-11-19,3.0,885
+nlp-00118:g-hanw-0911094000038-19,remove accountancy mismatches in the application of the gateway test to ensure,2009-11-09,0.24054496321742636,0.079212838948055,107,6,223,unlikely,False,,,22
+nlp-00119:g-hanw-0911094000038-20,put beyond doubt that preference shares are excluded from the relevant liabilities,2009-11-09,0.24054496321742636,0.079212838948055,107,6,223,unlikely,False,,,22
+nlp-00120:g-hanw-0911094000038-21,extend the definition of “financial instrument” to include all derivatives,2009-11-09,0.24054496321742636,0.079212838948055,107,6,223,unlikely,False,,,22
+nlp-00121:g-hanw-0911094000038-24,allowing companies to elect that no debt cap disallowance is allocated,2009-11-09,0.24054496321742636,0.079212838948055,107,6,223,unlikely,False,,,22
+nlp-00122:g-hanw-0911094000038-31,clarify what is meant by “ancillary costs” relating to amounts borrowed,2009-11-09,0.24054496321742636,0.079212838948055,107,6,223,unlikely,False,,,22
+nlp-00123:g-hanw-0911094000038-32,deal with the case where external borrowing is undertaken by a partnership,2009-11-09,0.24054496321742636,0.079212838948055,107,6,223,unlikely,False,,,22
+nlp-00124:g-hanw-0911094000038-34,ensure that certain partnerships,2009-11-09,0.24054496321742636,0.079212838948055,107,6,223,unlikely,False,,,22
+nlp-00125,Employees’ Rights,2009-11-12,0.2403585927828113,0.07899750614021436,107,6,223,unlikely,False,,,21
+nlp-00126:g-han-09111813000096-50,strengthen governance in the financial sector and to deal with excessive bank,2009-11-18,0.2394358926011469,0.07800991088923737,107,9,224,unlikely,False,,,20
+nlp-00127:g-han-09111813000096-51,enshrining in law the objective to halve the current deficit,2009-11-18,0.2394358926011469,0.07800991088923737,107,9,224,unlikely,False,,,20
+nlp-00128:g-han-09111813000096-58,support carbon capture and storage,2009-11-18,0.2394358926011469,0.07800991088923737,107,9,224,unlikely,False,,,20
+nlp-00129,gang crime,2009-11-18,0.2394358926011469,0.07800991088923737,107,9,224,unlikely,False,,,20
+nlp-00130:g-hanw-09111938000012-2,in December and will include provisions,2009-11-19,0.2643630948971179,0.10131479260364233,82,5,219,unlikely,False,,,20
+nlp-00131:g-han-09112315000059-92,second Bill in the trial of the new procedure in this House,2009-11-23,0.2629155363259195,0.09989410686024076,83,7,219,unlikely,False,,,20
+nlp-00132:g-han-09112466000018-124,I say to the noble Lord,2009-11-24,0.26281372969767286,0.09980514693887747,83,7,219,unlikely,False,,,19
+nlp-00133,animal health and welfare,2009-11-24,0.19381063305431664,0.07161210441596547,86,8,221,unlikely,False,,,19
+nlp-00134:g-hanw-09112432001154-8,follows my Statement in July,2009-11-24,0.26281372969767286,0.09980514693887747,83,7,219,unlikely,False,,,19
+nlp-00135:g-han-09120134000145-91,Through the new mandatory code for alcohol retailing,2009-12-01,0.2598830113862098,0.09667737455907985,85,8,220,unlikely,False,,,18
+nlp-00136:g-han-09121058000142-1,before the end of the current Session of Parliament to put,2009-12-10,0.2573233753590797,0.0940670085567155,92,9,221,unlikely,False,,,17
+nlp-00137:g-han-0912147000152-4,If legislation is necessary,2009-12-14,0.2546858049637076,0.0911923997538724,97,9,221,unlikely,False,,,17
+nlp-00138:g-han-09121662000152-7,ensure that people are domiciled,2009-12-16,0.25450002296468016,0.09103104400413063,97,9,221,unlikely,False,,,16
+nlp-00139:g-han-1001053000340-76,in this Parliament to ensure that Members of Parliament are taxed in,2010-01-05,0.19122582391915033,0.06987104013313582,95,6,221,unlikely,False,,,13
+nlp-00140:g-hanw-1001052000029-12,appropriate provision will be included in a suitable Bill,2010-01-05,0.17298315939286776,0.06276667505472008,96,6,221,unlikely,False,,,13
+nlp-00141:g-han-10012163000323-34,responsibility and cost-sharing will be published soon,2010-01-21,0.1913594245865384,0.0703247730035185,95,6,221,unlikely,False,,,11
+nlp-00142,Pension Schemes and Equality,2010-01-28,0.17160669151259678,0.06173615983066206,97,6,222,unlikely,False,,,10
+nlp-00143:g-hanw-10020381000039-24,We remain committed to legislating,2010-02-03,0.18878269590440566,0.06791203139346674,97,6,222,unlikely,False,,,9
+nlp-00144:g-hanw-10020973000027-48,complete bar on placing these products,2010-02-09,0.1880469922848031,0.06732727477774265,97,6,222,unlikely,False,,,8
+nlp-00145:g-han-1002234000013-33,publish the Government’s response to the consultation,2010-02-22,0.18866489708473472,0.06825494841752114,96,6,222,unlikely,False,,,7
+nlp-00146:g-han-10022468000098-15,from the recommendations of the recent reviews by Anna Walker and Professor,2010-02-24,0.18852927872308012,0.06813568123257309,96,6,222,unlikely,False,,,6
+nlp-00147,more permanent legislation that will establish the asset-freezing regime in primary legislation,2010-03-08,0.18839354106368228,0.0683684862166205,98,7,222,unlikely,False,,,5
+nlp-00148:g-han-100323100000077-5,Assembly in the autumn,2010-03-23,0.2516300167946098,0.0910187823166363,98,7,222,unlikely,False,,,2
+nlp-00149,recall mechanism,2010-03-23,0.18518357746964592,0.06521364715324492,102,8,223,unlikely,False,,,2
+nlp-00150:g-han-10040743000226-12,after the election to confirm the existing new rate,2010-04-07,0.24850291285547157,0.08792785205699885,101,8,222,unlikely,False,,,0
+nlp-00151:g-han-10052721000015-43,roll back the state,2010-05-27,0.30663333252588165,0.1282447969576563,78,6,214,unlikely,False,,,731
+nlp-00152:g-han-10052721000015-46,five-year,2010-05-27,0.30663333252588165,0.1282447969576563,78,6,214,unlikely,False,,,731
+nlp-00153:g-han-10060911000033-18,ensure that councillors are not prevented from speaking up on issues on,2010-06-08,0.3073394858803944,0.12947117321077442,76,4,213,unlikely,False,,,729
+nlp-00154:g-han-10061517000120-6,Government have been clear about what we intend to propose in legislation,2010-06-15,0.30477801532869114,0.1271078311774485,77,4,213,unlikely,False,,,728
+nlp-00155:g-han-10061670000422-7,in the autumn that will give teachers the right to remove disruptive,2010-06-16,0.3046310968810766,0.12699573671181494,77,4,213,unlikely,False,,,728
+nlp-00156:g-han-100617118000002-22,create a Prudential Regulation Authority,2010-06-17,0.3044842712927701,0.12688373350375742,77,4,213,unlikely,False,,,728
+nlp-00157:g-han-10062245000115-3,not agree to any further transfer of powers from this Parliament,2010-06-22,0.30234687604423743,0.12490595301596474,78,4,213,unlikely,False,,,727
+nlp-00158,listen and adapt our proposals,2010-06-29,0.30011718611706356,0.12295422739623825,81,4,219,unlikely,True,2012-06-27,105.0,851
+nlp-00159,referendum on the alternative vote,2010-07-01,0.2998322996560614,0.12273691705783932,81,4,219,unlikely,True,2010-07-22,4.0,851
+nlp-00160:g-han-10071241000661-10,effect in any event,2010-07-12,0.2939372250651105,0.11682311911335427,84,11,223,unlikely,False,,,724
+nlp-00161,Defamation Bill that will address many of these problems,2010-07-15,0.21770110331271827,0.08383056775972317,88,11,224,unlikely,True,2011-06-21,49.0,849
+nlp-00162:g-han-10072611000299-13,strengthen the democratic link with the public by introducing local,2010-07-26,0.2854025128607696,0.10757302336039885,89,16,224,unlikely,False,,,722
+nlp-00163,early in 2011 in the energy Bill,2010-07-27,0.21124680559045575,0.0772116186677794,93,17,225,unlikely,True,2010-12-08,20.0,847
+nlp-00164:g-han-1009066000287-1,first time in decades,2010-09-06,0.21868740945117823,0.0847185034319637,82,8,219,unlikely,False,,,716
+nlp-00165,reform police authorities,2010-09-08,0.29451768916027143,0.11751678841262356,79,8,217,unlikely,True,2013-05-09,140.0,841
+nlp-00166:g-han-10091432000072-2,ensure that any subsequent future treaty that proposes to transfer such competence,2010-09-14,0.29100623017467664,0.11378793653475798,80,9,218,unlikely,False,,,715
+nlp-00167,implement individual registration in 2014,2010-09-15,0.29087411679024416,0.11368677912173168,80,9,218,unlikely,True,2012-05-10,87.0,840
+nlp-00168,such as the measures on national insurance,2010-10-28,0.292792978056337,0.11724901594463932,77,5,214,unlikely,True,2014-07-17,195.0,834
+nlp-00169:g-han-10111631000065-13,Interim Report: Leader's Group on Members Leaving the House,2010-11-16,0.2146144459308601,0.08261345123171883,83,5,218,unlikely,False,,,706
+nlp-00170:g-han-1011172000062-8,bring it into force,2010-11-16,0.28958319942212135,0.11485585940512884,79,4,216,unlikely,False,,,706
+nlp-00171:g-han-10121539000117-27,Standards and Privileges,2010-12-15,0.2808291675804296,0.10650129273635614,84,7,217,unlikely,False,,,702
+nlp-00172:g-hanw-10121649000065-0,in the Finance Bill 2011 to create an exemption from income tax,2010-12-16,0.2807111747764851,0.10640620552550843,84,7,217,unlikely,False,,,702
+nlp-00173:g-hanw-1012204000477-29,Voting Entitlement,2010-12-20,0.27874286027761197,0.10441285281979679,91,8,218,unlikely,False,,,701
+nlp-00174,specific effect in a future communications data Bill,2011-01-26,0.2773420922749602,0.10497147568143726,91,6,216,unlikely,True,2014-11-26,201.0,821
+nlp-00175,in the Finance Bill 2011 to remove the exemption and replace it,2011-01-31,0.27604465288605645,0.10381933492205692,92,6,216,unlikely,True,2015-11-19,251.0,820
+nlp-00176:g-han-11020962001201-4,I said in my statement,2011-02-09,0.2745879943487803,0.10264284357755009,92,6,216,unlikely,False,,,694
+nlp-00177:g-han-11021765000179-1,Departmental Responsibilities,2011-02-17,0.20162232447112877,0.07257705412377047,96,7,219,unlikely,False,,,693
+nlp-00178,scrutinised in the usual way,2011-03-02,0.2756055892419526,0.1045332198010379,91,5,217,unlikely,True,2011-05-23,12.0,816
+nlp-00179,Bill of Rights,2011-03-17,0.2009302947657561,0.0727270171060464,97,7,219,unlikely,True,2014-01-23,150.0,814
+nlp-00180:g-han-11032134000030-1,Committee well knows,2011-03-21,0.19952865187986657,0.07137424299979812,98,8,220,unlikely,False,,,688
+nlp-00181:g-hanw-1103211000068-21,Drink and Drug-driving,2011-03-21,0.19952865187986657,0.07137424299979812,98,8,220,unlikely,False,,,688
+nlp-00182:g-han-1103245000101-17,I am sure that noble Lords will understand that I cannot give,2011-03-23,0.18044085393152712,0.06400535561623971,99,8,220,unlikely,False,,,688
+nlp-00183:g-han-11032944000041-5,West Lothian Question,2011-03-29,0.1979750501390119,0.069949371892942,99,8,220,unlikely,False,,,687
+nlp-00184:g-han-11032949000172-3,Justice: Civil Litigation Reform,2011-03-29,0.1979750501390119,0.069949371892942,99,8,220,unlikely,False,,,687
+nlp-00185:g-han-11051950000280-0,0,2011-05-19,0.19521209627440658,0.06799277074087572,100,7,219,unlikely,False,,,680
+nlp-00186:g-han-11051950000280-7,first day back,2011-05-19,0.264630924937333,0.09484030998519802,96,7,218,unlikely,False,,,680
+nlp-00187:g-han-1106061000058-6,show how we are putting in place a proper system of financial,2011-06-06,0.19493293460660155,0.06715970071674106,101,5,224,unlikely,False,,,677
+nlp-00188:g-han-11061453000407-2,stop precisely that distortion and that favouritism to the private sector,2011-06-14,0.2615764027979454,0.09187920753662279,98,5,223,unlikely,False,,,676
+nlp-00189:g-han-11061453000419-0,ensure a level playing field,2011-06-14,0.2615764027979454,0.09187920753662279,98,5,223,unlikely,False,,,676
+nlp-00190:g-han-11061639000169-1,telling people that if they do not co-operate in bringing forward measures,2011-06-16,0.2614017799228601,0.09171637302856847,98,5,223,unlikely,False,,,676
+nlp-00191,Electricity Market Reform,2011-07-12,0.25417036053852293,0.08437145721286396,103,16,226,unlikely,True,2012-11-29,73.0,797
+nlp-00192:g-han-11071354000836-17,Fixed Term Parliaments…We will let the people decide how to reform our,2011-07-13,0.25409297446786494,0.08430166456177184,103,16,226,unlikely,False,,,672
+nlp-00193,at a United Kingdom level,2011-09-06,0.25657997759612644,0.0852022790039189,98,10,222,unlikely,True,2015-05-28,195.0,789
+nlp-00194:g-hanw-11091565000035-0,clarify the corporation tax treatment of manufactured overseas dividends,2011-09-15,0.2530643900917226,0.08238484457033474,104,10,221,unlikely,False,,,663
+nlp-00195:g-han-11101946000087-1,Donations (Political Parties),2011-10-19,0.2568777653534977,0.08636920512777178,99,6,218,unlikely,False,,,658
+nlp-00196:g-han-11112448000404-57,we will need to take the Law Commission report as our foundation,2011-11-24,0.18610038883523525,0.05970971970196214,106,8,223,unlikely,False,,,653
+nlp-00197:g-han-11112943000216-7,Park Homes,2011-11-29,0.2516394568555026,0.08228607221365987,104,8,222,unlikely,False,,,652
+nlp-00198,Draft Legislation for Finance Bill 2012 and Tax Policy Update,2011-12-06,0.25022471959188863,0.08089833207813088,105,9,222,unlikely,True,2012-03-26,16.0,776
+nlp-00199:g-hanw-11120641000052-6,ensure that all premiums payable by corporate members of Lloyd’s in respect,2011-12-06,0.25022471959188863,0.08089833207813088,105,9,222,unlikely,False,,,651
+nlp-00200:g-han-11121580000499-2,implement them,2011-12-15,0.24843623073882032,0.07909884558167345,105,9,222,unlikely,False,,,650
+nlp-00201:g-han-11121580000499-8,do them anyway,2011-12-15,0.24843623073882032,0.07909884558167345,105,9,222,unlikely,False,,,650
+nlp-00202:g-hanw-1112191000092-4,publish a Green Paper alongside,2011-12-19,0.18174097223350213,0.05563172057256556,109,11,223,unlikely,False,,,649
+nlp-00203:g-hanw-11122042000042-5,Skills Funding and the Skills Funding Agency (Chief Executive),2011-12-20,0.16426877101950216,0.04990550168489823,110,11,224,unlikely,False,,,649
+nlp-00204:g-hanw-12011044000021-21,formally close down the Audit Commission and introduce the new framework,2012-01-10,0.18454112936063502,0.05823002123989631,106,8,222,unlikely,False,,,646
+nlp-00205:g-hanw-12011281000022-4,in Finance Bill 2012 to prevent post-cessation trade relief being given where,2012-01-12,0.250686630979996,0.0813050411786076,105,7,221,unlikely,False,,,646
+nlp-00206:g-han-12020240000429-2,it will be accompanied by a consultation document,2012-02-02,0.18156595284229735,0.05603089697596169,108,8,223,unlikely,False,,,643
+nlp-00207:g-hanw-1202064000025-28,make attendance at a mediation information and assessment meeting compulsory,2012-02-06,0.24646103463842187,0.07806247433070565,106,8,223,unlikely,False,,,642
+nlp-00208:g-han-12020955000028-17,Friend the Member for Maldon,2012-02-09,0.24631188738895782,0.07794365441564534,106,8,223,unlikely,False,,,642
+nlp-00209:g-han-12030640000097-24,follow this by bringing forward legislation,2012-03-06,0.18198028816173772,0.05728260052119254,107,9,224,unlikely,False,,,638
+nlp-00210,Development Assistance,2012-03-14,0.16339810298687665,0.05036914543767563,108,10,224,unlikely,True,2016-11-16,245.0,762
+nlp-00211:g-han-12032051000146-0,Joint Committee that is examining our draft Bill is in the final,2012-03-20,0.17980451668041775,0.055254093784570954,109,10,224,unlikely,False,,,636
+nlp-00212:g-han-12032154000222-24,limited to relaxing the Sunday trading laws for eight Sundays only,2012-03-21,0.24459304107659066,0.07725953005533097,106,10,223,unlikely,False,,,636
+nlp-00213:g-han-12032371000194-26,support the roll-out of these schemes nationwide should they prove successful,2012-03-23,0.24368624840433606,0.07638384136826375,107,11,223,unlikely,False,,,635
+nlp-00214:g-han-12032816000029-24,I said in my opening remarks,2012-03-27,0.17895383518443067,0.05451389274416466,109,11,224,unlikely,False,,,635
+nlp-00215:g-han-1203286000009-45,Parliament to get its teeth into,2012-03-27,0.17895383518443067,0.05451389274416466,109,11,224,unlikely,False,,,635
+nlp-00216:g-han-12032871000068-15,in this area,2012-03-28,0.17892320169970324,0.05449295135638258,109,11,224,unlikely,False,,,635
+nlp-00217:g-hanw-12042539000012-4,close the Commission and implement the new audit framework,2012-04-25,0.180170245922674,0.05602987376351803,108,9,223,unlikely,False,,,631
+nlp-00218:g-han-12050914000218-2,register of lobbyists,2012-05-09,0.24416569589528386,0.07736333544280279,106,9,227,unlikely,False,,,629
+nlp-00219:g-han-12051029000069-5,before the summer recess,2012-05-10,0.2836044883168194,0.11869731767613237,78,5,216,unlikely,False,,,629
+nlp-00220:g-han-12051031000008-8,"Once we have agreed the way forward, we will bring forward legislation when parl",2012-05-10,0.1901417856352412,0.07681190685479805,81,6,218,unlikely,False,,,629
+nlp-00221:g-han-120515106000121-1,Many Members have raised the question of the legislation,2012-05-15,0.1883876580443803,0.07547775502535896,82,6,218,unlikely,False,,,628
+nlp-00222,children and families Bill that will help all parents and remove some,2012-05-15,0.2811504670658052,0.11668421109121878,79,6,216,unlikely,True,2013-02-04,38.0,753
+nlp-00223:g-han-12051582000062-66,ensure that community sentences punish more effectively and rehabilitate more fully,2012-05-15,0.2811504670658052,0.11668421109121878,79,6,216,unlikely,False,,,628
+nlp-00224:g-han-1205161000077-115,is a matter that we will have to consider very carefully,2012-05-15,0.1883876580443803,0.07547775502535896,82,6,218,unlikely,False,,,628
+nlp-00225,statement will be laid within the two-month period specified in the Act,2012-05-17,0.18820123559913454,0.07534059778073096,82,6,218,unlikely,True,2012-10-18,23.0,753
+nlp-00226,Royal Succession,2012-05-22,0.18647427156595273,0.07375774804362253,85,6,218,unlikely,True,2012-12-13,30.0,752
+nlp-00227:g-han-12052232000078-3,going to take to publish a White Paper,2012-05-22,0.2059525851810557,0.08204926397034064,83,6,218,unlikely,False,,,627
+nlp-00228:g-han-12052232000080-8,going to look at those consultation responses,2012-05-22,0.278470978487014,0.11408687774963303,80,6,216,unlikely,False,,,627
+nlp-00229:g-han-12052237000137-21,modernise adult care and support in England,2012-05-22,0.2059525851810557,0.08204926397034064,83,6,218,unlikely,False,,,627
+nlp-00230:g-han-12061447000006-5,continue to push for this recommendation to be adopted by the European,2012-06-14,0.20435506884149446,0.08101068222117766,84,4,222,unlikely,False,,,624
+nlp-00231:g-hanw-12061433000041-7,work closely with business organisations and other interested stakeholders throughout this process,2012-06-14,0.18500993996880527,0.07282022911433983,85,4,223,unlikely,False,,,624
+nlp-00232,Women (Global Economy),2012-06-26,0.1822681155617667,0.07049608614830008,88,5,226,unlikely,True,2016-07-05,211.0,747
+nlp-00233:g-han-12062683000022-3,very clear that we will be delivering our commitment to allocate 0,2012-06-26,0.27256296097416244,0.10914872404791066,83,4,222,unlikely,False,,,622
+nlp-00234:g-han-12070210000461-2,LIBOR (FSA Investigation),2012-07-02,0.27045009860944025,0.10715770311348534,84,10,225,unlikely,False,,,621
+nlp-00235:g-han-120704105000011-51,publish a progress report on funding,2012-07-04,0.1995415229849903,0.07684103456067427,88,10,226,unlikely,False,,,621
+nlp-00236,Public Service Pensions,2012-07-04,0.27021401575044124,0.1069665243121905,84,10,225,unlikely,True,2012-09-13,11.0,746
+nlp-00237:g-han-12070562000135-2,Circus Animals,2012-07-05,0.19945010485712836,0.0767712467164901,88,10,226,unlikely,False,,,621
+nlp-00238:g-han-12070562000387-4,If implementing our vision of reserves requires legislation,2012-07-05,0.27009612142085054,0.10687105478133946,84,10,225,unlikely,False,,,621
+nlp-00239:g-han-12071139000252-2,not reiterate what I said in response to the Chair,2012-07-11,0.19692761027430908,0.07429258026798186,90,14,227,unlikely,False,,,620
+nlp-00240:g-han-12071258000497-1,in the longer term,2012-07-12,0.19683889729317677,0.0742250095535802,90,14,227,unlikely,False,,,620
+nlp-00241:g-hanw-12071338000262-79,extend landlords’ powers to seek possession where a tenant or member,2012-07-13,0.19516669058878708,0.07225457840491425,93,15,227,unlikely,False,,,619
+nlp-00242:g-han-12102924000023-47,accompanying Explanatory Notes will be published this afternoon,2012-10-29,0.19593197635533321,0.07390741623160178,85,5,220,unlikely,False,,,604
+nlp-00243,extend the right to request flexible working to all employees,2012-11-22,0.2624964038852364,0.10049229967293431,84,5,220,unlikely,True,2017-06-28,240.0,726
+nlp-00244:g-hanw-12112235000084-12,"Subject to the outcome of the consultation, we intend to legislate as soon as pa",2012-11-22,0.19356463684917732,0.07211178828593404,87,5,221,unlikely,False,,,601
+nlp-00245,Bank of England,2012-11-26,0.26096706945646897,0.09895221060128476,85,7,220,unlikely,True,2015-10-14,151.0,725
+nlp-00246:g-han-12113046000581-3,Government are committed to doing,2012-11-30,0.19109254076114274,0.06974093948465884,97,7,222,unlikely,False,,,599
+nlp-00247:g-han-1212108000183-0,Following the Government’s consultation,2012-12-10,0.18909969600145,0.06782484497213005,98,8,222,unlikely,False,,,598
+nlp-00248:g-hanw-12121148000030-23,temporarily increase the AIA limit on qualifying expenditure that effectively receives 100%,2012-12-11,0.2566181177402251,0.09452344084779471,93,8,221,unlikely,False,,,598
+nlp-00249:g-hanw-12121148000030-32,ensure that,2012-12-11,0.2566181177402251,0.09452344084779471,93,8,221,unlikely,False,,,598
+nlp-00250:g-hanw-12121148000030-35,prevent a potential loss of tax by amending the new CFC rules,2012-12-11,0.2566181177402251,0.09452344084779471,93,8,221,unlikely,False,,,598
+nlp-00251:g-hanw-12121148000030-4,ensure that only the financing expenses and financing income-related to treasury activities,2012-12-11,0.2566181177402251,0.09452344084779471,93,8,221,unlikely,False,,,598
+nlp-00252:g-hanw-12121148000030-43,amend section 236,2012-12-11,0.2566181177402251,0.09452344084779471,93,8,221,unlikely,False,,,598
+nlp-00253:g-hanw-12121963000613-2,clarify the law and to provide certainty by preventing the avoidance,2012-12-19,0.1874082200872055,0.06622283025324371,100,8,222,unlikely,False,,,597
+nlp-00254:g-han-13012438000172-1,Friend the Under-Secretary said in the debate on a private Member’s Bill,2013-01-24,0.18739784353196046,0.06664680217694972,98,6,222,unlikely,False,,,592
+nlp-00255,first phase in this Parliament and legislate for the second,2013-01-28,0.2535011875947724,0.09204430259285487,96,6,221,unlikely,True,2013-05-13,16.0,716
+nlp-00256:g-han-13012978000014-5,Control of Donations and Regulation of Loans etc. (Extension of the Prescribed Period) (Northern Ireland) Order 2013,2013-01-29,0.186556178160132,0.0658994606109352,99,6,222,unlikely,False,,,591
+nlp-00257:g-han-13020546000052-0,establish the new independent body to manage the public forest estate,2013-02-05,0.18577575160682594,0.06525567883324933,101,7,223,unlikely,False,,,590
+nlp-00258:g-han-13021253000145-39,changes that the commission says it needs,2013-02-12,0.2510728973534088,0.0898045500581258,97,7,222,unlikely,False,,,589
+nlp-00259,separately for that,2013-02-12,0.2510728973534088,0.0898045500581258,97,7,222,unlikely,True,2013-05-09,13.0,714
+nlp-00260,National Assembly for Wales (Electoral Arrangements),2013-03-12,0.25061631013296537,0.08998869523763205,98,7,222,unlikely,True,2014-03-20,54.0,710
+nlp-00261:g-han-13032510000174-3,respond to the Committee’s recommendations,2013-03-25,0.16439051050110345,0.055612498713859766,105,8,224,unlikely,False,,,583
+nlp-00262,cut business costs,2013-05-08,0.2465549820920962,0.08574328921242551,101,7,227,unlikely,True,2014-01-23,38.0,702
+nlp-00263:g-han-13050918000209-1,Home Affairs,2013-05-09,0.2738339824410084,0.11237045533045639,80,6,217,unlikely,False,,,577
+nlp-00264:g-han-1305137000069-38,will help us do just that,2013-05-13,0.20063743168150713,0.07946384119578173,84,6,219,unlikely,False,,,576
+nlp-00265:g-han-1305137000069-49,localism Bill and the general power of competence,2013-05-13,0.2716286324488624,0.11055609574330914,81,6,217,unlikely,False,,,576
+nlp-00266:g-han-1305169000013-25,we are bringing forward will enable us to make the necessary changes,2013-05-15,0.2713906521250111,0.11035922488729641,81,6,217,unlikely,False,,,576
+nlp-00267,in the Finance Bill to close down two schemes,2013-06-04,0.2703669880827323,0.10884240476159424,81,4,223,unlikely,True,2014-12-04,79.0,698
+nlp-00268:g-han-13060646000326-0,coalition agreement is very clear that we will introduce legislation,2013-06-06,0.270135712711932,0.10864840135244376,83,4,223,unlikely,False,,,573
+nlp-00269:g-han-13060646000326-1,tackle the issue of third-party influence in our political system,2013-06-06,0.270135712711932,0.10864840135244376,83,4,223,unlikely,False,,,573
+nlp-00270:g-han-13061011000030-3,make sure that it is reflected in the law,2013-06-10,0.2675014905381255,0.10692716298328499,84,4,222,unlikely,False,,,572
+nlp-00271:g-han-13061011000324-2,GCHQ,2013-06-10,0.19743939552734144,0.07681131867820819,87,4,224,unlikely,False,,,572
+nlp-00272:g-han-13061997000038-24,Legislation: Complexity,2013-06-19,0.19572166751857392,0.07530526400510022,89,5,227,unlikely,False,,,571
+nlp-00273,ensure access to employment tribunals in claims for unfair dismissal on grounds,2013-07-03,0.26139604953913226,0.10122800442756665,88,10,226,unlikely,True,2013-07-03,1.0,694
+nlp-00274:g-han-13070444000871-10,ensure that all companies know who owns and controls them,2013-07-04,0.26128948670574065,0.10113735144797664,88,10,226,unlikely,False,,,569
+nlp-00275:g-han-13071070000137-4,move from opting out to opting in,2013-07-10,0.2582309059638644,0.0979160269527151,90,14,227,unlikely,False,,,568
+nlp-00276:g-han-1307232000016-66,young carers might be changed,2013-07-22,0.1671862727124755,0.05805838425804823,101,17,229,unlikely,False,,,566
+nlp-00277:g-han-13101420000033-4,Clearly,2013-10-14,0.19190028824885674,0.07156999268704664,87,5,222,unlikely,False,,,554
+nlp-00278,make this deal a reality,2013-10-22,0.2587356539829886,0.09862877341557098,85,5,220,unlikely,True,2015-09-17,100.0,678
+nlp-00279:g-han-13103065000073-91,nuisance calls,2013-10-30,0.1895290088208749,0.06974268205749855,89,6,222,unlikely,False,,,552
+nlp-00280,Wales (Infrastructure and Finance),2013-11-01,0.25792656614722625,0.09790254061216222,85,5,220,unlikely,True,2014-06-05,31.0,676
+nlp-00281:g-hanw-13112246000040-21,My second commitment is that the Government will seek to legislate,2013-11-22,0.18667653831041583,0.06728943806966858,99,7,223,unlikely,False,,,548
+nlp-00282,I have referred to the flagship Bill that we intend to introduce,2013-12-05,0.18486657942144522,0.06556203745538365,101,8,223,unlikely,True,2014-06-10,27.0,672
+nlp-00283,Members,2014-01-06,0.18512774269069732,0.06551777653497197,100,5,222,unlikely,True,2018-03-21,220.0,667
+nlp-00284:g-han-14010625000625-43,consultation on abstraction reform was launched on 17 December and we expect,2014-01-06,0.18512774269069732,0.06551777653497197,100,5,222,unlikely,False,,,542
+nlp-00285:g-han-14012279000143-2,if it is not,2014-01-22,0.2479390840065185,0.08804098167990468,99,6,222,unlikely,False,,,540
+nlp-00286:g-han-14012854000030-1,tax-free child care,2014-01-28,0.24686152828695834,0.08698673461515721,102,6,222,unlikely,False,,,539
+nlp-00287:g-han-14031364000035-4,if football fails in that important task,2014-03-13,0.2443403746514216,0.08496154168355093,104,7,223,unlikely,False,,,533
+nlp-00288:g-han-14031727000635-2,Payment Scheme (Mesothelioma),2014-03-17,0.2428865555851491,0.08339182550610753,105,8,223,unlikely,False,,,532
+nlp-00289:g-han-14031883000406-27,committed to reviewing the legislation,2014-03-18,0.17841211715904812,0.05962064636209103,107,8,224,unlikely,False,,,532
+nlp-00290:g-han-14031956000204-227,remove all remaining tax restrictions on how pensioners have access to their,2014-03-19,0.24274612165576848,0.08324097506941935,105,8,223,unlikely,False,,,532
+nlp-00291:g-han-14050125000194-17,Care Homes,2014-05-01,0.17694845617580357,0.05827905524659789,108,8,229,unlikely,False,,,526
+nlp-00292:g-han-14051468000106-71,Elderly People: Abuse,2014-05-14,0.17564596328178525,0.056882286891578863,110,8,231,unlikely,False,,,524
+nlp-00293:g-han-14060931000225-24,important issue,2014-06-09,0.17585013294845891,0.06665041905164255,91,5,227,unlikely,False,,,520
+nlp-00294,help working families with childcare costs,2014-06-09,0.26351955332405524,0.10331979572559609,87,4,223,unlikely,True,2015-06-01,52.0,645
+nlp-00295:g-han-1406094000086-9,reform the Riot,2014-06-09,0.19435735683022495,0.0741760157821818,91,5,227,unlikely,False,,,520
+nlp-00296:g-han-1406101000011-7,professional regulation,2014-06-09,0.17585013294845891,0.06665041905164255,91,5,227,unlikely,False,,,520
+nlp-00297,aimed at tackling unjustified personal injury claims,2014-06-09,0.19435735683022495,0.0741760157821818,91,5,227,unlikely,True,2018-03-20,198.0,645
+nlp-00298:g-han-14061054000080-3,modernise the way in which compensation is paid to individuals and businesses,2014-06-10,0.19427550882216893,0.07410854452256581,91,5,227,unlikely,False,,,520
+nlp-00299:g-han-14061622000104-8,data sharing and data privacy,2014-06-16,0.19288659841424682,0.07285211057959393,92,5,227,unlikely,False,,,519
+nlp-00300:g-han-14061631000602-55,require all letting agents and property managers to belong to an approved,2014-06-16,0.2616166575119903,0.10150534719545255,89,5,226,unlikely,False,,,519
+nlp-00301:g-hanw-14063013000127-6,Inquiries Act 2005,2014-06-30,0.17188111734546915,0.06313591935537638,96,11,228,unlikely,False,,,517
+nlp-00302:g-han-14070280001321-23,increase the generosity of the research and development tax relief for small,2014-07-02,0.2577069125740537,0.09780198692673073,91,11,227,unlikely,False,,,517
+nlp-00303,through the data retention and investigatory powers Bill,2014-07-10,0.2545755663048437,0.09451086787099013,95,14,227,unlikely,True,2014-07-14,1.0,641
+nlp-00304,give the authority that explicit power in the Pension Schemes Bill later,2014-07-23,0.24777856686435334,0.08701311973343755,101,17,228,unlikely,True,2016-10-19,118.0,639
+nlp-00305:g-han-1410135000019-6,deal with this increased terrorist threat,2014-10-13,0.18916408381877128,0.06910739011514051,91,6,222,unlikely,False,,,502
+nlp-00306:g-hanw-14101330000143-22,but I would hope for a suitable vehicle in the first session,2014-10-13,0.17109647218560817,0.06207782530916636,91,6,222,unlikely,False,,,502
+nlp-00307:g-han-14110771000158-25,Health and Social Care (Safety and Quality) Bill,2014-11-07,0.1864779490967246,0.0670059033817674,98,5,222,unlikely,False,,,498
+nlp-00308:g-han-15010961000361-75,All these vanguard projects will help design the right to build that,2015-01-09,0.2469131286497171,0.08593333419685685,101,6,221,unlikely,False,,,489
+nlp-00309:g-wms-176610-13,We consider the Law Commissions’ report and draft Bill is a significant,2015-01-29,0.21048327776552836,0.07025133206023322,106,7,223,unlikely,False,,,487
+nlp-00310:g-han-1502023000015-9,Child and Adolescent Mental Health Services,2015-02-02,0.17848031543108295,0.05854976130194825,108,7,224,unlikely,False,,,486
+nlp-00311:g-han-15020233000004-3,first say something about the nature of the threat because context is,2015-02-02,0.2429050689432658,0.08183818299258662,105,7,223,unlikely,False,,,486
+nlp-00312:g-han-15022647000047-31,Jimmy Savile (NHS Investigations),2015-02-26,0.2439688508363314,0.08350249745546896,104,6,222,unlikely,False,,,483
+nlp-00313,in Finance Bill 2015 to ensure that where an asset is acquired,2015-02-26,0.31236590990052987,0.1101816769772309,101,5,221,unlikely,True,2015-03-23,4.0,608
+nlp-00314:g-han-150303108000004-61,Government remain committed to legislation for further reform of the NMC,2015-03-03,0.17889363205129186,0.059352714047937113,107,7,224,unlikely,False,,,482
+nlp-00315:g-han-15030634000570-6,Fixed Term Parliaments”,2015-03-06,0.24180201754992686,0.08112307063527817,105,7,223,unlikely,False,,,481
+nlp-00316:g-han-15031841000018-28,common reporting standard that we have got agreed around the world,2015-03-18,0.2398902996377033,0.07905288542422574,106,8,224,unlikely,False,,,480
+nlp-00317:g-han-15031841000018-30,it next week and bring it into effect at the start,2015-03-18,0.2398902996377033,0.07905288542422574,106,8,224,unlikely,False,,,480
+nlp-00318:g-wms-228936-5,Guardianship of the property and affairs of missing persons,2015-03-23,0.35999498369751787,0.1239518618062631,102,8,222,uncertain,False,,,479
+nlp-00319:g-wms-229285-14,Government intends that measures deferred to a future bill will be legislated,2015-03-24,0.22729089971531807,0.07359455391439365,109,9,224,unlikely,False,,,479
+nlp-00320,create a fairer tax system by clamping down on tax avoidance,2015-03-25,0.23848684442908477,0.07754756705014189,108,8,224,unlikely,True,2015-07-14,16.0,604
+nlp-00321,not being accorded sufficient weight by planning authorities,2015-03-25,0.20601279376099607,0.06606899986487212,109,9,224,unlikely,True,2015-10-13,29.0,604
+nlp-00322,in the draft Investigatory Powers Bill,2015-03-26,0.17504770961978047,0.05539364577056798,110,9,225,unlikely,True,2016-03-01,49.0,604
+nlp-00323:g-han-15052710000120-81,tax lock and a minimum wage tax guarantee,2015-05-27,0.27356206106985403,0.0942345458972907,100,7,224,unlikely,False,,,470
+nlp-00324:g-han-15052710000138-3,accordingly,2015-05-27,0.27356206106985403,0.0942345458972907,100,7,224,unlikely,False,,,470
+nlp-00325:g-han-15061140000232-22,in the autumn for pre-legislative scrutiny by a Joint Committee of Parliament,2015-06-11,0.2256636884954167,0.0900440313722125,81,4,215,unlikely,False,,,468
+nlp-00326,landmark Environment Bill,2015-06-18,0.3012078797371971,0.12273003327335355,79,4,214,unlikely,True,2019-10-15,226.0,592
+nlp-00327,Rights to protect our fundamental rights,2015-06-23,0.29922741216570325,0.12095354566468024,82,4,214,unlikely,True,2020-03-18,248.0,591
+nlp-00328:g-han-15062547000221-27,Constitution: Gracious Speech,2015-06-25,0.29894284887751155,0.12073952996910606,82,4,214,unlikely,False,,,466
+nlp-00329:g-han-1506294000150-51,Tunisia and European Council,2015-06-29,0.22026112023982275,0.08542255068050209,86,10,221,unlikely,False,,,465
+nlp-00330:g-han-15070837000267-8,freeze working-age benefits for four years,2015-07-08,0.2929841855803914,0.11489302389633146,84,11,220,unlikely,False,,,464
+nlp-00331:g-han-15070957000481-5,Friend the Chancellor said,2015-07-09,0.292847503718671,0.11479096831354817,84,11,220,unlikely,False,,,464
+nlp-00332:g-han-15071648000119-72,committed to bringing in this legislation,2015-07-16,0.1947553156547088,0.07246373637422711,90,15,225,unlikely,False,,,463
+nlp-00333:g-wms-422381-24,case by case basis and notes that the Committee will undertake detailed,2015-10-20,0.25347168973804185,0.09860596776828086,80,5,215,unlikely,False,,,449
+nlp-00334:g-han-15102753000001-7,provide protection for the term “apprenticeship”,2015-10-27,0.290255964037047,0.11393293766778116,79,5,215,unlikely,False,,,448
+nlp-00335:g-han-15102833000182-4,put our agreement with internet companies on this issue into the law,2015-10-28,0.29012652814232776,0.11383166725096111,79,5,215,unlikely,False,,,448
+nlp-00336:g-han-15112551000176-160,Friend the Secretary of State for Wales and I also confirm that,2015-11-25,0.28456922554479597,0.1092747921400643,83,7,217,unlikely,False,,,444
+nlp-00337:g-wms-432123-11,countering two types of avoidance involving capital allowances and leasing,2015-11-25,0.3613314634713774,0.14349683768096824,78,4,215,uncertain,False,,,444
+nlp-00338:g-wms-432123-3,exempt loans or advances made by close companies to trustees of charitable,2015-11-25,0.3613314634713774,0.14349683768096824,78,4,215,uncertain,False,,,444
+nlp-00339:g-wms-432123-7,confirm how the corporation tax rules for intangible fixed assets apply,2015-11-25,0.3613314634713774,0.14349683768096824,78,4,215,uncertain,False,,,444
+nlp-00340:g-han-15120843001160-14,ensure that UK scientific standards apply before any personal data can be,2015-12-08,0.278794610371708,0.10328544672929572,86,9,218,unlikely,False,,,442
+nlp-00341,Financial Services Update,2015-12-15,0.2755504472371988,0.09986976033115817,93,9,219,unlikely,True,2020-10-21,254.0,566
+nlp-00342:g-wms-438392-14,Police integrity reform,2015-12-15,0.41082310097020364,0.158527975002327,81,9,215,uncertain,False,,,441
+nlp-00343:g-wms-439161-14,statutory post-movement testing,2015-12-17,0.26264918710395463,0.09458948613241838,96,9,219,unlikely,False,,,441
+nlp-00344,Following the publication of a response to the consultation,2015-12-17,0.31167859644387835,0.11466438026338821,91,9,218,uncertain,True,2016-02-10,8.0,566
+nlp-00345:g-han-16010636000470-16,ensure that anyone who does not have fast broadband can require,2016-01-06,0.2804434508956638,0.10662743620728456,88,6,217,unlikely,False,,,438
+nlp-00346:g-wms-447563-11,Having carefully considered all the consultation responses,2016-01-26,0.3141088889558556,0.12087735565219793,87,6,215,uncertain,False,,,435
+nlp-00347:g-han-16020280000055-22,improve the terms and conditions of people who do not wish,2016-02-02,0.2760083176566227,0.10380360617543777,92,6,216,unlikely,False,,,434
+nlp-00348:g-han-16020280000065-2,all work that will affect any worker working on a Sunday,2016-02-02,0.2760083176566227,0.10380360617543777,92,6,216,unlikely,False,,,434
+nlp-00349:g-han-16020355000061-3,but that work does not need to happen within the context,2016-02-03,0.18463713918629684,0.06690833372457823,96,6,218,unlikely,False,,,434
+nlp-00350:g-han-1602116000090-12,ensure that trade unions use a transparent opt-in process for union subscriptions,2016-02-10,0.27466133231168893,0.10271919311009287,92,6,216,unlikely,False,,,433
+nlp-00351:g-wms-452206-9,Universal Credit,2016-02-11,0.23797746212115722,0.08762157020321218,94,6,217,unlikely,False,,,433
+nlp-00352:g-han-10C1C580-0743-4112-BB91-4FD0F040D3CF-4,achieve that,2016-03-24,0.26996403894841475,0.09928639504567215,95,7,218,unlikely,False,,,427
+nlp-00353:g-han-82A46D79-5845-4605-99C4-D2D5137460FC-62,Panama Papers,2016-04-11,0.2685089816643846,0.09766761572047968,96,7,219,unlikely,False,,,424
+nlp-00354,Bus Services,2016-05-11,0.2669606859242447,0.09683065137777395,95,7,217,unlikely,True,2016-05-19,2.0,545
+nlp-00355:g-han-2DD14D48-07E3-4FDE-9F4F-EA5C7E7E4DE8-5,encourage British entrepreneurs to make the most of the commercial opportunities,2016-05-19,0.29376953391966015,0.12365246436954888,77,5,213,unlikely,False,,,419
+nlp-00356:g-wms-519480-12,place the Commission on a permanent,2016-05-19,0.280422907602426,0.11740921918171264,78,5,213,unlikely,False,,,419
+nlp-00357:g-han-1B586B8D-A2C9-4A64-8D9A-D97BF1D42D2B-32,ensure that we are equipped to confront extremists and protect the public,2016-05-24,0.2911933067102195,0.12112561254820561,78,6,213,unlikely,False,,,418
+nlp-00358,strengthen careers advice,2016-05-25,0.291053240697244,0.12101839773050695,78,6,214,unlikely,True,2021-05-18,260.0,543
+nlp-00359:g-wms-521765-10,revised multi-agency working arrangements,2016-05-26,0.27766924616190725,0.11479685636400133,79,6,214,unlikely,False,,,418
+nlp-00360:g-han-24AED508-FA10-4B1B-B31B-E9BD71603E00-12,establish an FNO’s nationality as early as possible to avoid delays during,2016-06-06,0.29259503268481163,0.12218132927192349,77,4,213,unlikely,False,,,416
+nlp-00361:g-han-DF698C73-62FB-491D-856D-F9AEEA748996-14,remove the need for a referendum to introduce Welsh rates of income,2016-06-14,0.2891847488939625,0.11983529700410762,78,4,213,unlikely,False,,,415
+nlp-00362,Building Safety,2016-07-18,0.27587293464116336,0.1066650637140181,87,14,223,unlikely,True,2021-07-05,260.0,535
+nlp-00363:g-wms-541333-3,through the Children and Social Work Bill to strengthen multi agency arrangements,2016-07-21,0.41074781199640537,0.16847559822011982,80,13,217,uncertain,False,,,410
+nlp-00364:g-han-6D42AF52-E0A2-4066-BA34-1536E92C7296-19,clear,2016-10-25,0.20586265067319487,0.07956966023835706,82,5,216,unlikely,False,,,396
+nlp-00365:g-wms-622334-5,today ensures that,2016-10-27,0.35360796452271676,0.14507955406152953,74,5,213,uncertain,False,,,396
+nlp-00366,facilitate single and associated employer CDC provision,2016-11-01,0.27672863712132073,0.1092514434929097,79,5,215,unlikely,True,2019-10-15,155.0,520
+nlp-00367:g-han-7951FFCF-AF23-4D05-9C2E-DF5BB39A6FA5-5,extend the public lending right to include the remote lending of e-books,2016-11-28,0.20077199166787862,0.07548660695375835,85,7,219,unlikely,False,,,391
+nlp-00368,if that would mean that any of Sir Martin’s recommendations can be,2016-12-01,0.2714676691393838,0.10483347690151602,83,6,218,unlikely,True,2020-03-19,173.0,516
+nlp-00369:g-han-D61207D2-3E8C-4F4C-B1AD-F847D7C4076F-55,in the Digital Economy Bill is age verification for pornographic sites,2016-12-01,0.2714676691393838,0.10483347690151602,83,6,218,unlikely,False,,,391
+nlp-00370:g-wms-651657-4,following measures in January 2017,2016-12-05,0.2572170396819442,0.09776313825724031,84,7,219,unlikely,False,,,390
+nlp-00371:g-han-CD7FF1C1-279B-49FD-9E96-22F7C17CE00E-3,committed to the changes she is seeking,2016-12-08,0.2693498899885681,0.1027491821282846,84,7,219,unlikely,False,,,390
+nlp-00372:g-han-F16F244D-35B9-41F3-BE38-3110BDB01F6E-6,Government remain committed to the action promised by David Cameron,2016-12-08,0.1988684982016014,0.07375870630476566,92,7,220,unlikely,False,,,390
+nlp-00373,provide the framework for the new system,2016-12-15,0.26689552436428216,0.1002467388335793,91,7,219,unlikely,True,2017-01-13,5.0,514
+nlp-00374:g-han-861782DA-A59B-4CE6-BDFB-F9465247F1C9-33,during the Bill’s passage in the Lords,2017-01-17,0.19708824340318787,0.07267439452155837,94,6,219,unlikely,False,,,384
+nlp-00375:g-han-54CE02A1-E352-416E-8A98-A8B76F34BD12-37,Flood Defence Projects: South-west,2017-02-07,0.1749779028083704,0.062345528137609636,97,7,221,unlikely,False,,,381
+nlp-00376:g-wms-685673-22,seek to use the special Parliamentary procedure which is available for Bills,2017-02-07,0.22708360386201648,0.08258464809091927,95,6,220,unlikely,False,,,381
+nlp-00377:g-wms-705256-15,any necessary at an early stage,2017-02-27,0.39384414592018996,0.15628559732375513,86,4,216,uncertain,False,,,378
+nlp-00378:g-han-F3E1BFEC-B693-43D6-A4D2-D5945E3FA50A-30,in the Bill,2017-03-01,0.2632957834746324,0.098475832219636,92,5,220,unlikely,False,,,378
+nlp-00379:g-han-991CCEF1-A423-478E-8BE5-9E72CDDA86B2-10,We hope to do so,2017-03-09,0.1749770357679075,0.06307974476252771,98,7,221,unlikely,False,,,377
+nlp-00380,Finance following the autumn Budget,2017-04-25,0.25739713826350913,0.09328995574743727,96,7,220,unlikely,True,2017-09-06,20.0,495
+nlp-00381,stop tenants being charged fees for renting a property,2017-06-22,0.30558368795504326,0.12803289809722684,77,4,213,unlikely,True,2018-05-02,45.0,487
+nlp-00382:g-wms-731672-5,support advances in transport technologies,2017-06-22,0.3863032978688182,0.16753574475498803,73,4,211,uncertain,False,,,362
+nlp-00383:g-han-BAC3D7A4-09E6-45E7-B62D-72EAEFC43862-11,limit transfers should align with these measures,2017-09-06,0.20091014792406123,0.07813286160389106,81,8,220,unlikely,False,,,351
+nlp-00384:g-han-3806C6ED-CCC4-40AC-BC72-FC46BBF98D68-22,years to come,2017-09-07,0.2984651528413761,0.12057911450043682,77,8,218,unlikely,False,,,351
+nlp-00385,in Elections series of measures to give greater protection to all persons with,2017-09-07,0.2984651528413761,0.12057911450043682,77,8,218,unlikely,True,2021-07-05,200.0,476
+nlp-00386:g-wms-760336-12,provide for this was announced in the Queen’s speech and will be,2017-09-14,0.30358320019488527,0.12100180426658178,78,9,217,uncertain,False,,,350
+nlp-00387,amendments to the Enterprise Act 2002,2017-10-17,0.4411062631665019,0.19225847994937267,67,4,211,uncertain,True,2020-11-11,161.0,470
+nlp-00388:g-han-9040F483-04C6-4DB7-A86F-91760D88B31E-17,Regulation of Property Agents,2017-10-18,0.22115365194310624,0.08768149993025781,77,5,216,unlikely,False,,,345
+nlp-00389:g-han-A972555E-E843-4C5A-928F-E478E82582AC-21,Following the consultation I set out above,2017-10-23,0.2963187090451893,0.1207319628073569,74,5,214,unlikely,False,,,344
+nlp-00390,I very much hope we will publish,2017-10-24,0.21977999981813456,0.08684628651494544,79,5,216,unlikely,True,2021-06-08,190.0,469
+nlp-00391:g-han-CF7057F5-A8A5-4969-9892-21206326E0B6-7,scrutiny in early 2018,2017-10-24,0.21977999981813456,0.08684628651494544,79,5,216,unlikely,False,,,344
+nlp-00392,committed to introducing the Domestic Abuse Bill,2017-11-01,0.43552320795449956,0.1875524932535474,68,4,211,uncertain,True,2019-07-16,89.0,468
+nlp-00393:g-han-6551EE64-4691-4BB2-B2F3-9B9A673D91A1-131,increase duty on these products from 2019,2017-11-22,0.29077822611198123,0.11644371183633365,78,4,216,unlikely,False,,,340
+nlp-00394:g-han-6551EE64-4691-4BB2-B2F3-9B9A673D91A1-204,give local authorities the power to charge a 100% council tax premium,2017-11-22,0.29077822611198123,0.11644371183633365,78,4,216,unlikely,False,,,340
+nlp-00395:g-han-6551EE64-4691-4BB2-B2F3-9B9A673D91A1-97,allow VAT refunds from April 2018,2017-11-22,0.29077822611198123,0.11644371183633365,78,4,216,unlikely,False,,,340
+nlp-00396:g-han-B0C31F50-2877-4318-BDAD-E0E954B78AF4-75,noble Baroness,2017-11-23,0.290647941983533,0.11634035644702982,78,4,216,unlikely,False,,,340
+nlp-00397,effect in this parliamentary Session,2017-12-12,0.2099853016546839,0.07868512838068702,91,8,219,unlikely,True,2020-05-19,128.0,462
+nlp-00398:g-wms-805509-26,before the UK exits the EU and the substantive provisions will only,2017-12-13,0.36008966742308074,0.14365130518881022,79,7,216,uncertain,False,,,337
+nlp-00399:g-han-31E98997-CA81-4657-88D3-0615254F54A9-4,in relation to the unfair practice my hon,2018-01-10,0.21131145666469167,0.08032846881253301,88,5,218,unlikely,False,,,333
+nlp-00400,appropriate do so,2018-01-10,0.2853526618384567,0.11173589237667378,80,5,216,unlikely,True,2022-10-24,250.0,458
+nlp-00401:g-han-8BD7FE27-D878-432B-BE28-8929E09A0488-23,by the Summer Recess this year,2018-01-17,0.20963603243883813,0.07927683334422488,91,5,217,unlikely,False,,,332
+nlp-00402:g-han-B69CE5D6-16D7-4D6E-B30F-BB74608FB5BA-12,Private Sector Pension Abuse,2018-01-22,0.2809686778672024,0.10801659592294341,87,6,216,unlikely,False,,,331
+nlp-00403,establish a public register of beneficial owners of non-UK entities that own,2018-01-24,0.3180838487276539,0.12413066231743113,85,5,216,uncertain,True,2022-03-01,214.0,456
+nlp-00404,would enable an Executive to be formed,2018-02-20,0.2064234520142899,0.07673383921893588,93,5,219,unlikely,True,2019-07-04,72.0,452
+nlp-00405:g-han-0F5F720E-197A-49A6-B3DC-276A2FA57FE2-33,in accordance with that and nothing in this Bill threatens that,2018-02-21,0.27896513396643785,0.10672606711756846,90,5,218,unlikely,False,,,327
+nlp-00406:g-han-0F5F720E-197A-49A6-B3DC-276A2FA57FE2-35,agreement reached with the EU,2018-02-21,0.18682437993679465,0.06889589081599701,94,5,219,unlikely,False,,,327
+nlp-00407,Agriculture moves away from the CAP,2018-02-27,0.3546293714666467,0.14117853395410476,86,4,214,uncertain,True,2018-09-12,29.0,451
+nlp-00408,there will be no gap left in our law on sentience after,2018-03-05,0.27803671930074486,0.10703086589556919,89,5,217,unlikely,True,2021-05-13,167.0,450
+nlp-00409,Final Government Response to the Law Commission's review of Deprivation of Liberty Safeguards and Mental Capacity,2018-03-14,0.23858655623934294,0.08896540118397814,92,7,219,unlikely,True,2018-07-03,16.0,449
+nlp-00410:g-wms-869271-0,I am today announcing that the government intends to legislate,2018-03-22,0.20943266538392424,0.07620749830138951,96,7,219,unlikely,False,,,323
+nlp-00411,ensure that in the withdrawal agreement and implementation Bill the terms,2018-03-28,0.27107776556203783,0.10009687916673515,95,7,218,unlikely,True,2019-10-21,82.0,447
+nlp-00412:g-wms-873485-7,at the next suitable opportunity to meet this commitment,2018-03-28,0.273318452391729,0.10101987430689313,95,7,218,unlikely,False,,,322
+nlp-00413:g-han-A92366EB-8688-4F07-BDCB-801A4B9B83F4-9,not against the use of laser pointers at all,2018-04-18,0.2015754734325778,0.07329071547228327,96,6,220,unlikely,False,,,319
+nlp-00414,If any legislation is required to underpin the victims code,2018-04-24,0.18184893651113385,0.0656142368983998,97,7,220,unlikely,True,2023-03-29,258.0,443
+nlp-00415:g-han-BBFDEEDB-167D-4C3D-B128-35C89DED199A-55,ensure that the contractual obligations she mentioned continue to be met,2018-04-26,0.2717752392885092,0.10156596458287183,93,7,218,unlikely,False,,,318
+nlp-00416:g-han-9632CA6A-45CE-44BC-9095-2BF00C8E1C7D-32,Sanctions and Anti-Money Laundering Bill [Lords],2018-05-01,0.270036217313643,0.10003738271869804,93,7,218,unlikely,False,,,317
+nlp-00417:g-wms-895119-29,UK has already provided drafting assistance for underpinning legislation,2018-05-01,0.27871435911867265,0.10363181371073908,93,7,218,uncertain,False,,,317
+nlp-00418:g-han-9AE9591B-C8C2-435A-BA81-A44DF0D6507E-1,tighten the law in this area,2018-05-10,0.2696307638420161,0.09931185801845842,94,6,218,unlikely,False,,,316
+nlp-00419,ban the development of new build leasehold houses,2018-05-15,0.26758477700607486,0.09760857404335647,95,7,218,unlikely,True,2021-05-12,157.0,440
+nlp-00420:g-wms-906226-45,potential to make pre-application consultation a statutory requirement,2018-05-17,0.1801600277063901,0.06336720517079786,98,7,220,unlikely,False,,,315
+nlp-00421:g-han-B18761E2-A359-472E-BD6A-C8868A3C95C8-5,strengthen our response to violent crime,2018-05-22,0.26543480592688906,0.095411773649502,96,7,218,unlikely,False,,,314
+nlp-00422:g-han-070E3128-A88A-424D-9A86-C5B871B4BB64-0,all of the reforms anticipated in the original Bill,2018-06-06,0.17814014649922455,0.06189101219764769,100,5,225,unlikely,False,,,312
+nlp-00423:g-han-7834F929-D173-4885-8DD8-3C63273A1390-18,consulting stakeholders and will bring forward policy proposals and a draft Bill,2018-06-18,0.17518184175340337,0.05973539820937978,101,6,227,unlikely,False,,,310
+nlp-00424:g-han-7834F929-D173-4885-8DD8-3C63273A1390-3,no later than six months after Royal Assent to this Bill,2018-06-18,0.19362829958329233,0.06650923721134727,101,6,227,unlikely,False,,,310
+nlp-00425:g-wms-933706-31,have written to developers setting out our expectations,2018-07-02,0.2614429750697201,0.09039171332581944,101,12,226,unlikely,False,,,308
+nlp-00426:g-han-846BDF72-2BD8-4992-9C11-8D62E4D00DC4-22,through joint scrutiny by both Houses,2018-07-19,0.18705874450685273,0.05988585142203599,106,17,228,unlikely,False,,,306
+nlp-00427:g-wms-944603-1,later in the year which corrects a number of loopholes and omissions,2018-07-19,0.263514391573907,0.08715505991904964,103,16,227,unlikely,False,,,306
+nlp-00428:g-wms-946719-5,draft Bill will be published with accompanying explanatory notes,2018-07-23,0.284540580853993,0.09197822200285614,104,18,227,uncertain,False,,,305
+nlp-00429:g-wms-946719-7,early in the second session of this Parliament,2018-07-23,0.284540580853993,0.09197822200285614,104,18,227,uncertain,False,,,305
+nlp-00430:g-wms-946722-17,repeal the duty for a specific reference to caste as an aspect,2018-07-23,0.23864967904316794,0.07557172071429955,111,18,228,unlikely,False,,,305
+nlp-00431,ensure that councils honour their lifetime tenancy in these cases,2018-09-04,0.2609578752798306,0.08811088678816882,96,10,222,unlikely,True,2022-06-08,197.0,424
+nlp-00432:g-wms-983823-2,ban employers from making deductions from tips,2018-10-09,0.3887709586119644,0.13944333746604223,88,6,217,uncertain,False,,,294
+nlp-00434,I said earlier,2018-10-18,0.03341839833641662,0.010436107144382688,108,7,224,unlikely,True,2018-10-18,1.0,418
+nlp-00433:g-han-56033BBC-6FF1-421C-AB68-ACC9134A08FB-8,Civil Aviation (Insurance) (Amendment) (EU Exit) Regulations 2018,2018-10-24,0.18987151441819053,0.06272104328703575,104,7,222,unlikely,False,,,292
+nlp-00435,Future reciprocal healthcare arrangements,2018-10-26,0.3281636636201713,0.11461634619601847,90,6,219,unlikely,True,2018-10-26,1.0,416
+nlp-00436:g-han-DCA8BF56-D86A-4CDC-9B5F-6C4DE1FE47C1-39,where doing so is necessary to protect the delivery of public services,2018-10-30,0.2566861906732643,0.08665309241177972,99,6,221,unlikely,False,,,291
+nlp-00437:g-han-477BF629-101F-4DE6-9D47-4246799271D9-11,allow for the further reduction of corporation tax from 19% to 17%,2018-11-12,0.2558789203906618,0.08620303548155642,102,6,220,unlikely,False,,,289
+nlp-00438:g-han-5F75DA96-673E-4C6B-9399-75C72323EBC3-3,Misogyny,2018-11-15,0.1882897512318936,0.06157804234764163,105,6,222,unlikely,False,,,289
+nlp-00439:g-han-253C8EF8-900F-4F44-801E-036CFE2CBC3C-22,where doing so is necessary to ensure good governance,2018-11-28,0.25337132803392165,0.08388399556427484,103,8,221,unlikely,False,,,287
+nlp-00440:g-han-D4E43C6E-265A-4812-AB95-111CE6E7EE42-16,change through an amendment on Report,2018-11-29,0.25330488254150774,0.08382621510781403,103,8,221,unlikely,False,,,287
+nlp-00441:g-wms-1018766-8,following the creation of a robust delivery model with the appropriate governance,2018-12-03,0.21797476484312434,0.07034308931519463,105,9,222,unlikely,False,,,286
+nlp-00442:g-wms-1020494-5,intention remains to reform mental health law and so the Government will,2018-12-06,0.21780426411309298,0.0702010649784152,105,9,222,unlikely,False,,,286
+nlp-00443,Business Update,2018-12-10,0.25881220987220205,0.08381363991371052,104,9,222,unlikely,True,2020-06-25,81.0,410
+nlp-00444:g-han-08215BFD-823B-475A-B7CA-22B265F7C2E6-7,plug that gap,2018-12-13,0.18398804232141538,0.057638711015232734,109,9,223,unlikely,False,,,285
+nlp-00445:g-han-44E3BE54-265C-40D2-918F-F4399EF4EF51-23,give all workers a right to request a more predictable contract,2018-12-17,0.24875037945517403,0.07924034418823554,105,10,222,unlikely,False,,,284
+nlp-00446:g-han-4137D280-C078-4C3A-88DA-851164E2B86B-6,We will introduce legislation,2018-12-19,0.24863181097025783,0.07914138143303574,105,10,222,unlikely,False,,,284
+nlp-00447:g-han-AB31E6FC-E4A7-4AC9-A083-8AE5D248BFBE-6,Gentleman points out,2018-12-20,0.18282865782725974,0.056558362434562214,110,11,223,unlikely,False,,,284
+nlp-00448:g-han-5CCEA888-589E-4E68-9EB0-1572F35458D8-5,Drones: Consultation Response,2019-01-07,0.18596922741339458,0.05935727695414925,107,7,222,unlikely,False,,,281
+nlp-00449:g-wms-1039540-13,‘piloting powers’ rather than the migration of all claimants,2019-01-11,0.3216272914167931,0.10860789081990613,99,7,219,unlikely,False,,,280
+nlp-00450:g-han-AFDE0FA1-C713-402C-8072-AEE19950A6A9-12,taking that very important report into account,2019-01-22,0.1661553387019966,0.05170043412098915,108,8,223,unlikely,False,,,279
+nlp-00451:g-wms-1047603-10,create a similar requirement on all developers of new build homes,2019-01-24,0.18528661921599124,0.05806699388025981,107,8,223,unlikely,False,,,279
+nlp-00452,secondary back of the Bill that we intend to introduce that will bring,2019-01-24,0.16754894046931068,0.05212778931265166,108,8,223,unlikely,True,2023-11-27,253.0,404
+nlp-00453:g-han-0F4BA88B-4FB2-4B84-AB2C-DF71D533A9B9-2,Park Home Residents,2019-01-28,0.1655688592876143,0.051243401206259705,109,8,223,unlikely,False,,,278
+nlp-00454:g-han-60040894-AD24-44EA-83D7-94C142F41AF2-26,only where there is clear evidence that doing so would improve services,2019-01-31,0.16545164984719207,0.051153791258517316,109,8,223,unlikely,False,,,278
+nlp-00455:g-wms-1059365-12,enable enforcement and compliance checks to be conducted by any licensing officer,2019-02-12,0.3164281514087938,0.10369329129868149,104,8,221,unlikely,False,,,276
+nlp-00456,give our commitments on both non-regression and future developments force in UK,2019-02-26,0.24963629615645602,0.08136347957888776,105,8,221,unlikely,True,2020-12-30,97.0,399
+nlp-00457,set the regional rates and cost-cap the renewable heat incentive scheme,2019-02-28,0.03203627890666764,0.009573547815983137,111,9,225,unlikely,True,2019-02-28,1.0,399
+nlp-00458:g-han-27DEA473-D84B-421C-80DA-625B82BA461F-35,ensure that where future Bills could affect environmental protections,2019-03-07,0.24908646490480738,0.08119651649729093,105,8,221,unlikely,False,,,273
+nlp-00459:g-wms-1085830-0,short extension to the deadline for UK operators participating in the EU,2019-03-11,0.3736140054403502,0.12755707421773282,100,8,219,uncertain,False,,,272
+nlp-00460,Northern Ireland,2019-03-12,0.24755936987058405,0.07962450183274075,106,9,223,unlikely,True,2024-01-24,255.0,397
+nlp-00461:g-han-8335EC0F-5B6D-4F66-BCE2-4E9BB627B558-9,make this legally binding,2019-03-12,0.24755936987058405,0.07962450183274075,106,9,223,unlikely,False,,,272
+nlp-00462:g-wms-1087707-69,ensure that in the immediate period after we leave the EU,2019-03-13,0.2567567674547236,0.08289716206456547,106,9,222,unlikely,False,,,272
+nlp-00463:g-wms-1105792-8,close these legal loopholes that allow freeholders to unjustifiably recoup legal costs,2019-03-28,0.24702780212002587,0.07789350043548492,107,11,223,unlikely,False,,,270
+nlp-00464,Divorce law reform,2019-04-09,0.2781552558586088,0.08935446442835454,106,10,222,uncertain,True,2019-06-13,10.0,393
+nlp-00465,Government remain committed to the measures in the Bill and will introduce,2019-04-30,0.24538234803434775,0.078357542265459,107,9,222,unlikely,True,2023-11-08,237.0,390
+nlp-00466:g-han-EB0F3A33-86E3-45B7-A0CD-EC90EBEFFDE4-59,has not been touched on this evening,2019-05-01,0.16303313844353765,0.05027040381390736,109,10,228,unlikely,False,,,265
+nlp-00467,Wild Animals in Circuses (No. 2) Bill,2019-05-01,0.03142401405064511,0.009212567235646653,113,10,230,unlikely,True,2019-05-01,1.0,390
+nlp-00468:g-han-7953D07B-C1B2-4524-ABE3-49C9B010E4A9-1,Pensioners on Fixed Incomes,2019-05-13,0.16216301929728935,0.049510294491173015,110,10,228,unlikely,False,,,263
+nlp-00469,we will look to bring forward legislation to implement a statutory professional,2019-05-16,0.16208500312113244,0.04945995233566119,110,10,228,unlikely,True,2021-05-12,104.0,388
+nlp-00470,In relation to providing improved support,2019-05-21,0.23134513978871693,0.07195225332114173,108,9,230,unlikely,True,2021-01-26,89.0,387
+nlp-00471:g-han-B739E8C7-0993-4F33-AE54-A16CB9BAD346-4,We will,2019-05-22,0.16120479236907503,0.04866356039598264,110,10,231,unlikely,False,,,262
+nlp-00472,increase the maximum penalty for animal cruelty from six months’ imprisonment,2019-06-05,0.1793146105960525,0.054865238425751445,109,8,231,unlikely,True,2019-06-26,4.0,385
+nlp-00473,Judicial Update,2019-06-05,0.36739978128063505,0.12252294255298175,102,7,225,uncertain,True,2021-07-21,112.0,385
+nlp-00474:g-han-C80925B9-23DB-47F2-9536-AC2F738EC4E8-3,net zero on emissions by 2050,2019-06-12,0.2424550527049922,0.07583050115221289,107,13,229,unlikely,False,,,259
+nlp-00475:g-wms-1132698-3,Inheritance Tax relief on Kindertransport Compensation Payments,2019-06-18,0.2506220957366797,0.07817426033297206,107,13,229,unlikely,False,,,258
+nlp-00476:g-han-C912A9B0-B2CF-4822-8285-3F6B433077FA-29,Businesses: Late Payments,2019-06-19,0.24153117128338994,0.07502828823680655,107,14,229,unlikely,False,,,258
+nlp-00477:g-wms-1135155-27,ensure that unless there are exceptional circumstances,2019-06-27,0.2427560182071993,0.07508183391250756,108,16,229,unlikely,False,,,257
+nlp-00478:g-han-F87965E6-11BD-45B2-82B8-9C9ADB1C1564-19,Department for Work and Pensions,2019-07-02,0.15919683447461175,0.04721139676426868,116,18,231,unlikely,False,,,256
+nlp-00479:g-han-2F69D643-453F-4057-AE63-8C7DD14290EC-28,improve the clarity of employment status checks to reflect the reality,2019-07-04,0.23981755719154443,0.07360823826518205,108,17,229,unlikely,False,,,256
+nlp-00480,give direct financial authority for payments made under the scheme will be,2019-07-04,0.24769829753343586,0.07629515940623897,108,17,229,unlikely,True,2020-01-09,28.0,381
+nlp-00481:g-han-94AE0571-F9B5-45B4-AA08-A931895CF047-0,legislation,2019-07-09,0.15803504877282623,0.046107376809220786,119,19,231,unlikely,False,,,255
+nlp-00482,amendments to address these recommendations,2019-07-16,0.2367677113974394,0.07024831701935984,115,19,230,unlikely,True,2020-01-21,28.0,379
+nlp-00483:g-han-2C35DFB0-F514-42E2-A0D3-25A58C68DFC5-19,provide Ofcom with stronger powers to allow for the effective enforcement,2019-07-22,0.23420203591417005,0.06756206849586763,119,21,230,unlikely,False,,,253
+nlp-00484:g-wms-1149581-6,pre-legislative scrutiny,2019-10-16,0.2712123051323999,0.11295460919926292,73,5,215,unlikely,False,,,241
+nlp-00485:g-han-052308A6-DDA4-4033-A74A-6683862752EE-2,We will be publishing a White Paper,2019-10-23,0.2090918586886589,0.08474325866634252,75,5,216,unlikely,False,,,240
+nlp-00486:g-han-255FBEC6-3BE1-4690-9C00-137C98768E76-0,Voter Identification,2019-10-23,0.2825013619998171,0.11776002103346636,73,5,215,unlikely,False,,,240
+nlp-00487:g-wms-1167591-1,put the meaning of the law in relation to automation of tax,2019-10-31,0.2908339259193768,0.12084724180431608,73,5,215,unlikely,False,,,239
+nlp-00488,Environment guarantee the protection and restoration of our natural environment,2019-12-20,0.38496711822206275,0.16320035021654158,71,7,213,uncertain,True,2020-01-30,6.0,356
+nlp-00489:g-wms-1168523-16,Treasury Update,2019-12-20,0.21302038720746033,0.08410920842320373,79,7,217,unlikely,False,,,231
+nlp-00490:g-han-30ABC295-8823-4D9D-A20D-2F386461C154-44,Friend’s further point about the legacy system,2020-01-08,0.23051882246004,0.09413791847387812,75,4,215,unlikely,False,,,229
+nlp-00491,We intend to publish a draft Bill,2020-01-08,0.04120936383421787,0.0157616635960383,81,5,218,unlikely,True,2020-01-08,1.0,354
+nlp-00492:g-han-792A5FB7-D695-4F09-B1A7-1B5E016EBFB8-2,ensure that that cannot happen,2020-01-15,0.30740506618389996,0.12755005516046813,71,4,213,unlikely,False,,,228
+nlp-00493:g-wms-1171763-10,Review Implementation,2020-01-20,0.235092066368467,0.09369167118840475,76,5,215,unlikely,False,,,227
+nlp-00494:g-han-02F0E00A-C234-4791-8F67-20035252B48B-4,Return to Work,2020-01-23,0.20503004490018617,0.08069809680448667,77,5,216,unlikely,False,,,227
+nlp-00495:g-han-010CD6E5-4622-479C-85BB-649D0CB0BA2A-37,"Once this work is completed, we will legislate as soon as we can.",2020-01-28,0.3026681234290408,0.1231512242285847,74,5,214,unlikely,False,,,226
+nlp-00496,UK telecommunications,2020-01-28,0.38285445778164373,0.16129425653519178,70,5,212,uncertain,True,2020-11-24,44.0,351
+nlp-00497,in any way to protect access to cash,2020-02-04,0.30107124081792463,0.12195353930707994,74,5,214,unlikely,True,2022-07-20,129.0,350
+nlp-00498:g-han-0C093786-878A-465F-9C61-A0E2F53A1769-3,Government will consider carefully whether legislation is required,2020-02-04,0.20269163472703877,0.07897748470427722,84,6,216,unlikely,False,,,225
+nlp-00499,necessary stop the automatic early release of prisoners convicted of terrorist offences,2020-02-06,0.30078801877665723,0.12173787714015213,74,5,214,unlikely,True,2020-02-11,1.0,350
+nlp-00500,Online Safety,2020-02-13,0.2987853193897108,0.12002390654262493,75,6,215,unlikely,True,2022-03-17,110.0,349
+nlp-00501:g-han-726FF855-71AB-43A7-ADF4-3471797737B1-1,Friend knows,2020-02-13,0.2987853193897108,0.12002390654262493,75,6,215,unlikely,False,,,224
+nlp-00502:g-han-7B6578F5-27AF-4CBF-BE38-512E91EBBBEB-2,make sure that all new builds have gigabit-capable broadband,2020-02-13,0.2987853193897108,0.12002390654262493,75,6,215,unlikely,False,,,224
+nlp-00503:g-han-79EA543B-A84D-44E0-803A-32BE657FDADD-3,Huawei and 5G,2020-03-04,0.30045411427642443,0.12345641872232203,73,4,213,unlikely,False,,,221
+nlp-00504,employment deliver the greatest reform of workers’ rights in over 20 years,2020-03-16,0.2949815309206208,0.11800117858465589,84,6,215,unlikely,True,2022-07-06,121.0,344
+nlp-00505,Members will know,2020-03-17,0.2948472126694333,0.11789655005000639,84,6,216,unlikely,True,2022-09-22,132.0,344
+nlp-00506,delivers on these commitments in October 2021,2020-03-18,0.28133247226150815,0.11182565674121517,84,6,216,unlikely,True,2023-01-12,148.0,344
+nlp-00507:g-wms-1186386-13,Postponement of electoral events,2020-03-19,0.37325727481869897,0.1542984100446263,78,6,214,uncertain,False,,,219
+nlp-00508:g-han-257CB236-414C-4D75-86B0-BFF86F839028-1,year in a Finance Bill for 2021 to strengthen HMRC’s existing anti-avoidance,2020-04-29,0.29045787623207564,0.11533111234825279,84,6,216,unlikely,False,,,213
+nlp-00509,Northern Ireland Protocol,2020-05-21,0.2846384234628332,0.10979158371565909,88,6,216,unlikely,True,2022-06-13,108.0,335
+nlp-00510:g-han-E1C13D9C-F1A7-40FD-B7E0-BEF3F0A84F73-8,further,2020-06-25,0.2062217373467946,0.075291537938098,94,6,225,unlikely,False,,,205
+nlp-00511,The First Report on the Use of the Petition of Concern Mechanism in the Northern Ireland Assembly,2020-07-15,0.23508507280601787,0.08310962222492418,98,15,226,unlikely,True,2021-05-12,44.0,327
+nlp-00512,internal market in UK law,2020-07-16,0.2711929489593936,0.09729852402102923,96,15,225,unlikely,True,2020-09-09,8.0,327
+nlp-00513:g-wms-1225427-12,develop our regulation approach further,2020-07-16,0.25867379311224803,0.09231320528034828,97,15,226,unlikely,False,,,202
+nlp-00514:g-wms-1226641-21,in Finance Bill 2020/21 to extend Making Tax Digital for VAT,2020-07-21,0.27656540832157334,0.09592797019641242,100,17,226,unlikely,False,,,201
+nlp-00515:g-han-24FA3DDE-7838-4AB7-A503-8AE73E460990-3,Channel Crossings in Small Boats,2020-09-02,0.2758030704647105,0.10276287507671719,89,8,220,unlikely,False,,,195
+nlp-00516:g-han-E9CFD149-498A-4AFC-8C07-4F8D806703DE-3,in the course of the next months to guarantee that,2020-09-02,0.2758030704647105,0.10276287507671719,89,8,220,unlikely,False,,,195
+nlp-00517:g-han-1CB5BB00-F747-4D09-B729-F93FD79AA521-4,make sure that there is maximum certainty for businesses as regards,2020-09-08,0.2720218546496223,0.09765922508702897,92,9,220,unlikely,False,,,194
+nlp-00518:g-han-AC98D006-6D24-4DBF-BCAC-D71F82015416-1,I can only reaffirm what I have said,2020-09-16,0.1996437453617154,0.06895351523072615,95,10,221,unlikely,False,,,193
+nlp-00519:g-han-E596FED5-9CD9-43DE-BBD4-A17351A79571-19,give probation practitioners greater flexibility to take action where offenders’ rehabilitative needs,2020-09-16,0.2703538927249831,0.09615902210097554,93,9,220,unlikely,False,,,193
+nlp-00520:g-han-9BAB4C87-8D97-4784-B176-B7383AA5DD9A-6,But further than that,2020-09-22,0.2686765637993343,0.09437831235892792,93,10,220,unlikely,False,,,192
+nlp-00521,in the Planning and Infrastructure Bill to implement the changes,2020-09-30,0.2718563214518706,0.09868548100153696,91,8,219,unlikely,False,,,191
+nlp-00522:g-han-51B8AD76-DAFB-4AF5-B3FD-1889823627B4-26,remains a theoretical possibility,2020-10-09,0.1843729499548043,0.06596546220580421,91,6,218,unlikely,False,,,189
+nlp-00523:g-han-7CAE478D-CCF7-46B3-8266-1CCA898D8DB3-89,Therefore we shall legislate,2020-10-19,0.2736702974965365,0.10022541495671933,88,5,217,unlikely,False,,,188
+nlp-00524,separately in this area via a wider package of procurement reform,2020-10-26,0.2011436555265987,0.07100227660466871,91,6,220,unlikely,True,2022-05-11,81.0,312
+nlp-00525:g-han-29A80772-1306-4803-A0CF-9B60911FAAD1-66,stop the promotion of high fat,2020-11-10,0.2707247696844882,0.09780195325473762,89,5,219,unlikely,False,,,185
+nlp-00526:g-han-29A80772-1306-4803-A0CF-9B60911FAAD1-70,require large out-of-home sector businesses with 250 or more employees to calorie,2020-11-10,0.2707247696844882,0.09780195325473762,89,5,219,unlikely,False,,,185
+nlp-00527:g-wms-1251283-9,I intend to bring forward proposals to place the arrangements for allocating,2020-11-12,0.2343964485677381,0.08331636183129514,96,5,219,unlikely,False,,,185
+nlp-00528,Parliament,2020-11-17,0.2693245714200006,0.09650373636769805,95,5,219,unlikely,True,2021-05-12,26.0,309
+nlp-00529:g-wms-1252482-23,place an obligation on landlords to identify a nominated person responsible,2020-11-17,0.27155368853580214,0.09739548416771873,95,5,219,unlikely,False,,,184
+nlp-00530:g-han-7730BFF9-D79F-4DE1-892B-366795EA17E5-21,commercial radio reform,2020-11-27,0.17709666822871795,0.05936383566862677,104,9,221,unlikely,False,,,182
+nlp-00531:g-han-68F56EB6-EA56-4B21-9689-97AD7978705A-53,Government will legislate,2020-12-01,0.2649154091919429,0.0919010528423084,100,9,219,unlikely,False,,,182
+nlp-00532:g-han-D06D008E-94C8-44F8-B413-B7D8C7AADC8B-37,those reductions in an affirmative statutory instrument,2020-12-02,0.26482295232883835,0.0918183034794852,100,9,219,unlikely,False,,,182
+nlp-00533:g-han-0CE0AB80-E79F-4B6A-B9B9-D829D1BBF866-4,I am pleased to note that the Bill is scheduled for consideration,2020-12-08,0.19371011636709187,0.06415683200283288,104,10,222,unlikely,False,,,181
+nlp-00534,Finance in the spring,2020-12-08,0.2723923843462657,0.09326858874684757,101,9,220,unlikely,True,2020-12-08,1.0,306
+nlp-00535,restore order to our border,2020-12-14,0.19165402553734426,0.062045217564360114,105,11,222,unlikely,False,,,180
+nlp-00536:g-han-956364BE-1E7D-48AF-9FEB-F9335239EEF6-3,Immigration Rules: Supported Accommodation,2020-12-16,0.2598544534525242,0.08650154128596443,103,11,221,unlikely,False,,,180
+nlp-00537:g-wms-1271996-10,Government response to independent review of terrorist supervision,2020-12-17,0.3888367115242164,0.13749192945952868,97,9,217,uncertain,False,,,180
+nlp-00538:g-wms-1276513-7,ensure victims can feel better protected and suspects will not be placed,2021-01-14,0.3014585305160272,0.10860078029513724,95,5,217,uncertain,False,,,176
+nlp-00539:g-wms-1276651-7,Application of the second-hand margin scheme in Northern Ireland in respect of motor vehicles sourced from Great Britain,2021-01-14,0.27585567190680377,0.09826613230073292,97,5,218,unlikely,False,,,176
+nlp-00540,Announcement of a Joint Framework agreed between the UK Government and the Government of Ireland on the legacy of the Troubles,2021-01-20,0.2648653094300313,0.09326237505729298,97,6,218,unlikely,False,,,175
+nlp-00541,Employment Rights,2021-01-25,0.26304701790307433,0.09134696830182719,98,6,218,unlikely,False,,,174
+nlp-00542:g-wms-1279749-3,consult on the statutory guidance,2021-01-25,0.250835614642149,0.08665115739714473,99,6,219,unlikely,False,,,174
+nlp-00543:g-han-84FF9A04-C516-4702-9E1A-EF190BE994EF-2,No-fault Evictions,2021-01-27,0.17538977542585077,0.05868020111711235,104,7,221,unlikely,False,,,174
+nlp-00544:g-han-B29F5017-856D-4E36-980A-C17AF47DAF93-24,We will legislate,2021-01-28,0.26279163376977477,0.09111273627770011,99,6,218,unlikely,False,,,174
+nlp-00545,establish in domestic law a system of subsidy control that works throughout,2021-02-03,0.39270851270711615,0.14369053763256717,93,6,216,uncertain,True,2021-06-30,22.0,298
+nlp-00546,Government therefore remain committed to our manifesto pledge to ban public bodies,2021-02-04,0.18132344280243798,0.06033539775833866,104,7,221,unlikely,True,2021-07-19,24.0,298
+nlp-00547:g-han-906AC18C-7AF6-427A-B6ED-2906B11C8D21-3,Unauthorised Encampments,2021-02-08,0.2608546417435883,0.08940854206957996,101,7,220,unlikely,False,,,172
+nlp-00548,create this body,2021-02-22,0.296938555724791,0.10446764622891944,98,6,219,uncertain,True,2021-03-02,2.0,295
+nlp-00549:g-han-138EFEA5-ECBE-479A-BBD0-5814FDDA42CD-9,intent and a desire for certainty,2021-02-24,0.1927216504386375,0.06480610179007493,103,6,221,unlikely,False,,,170
+nlp-00550:g-han-EFE72A05-9F6A-4899-9B9A-BEB8015B2A4E-16,reform programme,2021-03-03,0.17457652106408938,0.05860579473068066,104,7,221,unlikely,False,,,169
+nlp-00551:g-wms-1300510-28,introduce a new electoral sanction of intimidation against those who participate in,2021-03-09,0.22611941042185305,0.07743313185879118,101,7,220,unlikely,False,,,168
+nlp-00552:g-han-0E19798A-E8EE-4F74-B29F-53A4D90F5CEE-44,create the new regulator,2021-03-10,0.17415183625892974,0.05836765173475815,104,7,222,unlikely,False,,,168
+nlp-00553,Residential Property Update,2021-03-11,0.2632227548309091,0.09148495041837394,99,7,220,unlikely,True,2022-10-24,85.0,293
+nlp-00554:g-wms-1302731-15,Concluding Part One of the Police and Crime Commissioner Review,2021-03-16,0.26753902508287375,0.09183029671092034,100,7,221,unlikely,False,,,167
+nlp-00555,Public Health (Coronavirus) (Protection from Eviction) (England) (No. 2) Regulations 2021,2021-03-18,0.2589913040195651,0.08848888652232179,101,7,221,unlikely,True,2021-11-09,34.0,292
+nlp-00556,make football reform a reality,2021-03-18,0.2677795218926161,0.09184213163312259,100,7,221,unlikely,True,2024-03-19,157.0,292
+nlp-00557:g-wms-1304446-14,Government will look to bring forward legislation to implement these recommendations,2021-03-22,0.22282223381588445,0.07412965778199244,104,8,222,unlikely,False,,,166
+nlp-00558:g-han-070AC0FB-1968-4560-BD18-4EEADE03A105-0,I am grateful for the opportunity to say here in the House,2021-03-23,0.1715290043566199,0.055854352476473995,105,9,222,unlikely,False,,,166
+nlp-00559:g-wms-1305936-24,ensure that the Government’s response to COVID-19,2021-03-25,0.2594160652499206,0.087552671366739,102,8,221,unlikely,False,,,166
+nlp-00560,strengthening our democracy and empowering young people to participate in it,2021-03-31,0.25580658664574957,0.08530261122392475,103,8,221,unlikely,False,,,165
+nlp-00561:g-han-86A9EA76-AAEB-4AFD-9502-F402057EB8E6-5,was part of the White Paper we published in February,2021-04-19,0.17147561906884692,0.05618607044318412,105,8,221,unlikely,False,,,162
+nlp-00562,government expects to pay out around £120m in compensation in total,2021-04-19,0.1969535270275784,0.06520097491739671,104,8,221,unlikely,True,2021-05-12,4.0,287
+nlp-00563,Bill,2021-04-20,0.1714262182816305,0.05614596239984104,105,8,222,unlikely,True,2023-03-21,101.0,287
+nlp-00564:g-han-44EC15F2-BD3A-4A2A-9D9B-6090D5535E01-16,Money Laundering and Terrorist Financing (Amendment) (High-Risk Countries) Regulations 2021,2021-04-27,0.1711472646606624,0.055974672620968585,105,8,221,unlikely,False,,,161
+nlp-00565:g-han-9ED743A1-F9DC-44E4-AC6E-82AC619944F5-35,provide security services with additional tools to tackle the evolving threat,2021-04-27,0.2568743703582749,0.08706112638540794,101,8,220,unlikely,False,,,161
+nlp-00566:g-han-F5F099A6-7640-4804-9F97-5D413E24078E-18,responses indicate that there is broad support for tougher sanctions,2021-04-27,0.18922043105527234,0.06233716612754914,105,8,221,unlikely,False,,,161
+nlp-00567:g-han-D86330AD-AC22-44A6-85BA-C3035062B7E0-0,Ballymurphy Inquest Findings,2021-05-13,0.29105953262144096,0.12253494849129812,77,5,214,unlikely,False,,,159
+nlp-00568:g-wms-1314238-19,e-Commerce: VAT legislative changes,2021-05-13,0.30157885690408465,0.127501078370154,77,5,214,uncertain,False,,,159
+nlp-00569:g-han-1632CD6D-5D4D-404D-B077-D19D1DCC8697-46,Environment Bill we are bringing forward is a pivotal part of delivering,2021-05-17,0.28901246857199264,0.12056818127337188,78,6,215,unlikely,False,,,158
+nlp-00570:g-han-1632CD6D-5D4D-404D-B077-D19D1DCC8697-47,set long-term,2021-05-17,0.28901246857199264,0.12056818127337188,78,6,215,unlikely,False,,,158
+nlp-00571:g-han-1632CD6D-5D4D-404D-B077-D19D1DCC8697-56,animals abroad tackle issues outside the United Kingdom,2021-05-17,0.28901246857199264,0.12056818127337188,78,6,215,unlikely,False,,,158
+nlp-00572:g-han-39546E6B-AF90-444D-BD8A-435DE27CA291-71,give freeholders on private mixed-tenure estates equivalent rights to leaseholders to challenge,2021-05-24,0.21200350680259533,0.08483810207951226,82,6,217,unlikely,False,,,157
+nlp-00573:g-wms-1329909-20,draft Bill will be published with accompanying explanatory notes and an assessment,2021-06-07,0.32462180910023214,0.13664871990285463,76,4,213,uncertain,False,,,155
+nlp-00574:g-han-65255195-75D4-4086-A855-739E997299B4-51,know that DAERA and Defra officials are working closely with the chair-designate,2021-06-08,0.21224254584946883,0.08544089185614052,81,4,216,unlikely,False,,,155
+nlp-00575,consultation response,2021-06-08,0.19224469855533188,0.07682203722811816,83,4,217,unlikely,False,,,155
+nlp-00576:g-han-C5EA0D09-1B3C-4A7F-BDBF-50A26DC9882D-1,but it is only right that that legislation considers the impact,2021-06-14,0.28432349610855107,0.11663252960610068,79,4,215,unlikely,False,,,154
+nlp-00577:g-han-678F5111-EAAB-42B4-A93C-AEF046C30C83-1,Summer-born and Premature Children,2021-06-21,0.1890639524228081,0.07410014093499986,85,5,222,unlikely,False,,,153
+nlp-00578:g-han-266F651E-C21E-4B45-B539-A9BAEC26F3B3-0,committed to introducing financial penalties for organisations that fail to meet their,2021-06-24,0.18878651615102415,0.07389810452232089,86,5,222,unlikely,False,,,153
+nlp-00579,in the upcoming Health and Care Bill,2021-06-24,0.26879916331110976,0.10849369886078004,82,4,221,unlikely,True,2021-07-06,2.0,278
+nlp-00580:g-han-0709882D-1965-42F6-A1B1-00DF395A9FDF-4,on,2021-06-28,0.2800591613534484,0.112798307492527,83,4,221,unlikely,False,,,152
+nlp-00581:g-wms-1341566-4,continue to explore bringing forward the necessary legislation,2021-06-29,0.2670887557232193,0.10697303945243583,83,4,221,unlikely,False,,,152
+nlp-00582,address online harms and make the UK the safest place in,2021-06-30,0.20699163433998236,0.08096114638521366,86,5,225,unlikely,True,2023-11-14,124.0,277
+nlp-00583,Social Housing: Housing Ombudsman,2021-07-01,0.2796776464856622,0.11249757086009309,83,4,221,unlikely,False,,,152
+nlp-00584:g-wms-1343375-1,announcing today that,2021-07-05,0.28788349647719036,0.11516338206451718,83,10,224,unlikely,False,,,151
+nlp-00585,provide a response,2021-07-06,0.28648668946684935,0.11449422657518614,83,10,224,uncertain,True,2021-07-06,1.0,276
+nlp-00586:g-han-D7511BAD-5DE7-4905-996A-6B9425D25CE6-2,Pregnancy and Maternity Discrimination,2021-07-07,0.18577730970659576,0.07135568699325277,88,11,225,unlikely,False,,,151
+nlp-00587:g-han-AB075429-8838-4497-8E42-9EE20449B05F-7,against them,2021-07-12,0.27424952364689986,0.10704563384918826,86,11,224,unlikely,False,,,150
+nlp-00588:g-wms-1345592-0,motion for the House of Commons to consider whether to amend,2021-07-12,0.2616169050157271,0.10159062555754764,87,11,224,unlikely,False,,,150
+nlp-00589:g-han-A615703D-BE3A-432C-A6E6-E1348B2492D3-27,give Ofsted additional powers to take action against illegal,2021-07-20,0.2710183569146611,0.10360690936559905,88,14,225,unlikely,False,,,149
+nlp-00590,Consumer Update,2021-07-20,0.405293156638953,0.16450427250840965,81,14,222,uncertain,False,,,149
+nlp-00591:g-han-36412157-BA26-4B29-9C0F-A4803C950E7C-1,These proposals will be considered as part of the ongoing talks process,2021-07-21,0.27089997207842303,0.10351425027401409,88,14,225,unlikely,False,,,149
+nlp-00592:g-wms-1350815-17,keep the new statutory guidance under review,2021-08-18,0.2754678626986139,0.10235580148854227,89,13,223,uncertain,False,,,145
+nlp-00593:g-wms-1352725-11,Government consultation response on statutory storage limits for gametes and embryos,2021-09-06,0.2385648913192374,0.0921441881892406,82,8,220,unlikely,False,,,142
+nlp-00594:g-han-5917A875-65E1-4013-ABB7-EF16420686DB-69,changes,2021-09-07,0.18406458564226044,0.06959115214364762,86,8,220,unlikely,False,,,142
+nlp-00595,in this Parliament that will further commit us to creating more nuclear,2021-09-07,0.27509171841870395,0.10778039374071482,81,8,219,unlikely,True,2021-10-26,8.0,267
+nlp-00596:g-han-1E3BAFB3-2C1A-4A09-B981-7DCA371C462A-37,I assure the House that the Government remain committed to introducing legislation,2021-09-10,0.18201356287495224,0.06750721636139677,88,9,221,unlikely,False,,,141
+nlp-00597:g-wms-1355635-4,these changes in an amendment to the Elections Bill at Committee stage,2021-09-15,0.25909260868657796,0.09883800189024243,85,9,220,unlikely,False,,,141
+nlp-00598:g-han-2637655D-767E-47C3-AEE6-6E798093D78E-2,registration of beneficial ownership and will do so,2021-10-13,0.2742291869551556,0.1073934310132565,80,6,217,unlikely,False,,,137
+nlp-00599:g-han-CC55EAFC-F5EF-464A-913D-045F1B12F82C-4,allow parents of children in neonatal care to take extended leave,2021-10-20,0.2751163069728262,0.10865186532841824,79,5,216,unlikely,False,,,136
+nlp-00600:g-han-CC55EAFC-F5EF-464A-913D-045F1B12F82C-5,Details of the policy were published last year and we will bring,2021-10-20,0.2751163069728262,0.10865186532841824,79,5,216,unlikely,False,,,136
+nlp-00601:g-wms-1362137-24,Sir Richard Henriques’ Review,2021-10-21,0.23837593672578666,0.092728615222871,81,5,217,unlikely,False,,,136
+nlp-00602,fix the broken asylum system,2021-10-26,0.20240005718308793,0.077323483555455,83,5,219,unlikely,False,,,135
+nlp-00603:g-han-1FA36CC3-485D-4D9B-9A5E-79194C730AAA-3,deliver the cultural package as set out in NDNA,2021-10-26,0.2739017175981738,0.10762921122734681,80,5,216,unlikely,False,,,135
+nlp-00604:g-han-CD78BC76-3DD3-4C69-AF12-FA7CB8D6BFC0-4,only,2021-11-01,0.27245175110273595,0.10631348935183627,81,5,218,unlikely,False,,,134
+nlp-00605:g-han-E5FEC7B5-386F-452A-9171-F795E4C2178C-42,Trophy Hunting Imports Ban: Endangered Species,2021-11-03,0.2722247311279717,0.10612370764592043,81,5,218,unlikely,False,,,134
+nlp-00606:g-han-A85C8FFB-4D3F-4DE7-ADE4-25E73D7513E4-1,require that holiday rentals meet an actual letting threshold before being assessed,2021-11-04,0.2721113586973843,0.10602893593739747,81,5,218,unlikely,False,,,134
+nlp-00607:g-han-FA341243-ABA3-40F2-A61B-1CC8C7C09DF1-1,we have been working very closely with the Treasury and the Valuation,2021-11-04,0.2721113586973843,0.10602893593739747,81,5,218,unlikely,False,,,134
+nlp-00608:g-han-B49B2314-96EF-41D3-BD04-01911B6FAE8E-3,but I reassure her that we will crack down on the use,2021-11-16,0.18105677815019106,0.06790917777695626,86,5,220,unlikely,False,,,132
+nlp-00609:g-han-F04D8A88-E94A-4131-9E07-CF37E97CD133-1,Integrated Rail Plan: North and Midlands,2021-11-18,0.27064233388680053,0.10504375791220551,82,5,218,unlikely,False,,,132
+nlp-00610:g-han-BCE62065-626B-4557-A6DD-15603E49DC90-13,work to criminalise virginity testing and will bring forward legislation,2021-11-19,0.1803515843497597,0.06731898332464786,87,5,220,unlikely,False,,,131
+nlp-00611:g-han-FA58BA3B-95D9-4189-AC2B-A52FA07517E7-39,currently working through our options,2021-11-29,0.1787595622688919,0.06590582518950559,93,7,221,unlikely,False,,,130
+nlp-00612:g-han-A88FF250-72E5-47FF-88D0-72C1B00C5824-65,address any barriers to mandatory reimbursement,2021-12-02,0.1785319658961196,0.06572529746130702,93,7,221,unlikely,False,,,130
+nlp-00613:g-han-E976B126-8623-459C-8E71-7A9A0FB41D9B-1,regardless of what the industry brings forward,2021-12-07,0.265476130899978,0.1000654530393133,85,7,220,unlikely,False,,,129
+nlp-00614:g-han-CB43AAAC-0B98-4348-A0E6-163DAD3147C1-11,"Should that Private Member’s Bill be unsuccessful, the Government remain committ",2021-12-13,0.1756237214906488,0.06296001029995671,98,8,222,unlikely,False,,,128
+nlp-00615:g-han-5FF11E06-8333-4474-A6D7-FB20DCCDB039-18,Co-operatives and Mutual Societies,2021-12-14,0.17555148677043686,0.0629023785661852,98,8,222,unlikely,False,,,128
+nlp-00616:g-wms-1388031-28,extend the energy price cap beyond the existing longstop date of December,2021-12-15,0.27189756679838895,0.10121310007961203,92,7,220,unlikely,False,,,128
+nlp-00617:g-wms-1388403-87,Government Response to the Independent Inquiry Report into the Issues raised by Former Surgeon Ian Paterson,2021-12-16,0.2506930753613429,0.09245663017058306,93,8,220,unlikely,False,,,128
+nlp-00618:g-wms-1388409-17,build on our well established nuclear third-party liability regime by seeking accession,2021-12-16,0.2717929218275492,0.1011224534850445,92,7,220,unlikely,False,,,128
+nlp-00619:g-wms-1399703-82,announced before Christmas,2022-01-05,0.25051485044105004,0.0925812722489737,94,6,219,unlikely,False,,,125
+nlp-00620:g-han-97989611-4F69-43D5-B6EB-61664033F006-1,these detailed and ambitious legislative proposals,2022-01-13,0.17617421092197735,0.06416927416821194,96,5,219,unlikely,False,,,124
+nlp-00621:g-han-0403D604-2332-4ABF-85CF-AA92C8DDEF18-22,committed to repealing the outdated Act and replacing it with much more,2022-01-17,0.17502667751637616,0.06349587272321296,96,6,219,unlikely,False,,,123
+nlp-00622:g-han-0403D604-2332-4ABF-85CF-AA92C8DDEF18-24,In the light of the commitment that I have outlined,2022-01-17,0.17502667751637616,0.06349587272321296,96,6,219,unlikely,False,,,123
+nlp-00623:g-han-79C62964-BF8C-462F-A982-92B75BFC8D57-3,today is part of our wider reform to make sure that something,2022-02-02,0.2586671573749442,0.09489773887124495,95,6,219,unlikely,False,,,121
+nlp-00624:g-han-79C62964-BF8C-462F-A982-92B75BFC8D57-58,explore further statutory protections for leaseholders and we will bring forward proposals,2022-02-02,0.19060698287398023,0.06803612143772975,97,6,221,unlikely,False,,,121
+nlp-00625:g-han-F853887E-9C0E-483A-8659-37E65CE0C21E-37,Department for Business,2022-02-04,0.17199060235872865,0.0607915353852076,100,7,221,unlikely,False,,,120
+nlp-00626:g-han-853B75BB-E98B-45C5-AB6F-339ED55AFA3E-24,today since we left the European Union,2022-02-08,0.2576884474264502,0.09407035961835213,95,6,220,unlikely,False,,,120
+nlp-00627:g-han-7F231517-E5D8-4CFF-9787-E5B436DA9E19-24,not talking about neat files here,2022-02-10,0.1897074831664855,0.06731073904830062,98,7,221,unlikely,False,,,120
+nlp-00628:g-wms-1437639-14,Responses to consultations on reforms to MiFID and the Prospectus Regime,2022-03-03,0.268228893966139,0.0995798933994203,93,5,219,unlikely,False,,,117
+nlp-00629:g-han-F9264BAE-902C-4E30-BD05-5B8380C26DBC-10,Rape and Sexual Violence,2022-03-08,0.257963131196005,0.09533086933206374,94,6,219,unlikely,False,,,116
+nlp-00630:g-wms-1439533-1,in Spring 2022 to ensure that the new Adult Disability Payment made,2022-03-10,0.2673372540265542,0.09908165515261018,93,6,219,unlikely,False,,,116
+nlp-00631,introduce children not in school registers,2022-03-14,0.18839905216901284,0.06667837387432231,99,7,221,unlikely,True,2022-05-11,9.0,240
+nlp-00632:g-wms-1441164-16,therefore take these proposals forward via a separate Legislative Reform Order,2022-03-15,0.26342532474407365,0.09606119930873783,96,7,219,uncertain,False,,,115
+nlp-00633:g-han-5C51FE31-6B10-41CE-9D85-C1942873E798-4,She will understand that parliamentary time is finite and there has been,2022-03-17,0.2555392629371833,0.09278189920297247,97,7,219,unlikely,False,,,115
+nlp-00634:g-han-B4199AC5-403B-4034-82DC-F7123A96674B-4,self-driving vehicles and so on,2022-03-24,0.25365088500316657,0.09082923891097053,98,8,221,unlikely,False,,,114
+nlp-00635:g-han-1EA782F7-35DF-480D-8F7C-BD9E85B96E96-3,Forced Labour of Uyghurs: UK Supply Chains,2022-03-29,0.16780816127420073,0.057426325590509496,103,8,222,unlikely,False,,,113
+nlp-00636:g-han-F6D8C172-31CE-4E40-9DFA-B0CD003CDBA0-63,Parole System: Public Protection,2022-03-30,0.25204745894109365,0.0891962067911908,99,8,221,unlikely,False,,,113
+nlp-00637:g-wms-1456083-17,My officials have been working with the Security and Intelligence Agencies,2022-03-31,0.2601700660631113,0.0923387619472317,99,8,221,unlikely,False,,,113
+nlp-00638:g-wms-1456088-0,Tax exemptions for sponsorship payments under Homes for Ukraine Scheme,2022-03-31,0.2613445174372952,0.09280197293707142,99,8,221,unlikely,False,,,113
+nlp-00639:g-wms-1459913-19,Trade Update,2022-04-25,0.21906113822972398,0.0774093394494653,99,7,220,unlikely,False,,,109
+nlp-00640:g-han-963EA646-420C-42D4-A04F-04B38D1867BF-86,protecting freedom of debate on university campuses,2022-05-10,0.25139397457599777,0.08865132062347302,98,7,220,unlikely,False,,,107
+nlp-00641:g-han-BAA0D40D-88EA-440C-83E4-F9E3669077D0-9,introducing these changes will be brought forward,2022-05-16,0.18545147874781417,0.07379863871768047,83,6,217,unlikely,False,,,106
+nlp-00642:g-han-C46E8EC6-3371-495D-92FE-F2CDDE3DB513-1,Social Welfare Law Cases: Legal Aid,2022-05-16,0.27703581982199366,0.11414843444376073,79,6,216,unlikely,False,,,106
+nlp-00643:g-han-9627AE51-0C1B-4B9B-B8AB-87C5F77FA7F0-45,ensure that our post-18 education system really promotes genuine social mobility,2022-05-17,0.2769094430208694,0.11404697447340685,80,6,216,unlikely,False,,,106
+nlp-00644:g-han-9627AE51-0C1B-4B9B-B8AB-87C5F77FA7F0-75,We know it is disappointing that the Queen’s Speech did not include,2022-05-17,0.18536138299936084,0.07373149288411318,83,6,217,unlikely,False,,,106
+nlp-00645:g-han-E5C612F3-AADB-4DDA-994F-516D36C64E5E-16,Economy Update,2022-05-26,0.2740542646857474,0.11130598213781151,81,6,216,unlikely,False,,,105
+nlp-00646,Great British Energy,2022-06-09,0.262717190367062,0.10648195792152075,80,4,222,unlikely,False,,,103
+nlp-00647:g-han-1A56DA20-9A17-42C7-9C57-1E8CEBF7B54C-2,deliver our commitment to introduce one week of unpaid leave for unpaid,2022-06-14,0.18227664723052406,0.07126286474072521,86,4,223,unlikely,False,,,102
+nlp-00648:g-wms-1470053-13,enable prisoner apprenticeships,2022-06-14,0.4060098626456051,0.17404037464979824,75,4,212,uncertain,False,,,102
+nlp-00649:g-han-B1D4AC5E-D4D1-4A5D-9EC8-EC4E40717C67-0,Fire and Rehire,2022-06-15,0.1821907546322617,0.07119793667334297,86,4,223,unlikely,False,,,102
+nlp-00650:g-han-1B5E0DC0-D45C-4ACE-99DB-A165FAAC1429-51,mandate the completion of disability awareness training by taxi and PHV drivers,2022-06-21,0.2704935089015119,0.10838113492948227,83,4,221,unlikely,False,,,101
+nlp-00651:g-han-DC8C9A0E-D041-4342-8AC9-2A34E7F1770E-0,change the inflationary index used in the calculation of the annual pitch,2022-06-22,0.2703750656506216,0.10828448130963991,83,4,221,unlikely,False,,,101
+nlp-00652,landmark Energy Security Bill,2022-07-06,0.3989677890689101,0.16591901560588393,80,10,219,uncertain,True,2022-07-06,1.0,224
+nlp-00653:g-han-05218B08-4EB0-4B76-850D-62B91C0065C2-1,give effect to the conclusions of the 2017 consultation on radio deregulation,2022-07-11,0.1941491773927628,0.0727050694906146,91,14,226,unlikely,False,,,98
+nlp-00654:g-wms-1489484-12,Firearms Safety Consultation,2022-07-15,0.26925104374284387,0.10192925020701998,89,15,225,unlikely,False,,,97
+nlp-00655,Data Protection and Digital Information Bill in the House of Commons,2022-07-18,0.3323972500644341,0.12912708923859778,86,14,224,unlikely,True,2022-07-18,1.0,222
+nlp-00656:g-wms-1490899-7,Call for Evidence Response on SLAPPs,2022-07-20,0.38950290113673647,0.15520793554185322,84,14,223,uncertain,False,,,97
+nlp-00657:g-wms-1490915-16,Draft legislation will be published this Autumn to give the Competition,2022-07-20,0.2955003824304935,0.11286336954680087,88,14,225,uncertain,False,,,97
+nlp-00658:g-wms-1490932-47,restrict certain claims for double taxation relief,2022-07-20,0.2699031661545649,0.10198010857975603,89,15,225,unlikely,False,,,97
+nlp-00659:g-han-1E3EAE71-1E9B-4946-A830-397ACC74F54C-0,noble Lord will be very well aware,2022-09-06,0.26508266992950946,0.10200044096122654,83,8,220,unlikely,False,,,90
+nlp-00660:g-han-7DF447B8-17DA-47EA-99A2-E8AD89B8EE38-6,If we do not get a negotiated solution,2022-09-07,0.26497392757110116,0.10190913134002283,84,8,220,unlikely,False,,,90
+nlp-00661,Energy Prices: Support for Business,2022-09-22,0.2593445842485488,0.09674083123291755,87,9,220,unlikely,True,2022-10-12,3.0,213
+nlp-00662:g-wms-1507519-34,emergency legislation to underpin the delivery of our support package,2022-09-22,0.3895741215544099,0.1539801350290607,79,9,218,uncertain,False,,,88
+nlp-00663:g-wms-1507519-35,immediately after Parliamentary Recess,2022-09-22,0.3895741215544099,0.1539801350290607,79,9,218,uncertain,False,,,88
+nlp-00664:g-han-E1B2537F-8EBF-42A1-9752-BBBEF4B4C4D4-60,unpick the complex patchwork of planning restrictions and EU-derived laws that constrain,2022-09-23,0.2582070703866716,0.09543225446662217,89,9,220,unlikely,False,,,87
+nlp-00665:g-han-E1B2537F-8EBF-42A1-9752-BBBEF4B4C4D4-73,require unions to put pay offers to a member vote,2022-09-23,0.2582070703866716,0.09543225446662217,89,9,220,unlikely,False,,,87
+nlp-00666,Post Office: GLO Compensation Scheme,2022-09-23,0.1788604375743002,0.06404345375752261,92,10,224,unlikely,True,2023-11-29,62.0,212
+nlp-00667:g-han-A9E76665-A0DE-4E19-ABC4-976C9E36F2F6-2,Stockton to Darlington Railway Anniversary,2022-10-11,0.17655410627078613,0.06559906529735267,87,6,222,unlikely,False,,,85
+nlp-00668:g-wms-1520224-4,exempt these payments,2022-10-11,0.2742728968350941,0.10589994289813678,82,6,218,unlikely,False,,,85
+nlp-00669:g-han-39C3A70B-B6F1-4335-B333-AD9DC50E9BDD-2,getting an agreement with the French Government,2022-10-12,0.1950445601249775,0.0729444688162901,87,6,219,unlikely,False,,,85
+nlp-00670:g-han-1F85EC32-5374-430A-A2D1-1B18D2BAC4F8-4,timetable for rental reform legislation,2022-10-17,0.26498043512915426,0.10301210382248802,81,5,217,unlikely,False,,,84
+nlp-00671:g-han-E0C91323-0601-4597-BC42-845BE6CC612F-28,Lawfare and Investigative Journalism,2022-10-17,0.19548563341042655,0.0739502657817068,84,5,218,unlikely,False,,,84
+nlp-00672:g-han-DC265037-71AA-4198-BE5A-F197BF558929-0,go further to allow Ministers to block release,2022-10-18,0.2648740307204877,0.10291994075766715,81,5,217,unlikely,False,,,84
+nlp-00673,make sure that we keep our railways open,2022-10-19,0.2647677060704925,0.10282785517795312,82,5,217,unlikely,False,,,84
+nlp-00674:g-han-86DFE1A5-672D-4A55-AA70-27B20D1DCC81-6,Western Jet Foil and Manston Asylum Processing Centres,2022-10-31,0.2619620743912274,0.10060750788751674,84,5,220,unlikely,False,,,82
+nlp-00675:g-han-667C8CB6-85E9-45B8-A11C-31BF6E87932E-36,in secondary legislation for the registrar to annotate the register,2022-11-01,0.2618592081907615,0.10051737126170036,84,5,220,unlikely,False,,,82
+nlp-00676:g-han-4B73ABF2-806F-4EAB-A309-2BDF1983BBBD-50,introduce a legally binding decent homes standard in the private rented sector,2022-11-16,0.26044510734682225,0.09949102542975857,84,5,220,unlikely,False,,,80
+nlp-00677,give the Digital Markets Unit new powers to challenge monopolies and increase,2022-11-17,0.26034482187825775,0.09940182916168584,84,5,220,unlikely,True,2023-04-25,23.0,205
+nlp-00678:g-wms-1545580-1,introduce a package of new criminal offences on intimate image abuse,2022-11-25,0.2656023810851249,0.10019220281555853,86,7,220,uncertain,False,,,78
+nlp-00679,is outwith this Bill,2022-12-07,0.18813245177479335,0.06781199672003736,98,8,222,unlikely,False,,,77
+nlp-00680:g-wms-1550175-40,through the FSM Bill to introduce new secondary objectives for the FCA,2022-12-09,0.2631384828017668,0.09651914435432296,96,8,221,unlikely,False,,,76
+nlp-00681,reform transitional relief,2022-12-12,0.186568518001906,0.06624906996895501,100,8,223,unlikely,True,2023-03-29,16.0,201
+nlp-00682:g-han-66904959-F635-4D4E-A508-21B4AE6EA1A9-0,make it clear that if someone comes here on a small boat,2022-12-14,0.2532459345856991,0.09227665287397369,97,8,222,unlikely,False,,,76
+nlp-00683:g-wms-1551950-7,draft legislation will be published today on GOV,2022-12-15,0.19362131292442447,0.06883813391100803,100,8,223,unlikely,False,,,76
+nlp-00684:g-han-0BAF1B4B-ACD8-4D78-94C6-732F93CADCAA-30,BBC: Future Funding (Communications and Digital Committee Report),2022-12-16,0.25175353058247674,0.09069726604930493,98,8,222,unlikely,False,,,75
+nlp-00685:g-han-04A22517-4096-429F-83CE-C8D2F4BF5E0E-3,working at speed on all the things that do not need legislation,2022-12-20,0.16729012440080576,0.05814221869538847,102,8,223,unlikely,False,,,75
+nlp-00686:g-wms-1564714-14,introduce a statutory duty on Channel 4 to consider its sustainability as,2023-01-09,0.22102286879405628,0.08057749025063012,96,5,221,unlikely,False,,,72
+nlp-00687,Industrial Action,2023-01-10,0.03289577770507484,0.01118677721392006,105,7,225,unlikely,True,2023-01-10,1.0,197
+nlp-00688:g-han-8588B5B0-EDF3-4B3A-92A4-B981E29C1D47-31,set out a proposed approach to banning conversion practices,2023-01-17,0.1866646586922533,0.06675084262822416,98,6,221,unlikely,False,,,71
+nlp-00689:g-han-9D116128-FA59-4C33-8379-B7FD500BB11B-91,by the Government as a result of the findings of the assessment,2023-01-17,0.2535535646348332,0.09313259138230882,95,6,220,unlikely,False,,,71
+nlp-00690:g-han-0215DF51-4FBA-41AE-B3E4-40C78C25B2D6-5,give Ministers the power to refuse a release decision made by,2023-01-18,0.253464592067593,0.09304878917230014,95,6,220,unlikely,False,,,71
+nlp-00691:g-han-5322BC65-4158-412B-A37A-0A3861686622-3,makes it clear that if you come here illegally,2023-01-25,0.2514638475906888,0.0909406491154561,97,6,221,unlikely,False,,,70
+nlp-00692:g-han-843FA7F4-78DF-4EAC-BE38-12A16E8100FD-2,help build the holocaust memorial and learning centre next to Parliament,2023-01-25,0.2514638475906888,0.0909406491154561,97,6,221,unlikely,False,,,70
+nlp-00693:g-han-7FE4ADD4-0362-4DEA-BC25-EE39FECD3D10-25,We will bring forward legislation,2023-01-30,0.2504115261278607,0.08993452408108435,97,6,222,unlikely,False,,,69
+nlp-00694:g-han-24BC7B82-07B6-4EE5-9F90-4F715470AB79-27,ban conversion practices,2023-02-02,0.1840507448982908,0.06424915080341109,102,7,223,unlikely,False,,,69
+nlp-00695:g-han-2B1AA684-F6FA-4E1B-A44B-CA02456F2A41-41,responsible actors scheme,2023-02-02,0.25015722469969376,0.08969151666371225,97,6,222,unlikely,False,,,69
+nlp-00696:g-han-3F6E358C-916B-41D1-9367-A221181D9616-1,We have set out those reforms in our White Paper,2023-02-02,0.16641969117509053,0.057698050072032575,103,7,223,unlikely,False,,,69
+nlp-00697:g-han-417253DC-EA14-46E5-875E-EF405238DF8F-38,ban the advertising and offering for sale here of specific,2023-02-03,0.24969169030900878,0.08930918033656587,98,6,222,unlikely,False,,,68
+nlp-00698:g-han-16114B06-1715-4AD2-9DE3-5F657543D121-15,build is one where if someone comes here illegally via a safe,2023-02-20,0.16680174333653686,0.05800974357630483,102,6,223,unlikely,False,,,66
+nlp-00699:g-wms-1587086-16,so those with convictions of controlling or coercive behaviour,2023-02-20,0.37731404509023553,0.14361353945642372,91,5,219,uncertain,False,,,66
+nlp-00700,in the Criminal Justice Bill,2023-02-21,0.16674362465152623,0.05795649751902291,102,6,223,unlikely,False,,,66
+nlp-00701:g-han-8D7F859C-1C2B-465C-8AB7-3DD1A2A4F27B-1,behalf of the devolved Administrations,2023-02-22,0.2505358951388609,0.09000541273136543,99,6,222,unlikely,False,,,66
+nlp-00702:g-han-92A14EBC-A2AB-43B8-BD80-B598663DB1E3-0,but the Leader of the House will continue to announce business in,2023-02-23,0.1666275446171816,0.05785014727857122,102,6,223,unlikely,False,,,66
+nlp-00703:g-han-0EEBEFC5-3054-433A-9255-B64F0BCC05BA-2,put in statute unfettered access for Northern Ireland’s producers into Great Britain,2023-02-27,0.250667740738776,0.0907207735446339,98,5,221,unlikely,False,,,65
+nlp-00704:g-han-5D6AF69A-C1A3-440C-9924-6A1094A1313D-3,Home-schooled Children Register,2023-02-27,0.18444288111067675,0.06499645970321556,101,6,222,unlikely,False,,,65
+nlp-00705:g-han-CFAA0715-ADB1-4EFC-ACA8-02181F7E88A1-0,rail reform will be introduced,2023-02-27,0.16677811369743725,0.05837144919982374,102,6,224,unlikely,False,,,65
+nlp-00706:g-han-1EE84FAD-E54F-4968-96AF-C940D15AC8CA-0,Today I can announce that we intend to legislate,2023-03-01,0.18431635705289848,0.06487765464004201,101,6,222,unlikely,False,,,65
+nlp-00707:g-han-4D963555-3B55-45E0-A525-FD18EE2BD4C8-2,Homeless People and Rough Sleeping,2023-03-01,0.2505032898202256,0.09055734904611538,98,5,221,unlikely,False,,,65
+nlp-00708:g-han-3D7264DE-EA06-4F60-ACD9-C07E80D06713-1,will do precisely as he asks,2023-03-02,0.25042118151243825,0.09047574145949681,98,5,221,unlikely,False,,,65
+nlp-00709:g-han-291311F9-6816-40A5-8D02-4531FF2B6820-6,scrutiny in the spring,2023-03-06,0.2498842085992411,0.09026453669550775,98,6,221,unlikely,False,,,64
+nlp-00710,Domestic Homicide Sentencing Review - Publication and Interim Response,2023-03-17,0.370497879027284,0.13742382061842484,95,7,219,uncertain,True,2023-11-14,35.0,187
+nlp-00711:g-han-4A6FEBFB-AFE4-415A-BAA6-EB4F86AF9736-1,Private Rented Sector,2023-03-27,0.24448642062565024,0.08451658973710444,103,8,223,unlikely,False,,,61
+nlp-00712:g-han-F2092494-82C6-4A59-918F-ECA408DF8587-6,children not in school measures at the next suitable opportunity,2023-03-27,0.1796935416251839,0.0604914194167885,105,8,224,unlikely,False,,,61
+nlp-00713:g-han-3C125D2A-5897-46C5-93E8-B6B79FCFD3F5-39,amend the Housing and Planning Act 2016 and make certain landlord offence,2023-04-18,0.24632595975927637,0.0861517804346597,101,8,222,unlikely,False,,,58
+nlp-00714:g-han-91EFC8A3-1784-4250-8216-4C82B7157572-11,issue,2023-04-20,0.16362366472818768,0.055278590967103636,105,8,224,unlikely,False,,,58
+nlp-00715:g-wms-1623565-5,clear target on storm overflow reduction in line with our Plan,2023-04-25,0.31430007193263143,0.11312451422981297,98,7,220,unlikely,False,,,57
+nlp-00716,NI Finances 2023-24,2023-04-27,0.21213306228398449,0.07298887933396933,103,7,222,unlikely,True,2023-11-27,31.0,182
+nlp-00717:g-han-37726BEE-5D43-4983-9CE4-4D260852AC0C-78,ensure that police requests for third-party material are necessary and proportionate,2023-05-03,0.17926495005151868,0.06028748989746126,106,8,228,unlikely,False,,,56
+nlp-00718:g-han-71E3B612-BF17-4022-B38A-B67B75002447-3,committed to preventing exploitation of UK courts by legislating against SLAPPs,2023-05-16,0.17788730976114472,0.058844199882416785,106,7,228,unlikely,False,,,54
+nlp-00719:g-wms-1640277-9,powers through the Levelling Up and Regeneration Bill that will allow direct,2023-05-25,0.3078987156772204,0.10594280147067295,102,7,226,unlikely,False,,,53
+nlp-00720:g-han-93E494E2-03FF-4231-9261-E5B574A252AD-50,I was asked many questions about legislation in the debate,2023-06-14,0.15903255206842182,0.051023155913722675,108,6,231,unlikely,False,,,50
+nlp-00721:g-han-B069AFA9-CAA6-4086-9480-56F2CBC6B4DA-109,strikes that balance,2023-06-14,0.23962739924866422,0.07948014094956729,106,6,229,unlikely,False,,,50
+nlp-00722,secondary year,2023-06-21,0.3054935082378386,0.103159140362031,104,6,228,unlikely,True,2023-12-04,24.0,174
+nlp-00723:g-han-63F9C6B1-2D36-4C08-BAF6-4C6087039A87-6,require those holding assets in the UK on behalf of the Central,2023-06-27,0.2372310940697639,0.07695949687312911,107,12,230,unlikely,False,,,48
+nlp-00724:g-han-21E476F7-58EB-4451-BCC3-191EE39F572D-20,introduce comprehensive anti-SLAPPs legislation,2023-06-29,0.15727590427176352,0.04929666819081657,115,12,231,unlikely,False,,,48
+nlp-00725:g-han-B41EBC5E-00E1-4A44-B880-5ED01B6B134A-0,huge future for autonomous vehicles,2023-07-03,0.1564501467275058,0.04847962420706876,115,16,231,unlikely,False,,,47
+nlp-00726:g-wms-1649448-2,into Parliament a Second Additional Provision to the High Speed Rail,2023-07-03,0.3025654648359639,0.09986830611462202,105,12,229,unlikely,False,,,47
+nlp-00727:g-han-113170C4-4E3F-4562-A33F-585FEE459080-4,be passed by both Houses first,2023-07-04,0.2358766398710421,0.07551492416441281,107,15,230,unlikely,False,,,47
+nlp-00728:g-han-52817C6B-A77B-4805-AC1B-1B9F5A3D6B55-1,Unregistered Schools,2023-07-05,0.23582060358990864,0.07545318464855977,107,15,230,unlikely,False,,,47
+nlp-00729:g-han-6E14D05B-E1B3-4E66-954A-505D7C89E8D7-19,committed to introducing additional changes,2023-07-06,0.1563327392192023,0.048359002763885245,115,16,231,unlikely,False,,,47
+nlp-00730:g-han-62B23919-9B9C-4B20-AB4B-F1A3CBEDA34D-3,I am happy to reiterate to the House that we will legislate,2023-07-10,0.15492673705036825,0.04688847379903635,119,17,231,unlikely,False,,,46
+nlp-00731:g-han-D06AB7F1-3608-4D46-AC2F-77A96B602508-2,E-bikes,2023-07-11,0.15488960159382628,0.04685042762079081,119,17,231,unlikely,False,,,46
+nlp-00732,implement the agreement will be brought forward,2023-07-17,0.2002701199796795,0.06033844408889187,118,18,231,unlikely,True,2023-11-08,17.0,170
+nlp-00733:g-han-8E4B3B4C-1277-4352-87B6-AE6998FF2936-14,I said in my opening remarks,2023-07-19,0.17004019804468937,0.0505263698075952,119,18,231,unlikely,False,,,45
+nlp-00734:g-han-12A38ABA-4C83-4F6B-9513-FAD1DA7AFF6A-4,National Air Traffic Services: Operational Failure,2023-09-05,0.15675625747115843,0.04734784097240867,114,11,228,unlikely,False,,,38
+nlp-00735:g-han-2BACE055-C33F-45AC-BE81-D1A0599A3637-33,give statutory force to this consultation requirement,2023-09-12,0.1546850354231797,0.045835025292911995,114,12,228,unlikely,False,,,37
+nlp-00736:g-han-729154A1-7F7D-439C-90EC-2AA7BAFE9957-18,make this change alongside other changes relating to the use of controlled,2023-09-14,0.17113323328146735,0.05100130002103971,114,12,227,unlikely,False,,,37
+nlp-00737:g-wms-1660706-0,ensure that the existing 0% charge,2023-09-14,0.24211529980853996,0.07439372594843302,112,11,226,unlikely,False,,,37
+nlp-00738:g-han-29C274B7-DEA4-4B23-9435-9ACFC57BC153-28,I can none the less reassure him and your Lordships that officials,2023-09-18,0.23262340589131023,0.07040749910130194,112,11,227,unlikely,False,,,36
+nlp-00739:g-han-753A8FF4-56B4-4C54-8D62-049EC29BC20D-3,repeal the Vagrancy Act,2023-09-18,0.17060828420981955,0.05027788490699128,114,12,228,unlikely,False,,,36
+nlp-00740:g-han-52760981-6DB3-4220-8E7A-52D67711D5CC-64,presumption that custodial sentences of less than 12 months in prison will,2023-10-16,0.23715564192730718,0.07501941572951884,108,7,224,unlikely,False,,,32
+nlp-00741:g-wms-1664687-24,Stopping the start: our new plan to create a smokefree generation,2023-10-16,0.22595380545992802,0.07112848609806148,108,7,224,unlikely,False,,,32
+nlp-00742:g-han-4531D8FB-B8BE-4B37-A1A7-C51757026FE6-1,in the dairy sector to help to make sure those contracts are,2023-10-19,0.2370122347455732,0.07486076438030342,108,7,224,unlikely,False,,,32
+nlp-00743:g-han-D5C7120A-447E-467C-AC55-D16333165B3A-1,take forward the “children not in school” measures,2023-11-08,0.19984550525157505,0.07835824143943612,80,5,220,unlikely,False,,,29
+nlp-00744:g-han-F606D639-624E-4375-AC7E-3B7A3AF82D05-79,reviewing its pre-legislative scrutiny report and we will respond to it,2023-11-09,0.18079537447166377,0.0703606835346662,80,5,220,unlikely,False,,,29
+nlp-00745:g-han-D36DEF1A-D201-40AB-8E1F-734634EB7F2C-47,restrict and ultimately ban the sale of peat and peat-containing products,2023-11-13,0.19877119752138334,0.07758057514651757,80,5,220,unlikely,False,,,28
+nlp-00746:g-han-BDAC891A-38FD-4BDD-9D8B-1FF27FF2E98C-33,it is quite normal,2023-11-16,0.268885092342173,0.10769230471731805,77,4,219,unlikely,False,,,28
+nlp-00747:g-han-2636FC50-153B-4458-B851-99CD8B9D5ADC-3,makes it unequivocally the case that Rwanda is safe and there will,2023-11-29,0.26557028180550557,0.10458381931351828,80,6,219,unlikely,False,,,26
+nlp-00748:g-han-C43EC5CD-3D82-4CF8-AC52-A9764C495F91-4,It will close tomorrow and we will introduce legislation,2023-12-05,0.2635774457576488,0.1025959973287657,81,7,219,unlikely,False,,,25
+nlp-00749:g-han-7BF7F4C8-F70A-4009-B9A2-0B06D85F7F35-16,going to publish,2023-12-06,0.19431924797855785,0.07357988298232108,84,7,221,unlikely,False,,,25
+nlp-00750:g-han-DF2B3944-5795-4044-ADD5-0E0AB0F1B965-42,regulate to remove it in a proportionate way,2023-12-11,0.2612407551944636,0.10018684861615824,83,7,220,unlikely,False,,,24
+nlp-00751:g-han-EBE86318-8FDD-4D11-B5E6-2780B9437E49-11,basis of that set of responses in order to ensure that ground,2023-12-11,0.2612407551944636,0.10018684861615824,83,7,220,unlikely,False,,,24
+nlp-00752:g-wms-1677613-8,Future Homes and Buildings Standards by amending the Building Regulations in 2024,2023-12-13,0.333056690385634,0.13155732999024428,80,7,218,unlikely,False,,,24
+nlp-00753:g-wms-1678015-4,proportionate statutory framework,2023-12-14,0.2488010870371271,0.0948053777550218,83,7,221,unlikely,False,,,24
+nlp-00754:g-wms-1678026-8,these reforms was commenced on 1 October 2023 and today the Government,2023-12-14,0.22587786138043028,0.08528801934904064,84,7,221,unlikely,False,,,24
+nlp-00755:g-han-CC7FB930-E20A-4F39-B74D-E2B42875AA39-14,Draft Child Support (Management of Payments and arrears and fees) (Amendment) Regulations 2023,2024-01-16,0.17417619618583735,0.06507682843758412,93,6,220,unlikely,False,,,19
+nlp-00756:g-wms-1682309-18,HMRC will engage with stakeholders to discuss our proposals to inform design,2024-01-16,0.20000271554742724,0.07545814777134933,92,5,220,unlikely,False,,,19
+nlp-00757:g-wms-1682309-22,introduce a route for people to apply for National Insurance Credits,2024-01-16,0.27081185665375906,0.10507604504877915,86,5,219,unlikely,False,,,19
+nlp-00758:g-han-7B700147-2901-4ABA-BB0C-91A6F6DC8CD8-3,year to ban the use of peat in horticulture,2024-01-23,0.2589384000757695,0.09865409295402293,90,6,219,unlikely,False,,,18
+nlp-00759:g-wms-1685014-20,introduce a statutory requirement for officers to hold and maintain vetting clearance,2024-01-25,0.3882277224771506,0.156392258968802,76,5,216,uncertain,False,,,18
+nlp-00760:g-han-BD0A8C25-7918-4C44-B2C6-D1312CC72601-1,Children’s Care Homes: Private Equity,2024-01-30,0.17163692448894002,0.06275054924318696,95,6,222,unlikely,False,,,17
+nlp-00761:g-han-3AE7914E-926D-4D71-AEDC-3A4FDB0E8DB0-1,draft that,2024-02-07,0.17079076913368563,0.062079555219488554,96,6,222,unlikely,False,,,16
+nlp-00762:g-han-68238852-46B3-47E8-BDDD-3576EFC130F3-28,pre-legislative scrutiny by a committee of both Houses on this issue,2024-02-09,0.18808415860185734,0.06844386091036747,96,7,222,unlikely,False,,,15
+nlp-00763:g-han-B78872DB-C40C-4311-8C87-B6C1FCCB4B80-66,remove three of the main restrictions on using the cash basis,2024-02-21,0.25757722557063745,0.09755646629893186,92,5,221,unlikely,False,,,14
+nlp-00764:g-han-B5186C8B-E09D-4B45-8F44-833893884143-4,enabling them to create bigger farm shops,2024-03-04,0.2568167271943418,0.0978363166519577,91,5,220,unlikely,False,,,12
+nlp-00765,whole of the United Kingdom,2024-03-05,0.25672386987026047,0.09774852057433368,91,5,220,unlikely,True,2024-03-20,3.0,137
+nlp-00766:g-han-7672EDCB-B1B3-483A-BE7E-A99F10369DE1-95,full expensing to apply to leased assets,2024-03-06,0.1890370483613993,0.07004766617795836,94,6,221,unlikely,False,,,12
+nlp-00767:g-han-7E7B650F-CF1D-4020-816C-29C9B69A8F02-2,overturn convictions and pave the way for the swift payment of compensation,2024-03-06,0.25663108724602796,0.09766079880015544,91,5,220,unlikely,False,,,12
+nlp-00768:g-wms-1694861-14,in the Criminal Justice Bill to enable prisoners to be transferred,2024-03-11,0.3816925334998913,0.15129449157680339,86,6,218,uncertain,False,,,11
+nlp-00769:g-han-FCF1AF68-1A7B-4F0C-88AA-986B54BCF36B-1,Gas-fired Power Stations,2024-03-13,0.25432066787640095,0.09522400668725926,93,7,222,unlikely,False,,,11
+nlp-00770:g-wms-1696028-35,We intend to publish a consultation on draft legislation to give effect,2024-03-14,0.2199380546755424,0.0811756568266013,96,7,222,unlikely,False,,,11
+nlp-00771:g-wms-1697743-30,non-legislative changes now to address pressing issues,2024-03-21,0.37946768933222585,0.14819120241843745,88,6,218,uncertain,False,,,10
+nlp-00772:g-han-DF3F2E26-90F1-4958-AE37-E656485D1662-3,will every nation around the world,2024-04-17,0.2525055932292542,0.09331310070011582,95,6,221,unlikely,False,,,6
+nlp-00773:g-han-6C7E048E-8E28-4B49-A063-680DD3F352AA-4,implement the policy,2024-04-23,0.2517353855041874,0.09298253759383265,96,7,221,unlikely,False,,,5
+nlp-00774:g-han-FCA151D4-206E-4548-A76A-C65B449225E4-56,committed to publishing,2024-04-25,0.18513515601491315,0.06651953523817979,99,7,222,unlikely,False,,,5
+nlp-00775:g-wms-1713752-1,Government is committed to delivering a world-class scheme and will bring forth,2024-04-25,0.21757857025943642,0.07917751294962312,98,7,222,unlikely,False,,,5
+nlp-00776:g-wms-1715102-26,Gambling Update,2024-05-01,0.21611896146552764,0.07790006197610243,99,7,222,unlikely,False,,,4
+nlp-00777:g-wms-1716283-8,Economic Note will be published alongside it on legislation,2024-05-08,0.2579660535819012,0.09410845419593744,97,7,221,unlikely,False,,,3
+nlp-00778:g-wms-1717773-23,enhance fairness and transparency,2024-05-14,0.31710561162324513,0.11755311688981585,95,6,220,unlikely,False,,,2
+nlp-00779:g-wms-1718177-13,look to bring further legislative changes to remove this requirement,2024-05-15,0.21423251961592968,0.07598442983539755,101,7,227,unlikely,False,,,2
+nlp-00780:g-han-4D5A028A-7A8F-4778-B2B9-8CEBE27A752D-3,ensure that our regulators do the job that they need to do,2024-05-22,0.24587938279328148,0.08708544904167116,101,7,227,unlikely,False,,,1
+nlp-00781:g-han-E2FB2A73-E221-49CB-A1C0-91ECF2AA3C5C-22,relating to our energy independence will be introduced,2024-07-18,0.20000241209029584,0.07692252104525264,87,14,224,unlikely,False,,,118
+nlp-00782:g-wms-1721890-7,protect public funds and set up a National Wealth Fund,2024-07-18,0.3765471148544401,0.15580602423725545,79,13,218,uncertain,False,,,118
+nlp-00783,remove hereditary peers from the House of Lords,2024-07-18,0.3765471148544401,0.15580602423725545,79,13,218,uncertain,True,2024-09-05,8.0,118
+nlp-00784:g-han-8F3947EF-67A7-458B-8D81-835ACB57E550-85,I can say that a draft Bill will be brought forward,2024-07-19,0.2169679113604475,0.08168090958561149,88,16,224,unlikely,False,,,117
+nlp-00785:g-han-AA979E0E-B344-4A4B-97AD-886BA4A96657-8,"Planning, the Green Belt and Rural Affairs",2024-07-19,0.2925945983361165,0.11358392474011392,85,16,223,unlikely,False,,,117
+nlp-00786,support sustainable aviation fuel production,2024-07-22,0.3704052592190312,0.14865128499849575,81,15,221,uncertain,True,2025-05-14,43.0,117
+nlp-00787:g-han-73E767BC-B20F-4CC9-8C62-8EAA01763329-2,Tuesday of next week”,2024-07-24,0.29189684571176533,0.11307980143269246,85,16,223,unlikely,False,,,117
+nlp-00788,set out which powers go to which type of authority,2024-07-24,0.21642198048829567,0.08131161781172781,88,16,225,unlikely,True,2025-07-10,51.0,117
+nlp-00789:g-han-7F367F7A-929B-4B62-8059-259F7BD1299D-19,return to those issues in a moment,2024-07-24,0.19608019352682096,0.0730915784792496,90,16,225,unlikely,False,,,117
+nlp-00790:g-han-7F367F7A-929B-4B62-8059-259F7BD1299D-43,will set down plans for a strong and secure border,2024-07-24,0.29189684571176533,0.11307980143269246,85,16,223,unlikely,False,,,117
+nlp-00791:g-han-FCB42AD0-308F-4903-A7BE-3BE04BB92AB3-1,remove dangerous knives from our streets,2024-07-29,0.29123221310376146,0.11157940436426474,86,16,223,unlikely,False,,,116
+nlp-00792:g-han-D70C172D-F895-4A55-BD46-5E0AC0663BBC-33,place a duty of candour on public servants and authorities to make,2024-07-30,0.2910942556675055,0.11148006360272583,86,16,223,unlikely,False,,,116
+nlp-00793,register through the children’s wellbeing Bill,2024-09-09,0.2980784322047978,0.11990847494231123,77,9,217,unlikely,True,2024-12-17,15.0,110
+nlp-00794,would be happy to answer any of your questions,2024-09-12,0.30701626980192676,0.12383585451601281,77,8,217,uncertain,True,2024-09-12,1.0,110
+nlp-00795,make the necessary amendments to current legislation to implement the Agreement,2024-10-07,0.28799550165224763,0.11736044257747888,74,5,215,unlikely,True,2025-07-15,41.0,106
+nlp-00796:g-han-CA63939E-147D-4B1A-8446-842C4CE76BBB-58,in line with the intentions announced in the King’s Speech,2024-10-14,0.22437169976327198,0.09008774121298264,75,5,215,unlikely,False,,,105
+nlp-00797:g-wms-1733707-43,I can confirm that my department will lay legislation,2024-10-14,0.3821069170749613,0.16371151117729524,68,4,212,uncertain,False,,,105
+nlp-00798:g-han-7346DE9A-6A2C-431B-BB26-9188C506BF18-2,require schools to co-operate with their local authority on admissions and place,2024-10-17,0.22403408707668368,0.08984432723691875,76,5,215,unlikely,False,,,105
+nlp-00799:g-wms-1735515-23,After reviewing feedback,2024-10-21,0.31086308954834396,0.12877244358564016,72,5,214,uncertain,False,,,104
+nlp-00800,UK Support to Ukraine,2024-10-22,0.2096694910890669,0.08343294035358628,77,5,215,unlikely,True,2024-11-06,3.0,104
+nlp-00801:g-han-6133EFA9-8030-470F-A1C6-F5BEFAF97FF6-40,ensure that antisocial behaviour powers are as effective as they need,2024-10-23,0.299810788879719,0.12354204654028433,73,5,214,unlikely,False,,,104
+nlp-00802:g-han-E1429ED0-3D59-4273-964B-200126E353A5-4,ensure that local authorities can plan properly for places and admissions in,2024-10-24,0.2996693073261372,0.12343285564703879,73,5,214,unlikely,False,,,104
+nlp-00803:g-han-190EF7BB-FC41-47F8-8C53-85EC5B3C9ED0-2,lower the voting age to 16 for all UK elections,2024-10-31,0.20033798905755046,0.07889199043002393,79,5,216,unlikely,False,,,103
+nlp-00804:g-han-E902DDC1-EE70-4B41-AC12-2924BCEB0ADC-15,after going through the necessary processes,2024-11-12,0.29622679722308537,0.120922661971594,75,4,214,unlikely,False,,,101
+nlp-00805:g-han-998701D6-FE2A-4FA3-94D6-18040306A11F-16,later to address the much-needed wider reforms,2024-11-13,0.29608944990252484,0.12081561697357052,75,4,214,unlikely,False,,,101
+nlp-00806:g-han-73E4AD4F-1359-41A6-811C-1AA3116235BC-2,16 and 17 year-olds to be able to vote in UK elections,2024-11-14,0.29595218997101314,0.12070865987052842,75,4,214,unlikely,False,,,101
+nlp-00807,Children’s Social Care,2024-11-18,0.29464202234187337,0.11958436496809037,76,4,214,unlikely,True,2026-05-14,78.0,100
+nlp-00808:g-han-EEB4BF1A-C70D-453C-B821-B5BF1DCA343D-34,embed family group decision-making as an offer all families can access,2024-11-18,0.29464202234187337,0.11958436496809037,76,4,214,unlikely,False,,,100
+nlp-00809:g-wms-1742619-32,present our White Paper to Parliament,2024-11-19,0.3037943424179804,0.12372052043913621,75,4,214,uncertain,False,,,100
+nlp-00810:g-han-580B2FB3-04CE-4EB5-8DB2-BE873AD24154-10,particularly around shop theft,2024-11-20,0.29437084458687746,0.11937256402512439,76,4,214,unlikely,False,,,100
+nlp-00811:g-han-FFE60B91-8F8B-43EB-8A88-01AA8A5CEEB0-2,committed to dealing with shop thefts and attacks on retail workers,2024-11-20,0.19786156232538796,0.07726083866697636,81,5,218,unlikely,False,,,100
+nlp-00812:g-wms-1743000-5,policy statement Keeping Children Safe,2024-11-20,0.25564747871645477,0.10206411924389801,78,4,217,unlikely,False,,,100
+nlp-00813:g-wms-1745685-24,implement the April 2025 uplift,2024-11-29,0.2520617067718059,0.0986750583316433,80,7,217,unlikely,False,,,98
+nlp-00814,introduce Awaab’s law in the social rented sector,2024-12-02,0.2899619177365551,0.11514032331095267,79,7,216,unlikely,True,2026-02-25,65.0,98
+nlp-00815:g-wms-1745856-29,drive action from those responsible for their buildings’ safety by tightening building,2024-12-02,0.21675902327837349,0.08359390836870903,82,7,218,unlikely,False,,,98
+nlp-00816:g-han-A35DF9EB-2419-41D1-A418-90A32768ECD1-36,enable the courts to impose stalking protection orders,2024-12-03,0.28983084808747756,0.1150380464294134,79,7,217,unlikely,False,,,98
+nlp-00817:g-wms-1749335-3,via secondary legislation to formalise this tax exemption,2024-12-12,0.19988809267965105,0.07544138774416365,84,7,218,unlikely,False,,,97
+nlp-00818:g-han-C039E13F-E5E3-4ABC-91E5-E13E78BAE034-39,make grooming an aggravating factor in the sentencing of child sexual offences,2025-01-06,0.2891338087807329,0.11475821954421905,78,4,216,unlikely,False,,,93
+nlp-00819:g-han-6B577DA2-E69B-4640-BBCB-01DDCC3EF3BF-20,Workplace Pay Gaps,2025-01-07,0.21416394489079704,0.08246771790947269,82,5,217,unlikely,False,,,93
+nlp-00820,honour that commitment in the Crime and Policing Bill,2025-01-07,0.42780263857284667,0.18062484219128425,71,4,212,uncertain,True,2025-02-25,8.0,93
+nlp-00821:g-han-5B008A9C-FB21-40EA-9363-81A197E5EA18-3,legislation,2025-01-08,0.19391580786944546,0.07406853809000676,87,5,218,unlikely,False,,,93
+nlp-00822:g-han-E7C7845F-F27A-4367-88A1-7086CFA2AC21-3,make that a reality,2025-01-09,0.1938241363640045,0.07400115892777992,87,5,218,unlikely,False,,,93
+nlp-00823:g-han-930010D1-F264-4E9B-8B1F-4CC7ECBFB51E-2,I think the consultation closed a couple of weeks ago,2025-01-16,0.19241570686142986,0.07302897048003962,88,5,217,unlikely,False,,,92
+nlp-00824:g-han-2C334C05-CAD0-42F9-84DD-1B2B902BC1D3-2,ensure that e-scooters are used responsibly and safely,2025-02-06,0.28128322178621573,0.10800917345862943,89,6,216,unlikely,False,,,89
+nlp-00825:g-han-8E1934C5-A433-4CC8-95DC-6BB1BC898871-50,outlining a fully trans-inclusive ban on conversion practices,2025-02-13,0.20682198596081072,0.07651088151354117,93,6,219,unlikely,False,,,88
+nlp-00826,tackle late payments,2025-02-13,0.27959060320917256,0.10651574745872608,90,6,217,unlikely,True,2025-12-04,43.0,88
+nlp-00827:g-han-5D03A688-8DE2-4207-8CC2-ECF26E6BB6E8-2,I will introduce primary legislation to reinstate legacy inquests halted by,2025-02-26,0.18919019594629952,0.07111624262221584,92,5,219,unlikely,False,,,86
+nlp-00828:g-wms-1780193-3,implement the remaining provisions of the Leasehold and Freehold Reform Act 2024,2025-03-03,0.28382217305924057,0.11074458679799914,88,5,217,uncertain,False,,,85
+nlp-00829:g-wms-1780725-50,rate for Statutory Sick Pay,2025-03-04,0.35753756643027246,0.14397060878910414,84,4,214,uncertain,False,,,85
+nlp-00830:g-han-7961CFC8-DA53-4997-AFD0-C4106E85E84B-26,make it a requirement for the Secretary of State to appoint,2025-03-11,0.27874081621862623,0.10692330444825218,89,6,218,unlikely,False,,,84
+nlp-00831:g-han-15E283EF-FCFD-4D3B-A291-DE91400EECA4-4,PIP changes,2025-03-18,0.2764810743466547,0.1046909641004308,91,7,218,unlikely,False,,,83
+nlp-00832:g-han-32E0D505-F1F4-4D1D-96EF-44558A41B1B3-1,we will have a review of the PIP assessment process,2025-03-18,0.2764810743466547,0.1046909641004308,91,7,218,unlikely,False,,,83
+nlp-00833:g-han-56B15A3B-9878-4D02-8DBE-9FDFD22646C3-17,biggest reforms to employment support in a generation,2025-03-18,0.2764810743466547,0.1046909641004308,91,7,218,unlikely,False,,,83
+nlp-00834,rebalance the payments in universal credit from April,2025-03-18,0.2764810743466547,0.1046909641004308,91,7,218,unlikely,True,2025-06-18,14.0,83
+nlp-00835:g-han-CF888DD1-4840-4FC5-A001-CD32532AE093-1,those,2025-03-18,0.2764810743466547,0.1046909641004308,91,7,218,unlikely,False,,,83
+nlp-00836:g-wms-1785546-8,We are considering what other measures the draft Bill could incorporate,2025-03-18,0.2637648803410798,0.09934869350259942,91,7,218,unlikely,False,,,83
+nlp-00837:g-wms-1789143-5,amend the Criminal Justice Act 1988,2025-03-27,0.40904819146679217,0.16262344443493912,85,7,215,uncertain,False,,,82
+nlp-00838:g-han-0C804ACC-6641-4042-AC24-9D397ACD9ED9-2,committed to publishing,2025-03-31,0.20156415935052205,0.07265726469536328,98,8,220,unlikely,False,,,81
+nlp-00839:g-han-F5BAB59E-CE21-4E86-87BB-CB950D707EA5-1,Clonoe Inquest,2025-04-02,0.1822973938801565,0.06516079720207806,100,8,221,unlikely,False,,,81
+nlp-00840:g-han-0E18FAC2-9EA8-46ED-8336-848B42BDFD2C-99,Court Waiting Times: Kent,2025-04-08,0.27426888040321873,0.10271325281823529,94,7,219,unlikely,False,,,80
+nlp-00841:g-han-8B140FBC-065A-461D-AAA4-1DEABF2ED82E-1,ensure that assault on a retail worker is a new offence in,2025-04-22,0.275117446109712,0.1043302289253013,92,5,218,unlikely,False,,,78
+nlp-00842:g-han-D4136F8E-A66B-4CAF-911C-4A960D713F5E-4,clear that that ban must not cover legitimate psychological support,2025-04-22,0.275117446109712,0.1043302289253013,92,5,218,unlikely,False,,,78
+nlp-00843,I am sorry to say to the noble Viscount,2025-04-23,0.18400380731332042,0.0672536307693851,97,7,219,unlikely,True,2025-06-05,7.0,78
+nlp-00844,respond and consult on the commission’s recommendations,2025-04-23,0.20325865035522564,0.07484472590621655,95,7,219,unlikely,True,2026-06-09,59.0,78
+nlp-00845:g-han-D480DCF6-0C98-4449-AAD5-20651BA86F98-4,committed to bringing more accountability and audit into local government,2025-04-24,0.2749010233420473,0.10414376795859745,92,5,218,unlikely,False,,,78
+nlp-00846:g-wms-1796602-6,provide the police with the power to issue Content Removal Notices,2025-04-24,0.4099518341873738,0.1650676507413536,83,5,214,uncertain,False,,,78
+nlp-00847:g-han-147C3A62-90F2-4D4F-AE38-495AABD8DD5A-2,committed to ratifying the agreement,2025-05-13,0.2706493995011307,0.10009188437045109,95,6,218,unlikely,False,,,75
+nlp-00848:g-han-9138851D-0792-4AE7-8BBF-FDB14AADCDFA-9,if necessary to ensure that product liability laws are up to date,2025-05-15,0.2704437310970649,0.09991254958674682,95,6,218,unlikely,False,,,75
+nlp-00849:g-wms-1803225-5,allow employers,2025-05-15,0.2803752054265616,0.10401878247997376,94,6,217,unlikely,False,,,75
+nlp-00850:g-han-5A9B53C5-F6A6-4217-8150-2850A23734B0-3,because this Government inherited a completely hopeless piece of legislation,2025-05-21,0.17925421745811404,0.0629866662602323,101,7,225,unlikely,False,,,74
+nlp-00851,there will be a cyber security and resilience Bill,2025-05-21,0.17925421745811404,0.0629866662602323,101,7,225,unlikely,True,2025-11-12,26.0,74
+nlp-00852:g-han-01DE107A-7BD3-4E50-8B39-887F8CA7B52B-9,give mayors of strategic authorities the power to raise a mayoral CIL,2025-05-22,0.2682295734317586,0.0976668546676631,96,7,218,unlikely,False,,,74
+nlp-00853:g-han-AD8D2CE0-9868-43DF-80F2-AF93D1FCC685-5,in future on some of those issues,2025-05-22,0.2682295734317586,0.0976668546676631,96,7,218,unlikely,False,,,74
+nlp-00854:g-han-C694C0D4-DF25-4694-8A96-100492D87D0A-6,make wider reforms to our water industry,2025-05-22,0.2682295734317586,0.0976668546676631,96,7,218,unlikely,False,,,74
+nlp-00855:g-han-7245B530-13DF-458D-93E1-F756413033F2-0,in this area to close the dark corners that unscrupulous managing agents,2025-06-03,0.26943881385281904,0.09862000867783705,95,5,223,unlikely,False,,,72
+nlp-00856:g-han-811803C6-EA0E-419E-ADEE-81758A37BED1-4,ratify the treaty,2025-06-05,0.2692393959298488,0.098443169354574,95,5,223,unlikely,False,,,72
+nlp-00857:g-han-9EE7BA5D-B76C-4EDC-8AEE-FF7541A2D22B-4,improved community right to buy,2025-06-09,0.26719866695220873,0.09687453925423897,95,5,223,unlikely,False,,,71
+nlp-00858:g-han-AAC35AD2-CCDA-489A-8A33-F785D781587A-50,Theft of Tools of Trade,2025-06-11,0.17831456003349708,0.062295808877282303,101,5,227,unlikely,False,,,71
+nlp-00859:g-wms-1813306-11,Firearms licensing: sound moderators,2025-06-17,0.273905965403565,0.09850798980643348,97,5,223,uncertain,False,,,70
+nlp-00860:g-han-24FDB85B-399F-4F4C-BC61-74A73335E860-4,in the Crime and Policing Bill to introduce a disregard scheme,2025-06-18,0.26525294436315294,0.0949961016590472,98,5,223,unlikely,False,,,70
+nlp-00861:g-wms-1815787-5,abolish the committee system,2025-06-24,0.1962340932285608,0.06770044032175596,103,11,227,unlikely,False,,,69
+nlp-00862:g-han-044E4BBE-E199-4F54-9F7D-47ABDF32F720-0,It has been made public that legislation will be introduced,2025-06-30,0.26202553125522093,0.0918480503722814,100,11,226,unlikely,False,,,68
+nlp-00863:g-han-B239A414-9ED6-42D7-95C1-BBCC2C2B6075-9,She knows me well as a Whip,2025-07-01,0.17472434103913323,0.059057627056971804,104,12,228,unlikely,False,,,68
+nlp-00864:g-wms-1818064-11,ensure air passengers have the highest level of protection possible,2025-07-01,0.2267666555311433,0.07827582291266963,102,12,227,unlikely,False,,,68
+nlp-00865:g-han-01269DCA-D767-41A6-B42A-14ECF0058CA1-5,I hope that I have demonstrated the proportionality of this measure,2025-07-03,0.19298755175571816,0.06563719179854152,104,12,227,unlikely,False,,,68
+nlp-00866:g-han-E54A22E9-7D21-45D8-B67F-97B0A48DE2D4-11,"Draft Buckinghamshire Council, Surrey County Council and Warwickshire County Council (Housing and Regeneration Functions) Regulations 2025",2025-07-09,0.1726777693967164,0.05702757237563079,105,16,228,unlikely,False,,,67
+nlp-00867:g-wms-1822509-0,ensure that payments made across the UK under the Department for Work,2025-07-14,0.26633770633682724,0.08958589614888582,103,16,227,unlikely,False,,,66
+nlp-00868:g-wms-1822517-17,Nature recovery,2025-07-14,0.3279558886506319,0.11345233639734793,101,15,226,unlikely,False,,,66
+nlp-00869:g-wms-1823829-0,ensure that payments made under the Grenfell Support,2025-07-16,0.2661616182498925,0.0894244142650003,103,16,227,unlikely,False,,,66
+nlp-00870:g-han-461E7571-6A17-4E66-B1F9-327089A4ABB2-4,Strategy for Elections,2025-07-17,0.25655354454959556,0.08578805459667986,104,16,227,unlikely,False,,,66
+nlp-00871:g-wms-1824327-9,Restoring trust in our democracy: Our strategy for modern and secure elections,2025-07-17,0.2586967737738034,0.08658577334932939,104,16,227,unlikely,False,,,66
+nlp-00872:g-wms-1824351-20,Update on the Remediation Acceleration Plan,2025-07-17,0.19062668554512313,0.0619928121605592,106,17,228,unlikely,False,,,66
+nlp-00873:g-han-D8F455E3-39C4-47BB-BAFB-E93DDEB43C00-64,Strategic Defence Review 2025,2025-07-18,0.16847607512802096,0.052605649731491504,113,19,229,unlikely,False,,,65
+nlp-00874:g-wms-1825140-24,Consultation response on proposals to regulate NHS managers,2025-07-21,0.21870376138473008,0.06961656329680138,112,18,228,unlikely,False,,,65
+nlp-00875,technical fixes to contained in Finance Act 2025 that replaced the special tax rules relating,2025-07-21,0.26224854317311014,0.08507848330884268,105,18,227,unlikely,True,2025-12-02,20.0,65
+nlp-00876:g-wms-1825144-68,easement that will apply UK-wide between April 2026 and April 2028,2025-07-21,0.19336774643010712,0.060897916902592684,113,18,228,unlikely,False,,,65
+nlp-00877:g-wms-1825144-79,ensure that the overseas restriction operates in Northern Ireland as intended,2025-07-21,0.26224854317311014,0.08507848330884268,105,18,227,unlikely,False,,,65
+nlp-00878:g-han-8949297B-49F6-4388-B35E-EDB33977259F-6,bring that into effect at some point and will review the operation,2025-09-02,0.2609829630171886,0.0894460115390082,97,9,222,unlikely,False,,,59
+nlp-00879:g-han-00FC4A23-155D-460C-8190-F897DA3259C8-2,other means of ensuring that that can better happen,2025-09-04,0.2608110381087506,0.08928634431369174,97,9,222,unlikely,False,,,59
+nlp-00880:g-han-493EDEE3-04CF-4902-A47A-12AB62D65F65-15,Government will introduce the cyber-security and resilience Bill to raise cyber-security standards,2025-09-09,0.1718162574180594,0.05563415241189728,106,11,223,unlikely,False,,,58
+nlp-00881:g-han-F012439E-6DB1-42DC-AA31-DC9D429D1DDD-3,allow councils to meet remotely in response to our consultation,2025-09-09,0.1899515418186552,0.06195918166177962,106,10,222,unlikely,False,,,58
+nlp-00882:g-han-3A2CCB51-B685-41D5-A39E-7D30216DD508-11,Official Secrets Act,2025-09-15,0.25661248628359207,0.08513721273678863,104,10,222,unlikely,False,,,57
+nlp-00883:g-han-0B6EF725-7DCF-4175-AAC3-D6DF15116CE5-12,reform our approach to the application of Article 8 in the immigration,2025-10-13,0.2614707767348214,0.09056245700005046,93,6,219,unlikely,False,,,53
+nlp-00884:g-han-F22DE894-1636-4854-984D-32E5CCBC6E0D-1,how Article 8 of the European convention is implemented in immigration cases,2025-10-13,0.2614707767348214,0.09056245700005046,93,6,219,unlikely,False,,,53
+nlp-00885:g-han-02B8C4A4-0598-4DAE-A205-D0023A3E6805-8,Government have made clear the importance of getting a spatial development strategy,2025-10-16,0.2612220939108412,0.09033269401642847,93,6,219,unlikely,False,,,53
+nlp-00886:g-han-02B8C4A4-0598-4DAE-A205-D0023A3E6805-9,before bringing the powers into force,2025-10-16,0.17421849815771182,0.05811684006368307,102,6,222,unlikely,False,,,53
+nlp-00887:g-han-0DB785B5-CEA1-46F0-95A9-2ADFA65C72AC-19,Monday this week,2025-10-16,0.17421849815771182,0.05811684006368307,102,6,222,unlikely,False,,,53
+nlp-00888:g-han-EBB91A06-3AEE-480F-B66C-01C13F165695-50,provide long-term certainty over future funding,2025-10-20,0.17356789279811194,0.057721443410269684,105,6,221,unlikely,False,,,52
+nlp-00889:g-wms-1843168-26,"Regulation Action Plan Update, and Modernisation of Corporate Reporting",2025-10-21,0.24811673347200816,0.0850410995004977,99,6,220,unlikely,False,,,52
+nlp-00890,Building Safety Regulator,2025-10-23,0.17339577913600124,0.0575748973193841,105,6,221,unlikely,True,2026-10-14,51.0,52
+nlp-00891:g-han-FDE1455F-668D-41D1-B863-4B46DEF5424C-4,We will bring forward legislation,2025-10-23,0.26005803858201365,0.08950528435356044,99,6,220,unlikely,False,,,52
+nlp-00892:g-wms-1844258-19,Implementing the Employment Rights Bill: October Consultation Package,2025-10-23,0.3318845004942002,0.11797291634461451,90,6,217,unlikely,False,,,52
+nlp-00893:g-wms-1844290-48,These changes will require amendments to primary legislation on which the Government,2025-10-23,0.17492780052561305,0.05811895216830154,105,6,221,unlikely,False,,,52
+nlp-00894:g-han-6C1935D2-8E40-46FA-97B1-98882C87B26E-5,more robust provisions,2025-10-28,0.17268954220865174,0.056974606763934135,105,7,222,unlikely,False,,,51
+nlp-00895:g-han-2C56A96A-1A0C-45B3-9D75-B3393F055CA1-57,ensure that the stand-alone provision in the Bill will be,2025-11-11,0.1720160448615656,0.05658584674217588,105,6,222,unlikely,False,,,49
+nlp-00896:g-han-1D011FA4-B9C3-4A8A-AC3D-826FF5C6FA78-1,Cryptocurrencies: US Regulation,2025-11-12,0.25802843333008946,0.08792559187911511,102,6,220,unlikely,False,,,49
+nlp-00897:g-wms-1854375-15,Government response to ticketing consultation and call for evidence,2025-11-19,0.22237813913825966,0.07418699712020772,104,8,221,unlikely,False,,,48
+nlp-00898:g-han-4EDC917A-4488-40A0-8B37-B26428056231-30,However,2025-11-24,0.17031336978867742,0.05510480595915461,106,8,223,unlikely,False,,,47
+nlp-00899:g-han-F729E735-EC59-4664-9202-E9271512CF50-10,in a water Bill to deal with it,2025-11-24,0.25569154814102213,0.08573064644226892,104,8,220,unlikely,False,,,47
+nlp-00900:g-han-B0501435-8107-4498-914F-692AA62A7520-16,UK-wide easement in the benefit-in-kind tax applicable to vehicles in order,2025-11-25,0.18825292534746352,0.06132462030504235,106,8,222,unlikely,False,,,47
+nlp-00901:g-wms-1859026-24,implement these reforms by June 2026 under the provisions of the Retained,2025-12-02,0.3246364998183963,0.11099148218683196,101,8,219,unlikely,False,,,46
+nlp-00902:g-wms-1859037-26,Ministry of Justice will continue to work with the judiciary and stakeholders,2025-12-02,0.2617371001082863,0.08695631409525291,104,8,221,uncertain,False,,,46
+nlp-00903:g-han-856AE54F-E77A-44AB-AA2A-DD848D3FC5F4-0,make sure this happens,2025-12-03,0.2539979207665443,0.08406262715365252,104,8,222,unlikely,False,,,46
+nlp-00904:g-wms-1859657-8,providing a higher admissibility threshold for victims’ compensation claim evidence in trials,2025-12-03,0.3810257312986857,0.1338478807754619,99,8,218,uncertain,False,,,46
+nlp-00905:g-han-46E291B2-A726-41D0-9E1B-AC5E68A4E40C-1,should give resident doctors across the country who receive their survey,2025-12-10,0.25217929255046984,0.08219414181632739,105,9,222,unlikely,False,,,45
+nlp-00906:g-han-62ED32A8-8F26-4DFC-88EA-21FE2BA57D41-25,make sure that our commitment will stand in the statue books,2025-12-10,0.25217929255046984,0.08219414181632739,105,9,222,unlikely,False,,,45
+nlp-00907:g-wms-1863780-8,website of the Mauritian Parliament and can be viewed on the Government,2025-12-15,0.32059207531300365,0.10658768359278889,103,9,221,unlikely,False,,,44
+nlp-00908:g-wms-1865124-14,clarify that LFAs are not Damages Based Agreements,2025-12-17,0.3764117188159515,0.12852457541833376,101,9,220,uncertain,False,,,44
+nlp-00909:g-wms-1865737-21,ban the use of the draconian remedies in sections 121 and 122,2025-12-18,0.18595657777370045,0.05817166445418053,109,10,223,unlikely,False,,,44
+nlp-00910:g-han-B547D64D-6D43-4F98-8F9C-762B974B7E1D-3,We will publish the draft Bill,2026-01-07,0.18704636124350427,0.059925654797106764,106,7,221,unlikely,False,,,41
+nlp-00911:g-han-5CCBEAAD-1DF4-404C-B0B7-681AC0F24CCF-1,micromobility vehicles,2026-01-08,0.16911178444981198,0.053764251105356126,107,7,222,unlikely,False,,,41
+nlp-00912:g-han-197DBFAD-7304-440F-B74F-E12A4EA0B998-12,where needed and where we see evidence of the gaps,2026-01-14,0.25262717279327984,0.08190384501845752,105,7,220,unlikely,False,,,40
+nlp-00913:g-han-E2825112-2998-4744-BB20-535BDCBBEA17-24,put in place the new legal framework,2026-01-15,0.16810865952477444,0.05256858320736197,107,7,222,unlikely,False,,,40
+nlp-00914:g-han-82A64DE7-E9AA-4326-8E3F-663B172A7439-3,We accept his recommendations and we intend to legislate,2026-01-19,0.1847956128926238,0.05748156316470577,107,8,223,unlikely,False,,,39
+nlp-00915:g-han-C83D58DF-0ABD-45DF-923A-04D630F82C99-6,Again,2026-01-20,0.16705648039515655,0.05156626974506437,108,8,223,unlikely,False,,,39
+nlp-00916:g-wms-1874099-28,Local Government Reorganisation,2026-01-22,0.2530487807120763,0.08095496216209092,105,7,221,unlikely,False,,,39
+nlp-00917:g-han-00C26772-3461-43CF-9990-4D99D4F71810-12,mandate the recording of suspects’ ethnicity data,2026-01-27,0.2501256127018,0.07950304461162037,106,7,222,unlikely,False,,,38
+nlp-00918:g-han-712E8147-8441-49D8-9F16-59A60F6F9582-10,increase the number of temporary events notices for pubs and other hospitality,2026-01-27,0.2501256127018,0.07950304461162037,106,7,222,unlikely,False,,,38
+nlp-00919:g-han-19491292-755D-40B1-BA81-EB85C66A760F-20,enable this,2026-02-02,0.18351626872129828,0.05650636775986519,108,8,223,unlikely,False,,,37
+nlp-00920:g-han-89600D31-7822-4855-800E-C60FCE06FF79-3,AI Superintelligence,2026-02-03,0.24940770212484034,0.07896957806014948,106,8,222,unlikely,False,,,37
+nlp-00921:g-wms-1877775-38,Separation Centres Review,2026-02-03,0.2569616438878809,0.08163557489538245,105,8,222,uncertain,False,,,37
+nlp-00922:g-wms-1878308-13,Independent Review of the Criminal Courts: Part 2,2026-02-04,0.37470357090737777,0.1258788330873832,99,7,219,uncertain,False,,,37
+nlp-00923:g-han-03E67244-D60D-4159-941A-C384245BA8E8-54,consulting will require primary legislation,2026-02-05,0.1658067802785229,0.0506265055785699,109,8,223,unlikely,False,,,37
+nlp-00924:g-han-3994F72B-8CD8-4F15-923E-48D295A2817B-25,water creating the laws that we need to fundamentally change the system,2026-02-05,0.1658067802785229,0.0506265055785699,109,8,223,unlikely,False,,,37
+nlp-00925:g-han-3994F72B-8CD8-4F15-923E-48D295A2817B-29,these reasons,2026-02-05,0.1658067802785229,0.0506265055785699,109,8,223,unlikely,False,,,37
+nlp-00926:g-han-60871F7D-4B32-4C85-8CED-57B7B1519B44-11,We remain committed to bringing forward legislation,2026-02-11,0.16515953161904853,0.05010160734710449,109,10,223,unlikely,False,,,36
+nlp-00927:g-han-60871F7D-4B32-4C85-8CED-57B7B1519B44-18,Again,2026-02-11,0.16515953161904853,0.05010160734710449,109,10,223,unlikely,False,,,36
+nlp-00928:g-han-8AF05879-AF92-4684-817C-8BAA62553624-7,EU Membership Referendum: Impact on the UK,2026-02-24,0.2508035763959401,0.08129731497306227,105,8,221,unlikely,False,,,34
+nlp-00929:g-han-E88A4710-83F0-4920-B104-A8F39F9B1118-21,criminalise nudification tools to make it illegal for companies to supply tools,2026-02-24,0.2508035763959401,0.08129731497306227,105,8,221,unlikely,False,,,34
+nlp-00930:g-han-02DDA5D9-54D6-4C34-BDE2-DA59D941A308-18,disqualify from future elections anyone who seeks to harass,2026-03-02,0.25032323448903565,0.08088771414503158,105,8,221,unlikely,False,,,33
+nlp-00931:g-han-02DDA5D9-54D6-4C34-BDE2-DA59D941A308-9,protect the officials and staff who run elections,2026-03-02,0.25032323448903565,0.08088771414503158,105,8,221,unlikely,False,,,33
+nlp-00932:g-han-41AE950E-E46B-4C25-AFDF-F54E20E82376-2,we always do,2026-03-09,0.18286960611695727,0.0566001488447786,107,9,223,unlikely,False,,,32
+nlp-00933:g-wms-1888530-10,single‑occupier bill cap to correct a historic unfairness where single disabled households,2026-03-09,0.3180330268222176,0.10452140511569595,103,8,220,unlikely,False,,,32
+nlp-00934:g-han-5927EC47-1757-4396-8AB3-148D7D425779-33,is why the Government have proposed new authorisation deadlines and will legislate,2026-03-11,0.16526400882293152,0.05074997332378711,108,9,224,unlikely,False,,,32
+nlp-00935:g-han-3BD2DF37-A3C7-4029-85A9-34EE4FD840E4-3,ban on the sale of peat and peat container products,2026-03-12,0.1652265331687766,0.05072158062404867,108,9,224,unlikely,False,,,32
+nlp-00936:g-wms-1891124-7,establish a Commission on Nuclear Regulation to resolve cross cutting issues,2026-03-16,0.31633277566742823,0.10273581538322199,104,9,221,unlikely,False,,,31
+nlp-00937:g-han-4DFC3E4D-96C6-4E62-8ECA-5262C96C1A3E-3,Bailiffs,2026-03-17,0.16432017032275312,0.049885749032577656,110,10,224,unlikely,False,,,31
+nlp-00938:g-han-922BED57-9E32-4C2C-84FD-0C8FC97C7207-28,increase tuition fee caps automatically for future academic years,2026-03-17,0.16432017032275312,0.049885749032577656,110,10,224,unlikely,False,,,31
+nlp-00939:g-han-F4BDDA55-0AD0-48AC-8BD9-CC33D33B613A-51,Productivity and Economic Growth: East Midlands,2026-03-17,0.24717500209727944,0.07773598111281545,106,9,223,unlikely,False,,,31
+nlp-00940:g-wms-1892313-6,Credit union common bond reform in Great Britain.,2026-03-18,0.17078179221810075,0.051969306153790085,109,10,224,unlikely,False,,,31
+nlp-00941:g-han-CB89D69A-F081-45A4-BC77-F60DA6F1DE48-14,implement the Fingleton review,2026-03-24,0.2459460883683499,0.07657379440562703,107,9,223,unlikely,False,,,30
+nlp-00942:g-han-DBE358EF-665C-40B3-8322-2AE7AB68C3EA-6,Water Supply and Housing Targets: West Kent,2026-03-24,0.1634575417579834,0.04912852405548685,110,11,224,unlikely,False,,,30
+nlp-00943:g-wms-1894694-9,Report from the Independent Review into Countering Foreign Financial Influence and Interference in UK Politics,2026-03-25,0.24796651842600528,0.07725011419286913,106,9,223,unlikely,False,,,30
+nlp-00944:g-han-138E410A-E85D-4DA7-8BA0-39FF25B41573-60,prevent the spread of extreme violent content online,2026-04-13,0.24795632190029665,0.0796240080397961,106,9,222,unlikely,False,,,27
+nlp-00945:g-han-3BCE22E3-62CF-468A-8F65-8849FAC14ACA-27,provide a more permanent solution,2026-04-13,0.16486834867776684,0.05111576180360064,109,9,223,unlikely,False,,,27
+nlp-00946:g-han-FF7ADCCA-6D2B-4AE4-B55F-7016CB53CE3E-18,Draft Building Safety (Responsible Actors Scheme and Prohibitions) (Amendment) Regulations 2026,2026-04-13,0.16486834867776684,0.05111576180360064,109,9,223,unlikely,False,,,27
+nlp-00947:g-wms-1898588-23,Ancillary contracts and mixed contracts We will legislate,2026-04-13,0.3172208390874739,0.10514137880618503,102,8,221,unlikely,False,,,27
+nlp-00948:g-wms-1900303-6,removal of CPS in a future Finance Bill,2026-04-16,0.25706633204717066,0.08281657475660124,106,9,222,unlikely,False,,,27
+nlp-00949:g-wms-1902137-12,Stamp Duty Land Tax on periodic tenancies,2026-04-22,0.18897275513056216,0.05872512851289349,108,9,222,unlikely,False,,,26
+nlp-00950:g-han-18F6A71C-2472-48CF-94C9-ABAC6F6E4ACF-34,Antisemitic Attacks,2026-04-27,0.2461819309663287,0.0775716088610107,107,9,222,unlikely,False,,,25
+nlp-00951,provide a route for Government to bring steel companies or their operations,2026-05-14,0.3590524929963374,0.1518022562243995,76,5,214,uncertain,True,2026-05-14,1.0,23
+nlp-00952:g-wms-1905263-7,establish the new regulatory framework,2026-05-14,0.21724936320982444,0.08671729147625408,82,6,217,unlikely,False,,,23
+nlp-00953:g-wms-1905303-11,framework to ratify a future agreement on closer future economic and security,2026-05-14,0.3590524929963374,0.1518022562243995,76,5,214,uncertain,False,,,23
+nlp-00954:g-wms-1906262-26,enable surpluses in closed RFB pension schemes to be shared with other,2026-05-18,0.1951073946656904,0.07635687954144113,84,6,218,unlikely,False,,,22
+nlp-00955:g-han-4CDC9F45-3B7F-4835-9BE1-C3D5F9EF92C8-62,ensure that that tuition fee income for universities is index-linked,2026-05-19,0.2801910268163401,0.11328623942790535,81,6,216,unlikely,False,,,22
+nlp-00956:g-wms-1907767-28,Transport taxation update,2026-05-20,0.2902702213011227,0.11779921351942235,80,6,216,unlikely,False,,,22
+nlp-00957:g-han-F0CE8FEC-16B7-4949-8CA7-39FEFA727BDD-17,allow local transport authorities to prohibit pavement parking,2026-06-03,0.2812532267868909,0.11606021676961942,80,4,216,unlikely,False,,,20
+nlp-00958:g-han-D2CB6FE2-E111-44D9-800B-263CBAF944E4-1,Digital Safety: Children,2026-06-09,0.27829820288885393,0.11201280164932292,80,4,215,unlikely,False,,,19
+nlp-00959:g-han-538579BB-12BA-4EBA-8555-B94985214228-4,Social Media Ban for Under-16s,2026-06-15,0.2762233438990175,0.11008663461539377,83,4,221,unlikely,False,,,18
+nlp-00960:g-han-F58AAD24-BF95-4357-8D47-83355B71140F-6,them all,2026-06-17,0.18469710082283708,0.07098747666789922,87,5,223,unlikely,False,,,18
+nlp-00961:g-han-18532206-20D8-43C7-AD50-953CE71D3AFF-89,Jo Cox Civility Commission,2026-06-18,0.203917329912388,0.0789088805926205,86,5,223,unlikely,False,,,18
+nlp-00962:g-han-FD108146-AA40-4790-9B71-EA43CD15CD52-2,Grooming Gangs: Independent Inquiry,2026-06-18,0.2758508845054216,0.10979267193567104,83,4,221,unlikely,False,,,18
+nlp-00963:g-wms-1917705-14,publish the government’s consultation response,2026-06-18,0.23913563515516234,0.09379776835170325,85,4,222,unlikely,False,,,18
+nlp-00964:g-han-E1C3983C-5B7F-4466-9580-9189905FEE0B-1,draft will introduce legislation,2026-06-22,0.18344050520890415,0.06992936468804992,89,5,226,unlikely,False,,,17
+nlp-00965:g-han-51192438-5878-4B46-A03A-C2112E42988D-66,that,2026-06-23,0.2025481470020715,0.07773781866997374,88,5,226,unlikely,False,,,17
+nlp-00966:g-wms-1920137-10,limit the growth of some courses that lead to poor earnings returns,2026-06-25,0.2373506212135559,0.09225098705274042,86,4,225,unlikely,False,,,17
+nlp-00967:g-han-D08438A8-2E8F-4158-BD42-6F1D9969681F-3,University Student Finance,2026-06-30,0.2717993509208962,0.10604792591501828,85,10,225,unlikely,False,,,16
+nlp-00968:g-han-EF12DFF3-03EF-497D-B553-50711C275342-2,introduce legislation that comprehensively tackles all SLAPPs,2026-06-30,0.18172517056432647,0.06845139748143732,90,10,226,unlikely,False,,,16
+nlp-00969:g-han-4B85C058-0B78-489C-A012-661E5D6623DC-3,take that forward in the energy independence Bill,2026-07-07,0.26863235080529557,0.10282331906695119,88,11,225,unlikely,False,,,15
+nlp-00970:g-wms-1924683-48,committed to establishing the Child Protection Authority and we are exploring options,2026-07-07,0.2327162813647818,0.08779166662501184,89,11,226,unlikely,False,,,15
+nlp-00971:g-wms-1925302-9,British Industrial Competitiveness Scheme,2026-07-08,0.3420755233529402,0.13506617775719268,84,11,224,unlikely,False,,,15
+nlp-00972:g-han-3EDBC84A-347C-4283-8C89-E952F7D04190-1,National Crime Agency: Reform Party Funding,2026-07-14,0.196380420880192,0.07205965364661487,93,15,227,unlikely,False,,,14
+nlp-00973:g-han-AEAE29D0-7BB1-4813-85FF-5978758F58B1-18,in this second Session for pre-legislative scrutiny,2026-07-15,0.19629242412580783,0.07199403019509074,93,15,227,unlikely,False,,,14
+nlp-00974:g-han-7EDF4378-6D47-4EA6-9DF3-ACD2C7674B26-16,in this Parliament to enable the Health and Care Professions Council,2026-07-16,0.2659092512865655,0.10023906687427209,89,14,226,unlikely,False,,,14
+nlp-00975:g-han-878377C9-BC71-4F94-9ED4-31F4B7E01854-72,Early Release Prisoners: Preventing Homelessness and Rough Sleeping,2026-07-16,0.2659092512865655,0.10023906687427209,89,14,226,unlikely,False,,,14
+nlp-00976:g-han-DF52E3A4-6D32-48F2-86D9-30A5448952F1-2,Artificial Intelligence: Legislation,2026-07-16,0.2659092512865655,0.10023906687427209,89,14,226,unlikely,False,,,14
+nlp-00977:g-han-70A96D1E-21A8-4CA0-8B83-B62F527792B7-81,having considered the results of the consultation,2026-07-17,0.17457151964634826,0.06134854558859789,97,17,227,unlikely,False,,,13
+nlp-00978:g-han-44A2F693-9EB3-415C-A5E3-157BA5F3E5D9-3,she said,2026-09-03,0.18078135538193327,0.06826075813157334,87,8,222,unlikely,False,,,7
+nlp-00979:g-han-45C644BD-E9E8-449F-A29F-D133B27DEDA2-2,mitigate the effects of the PACCAR judgment,2026-09-03,0.27047523639552495,0.1057639601458329,82,8,221,unlikely,False,,,7
+nlp-00980:g-han-086A9E71-E881-4B8C-AD08-B9057C1273C8-21,is not needed in the short term,2026-09-08,0.17805829342789273,0.0648664941918718,89,9,222,unlikely,False,,,6
+nlp-00981,correct this antiquated and archaic anomaly,2026-09-10,0.25407760570132193,0.09529295298314049,86,9,220,unlikely,True,2026-09-15,1.0,6
+nlp-00982:g-wms-1947478-27,give the Secretary of State powers to cap exorbitant permission fees,2026-10-12,0.27211561109466975,0.10604643200837528,81,5,217,unlikely,False,,,1
+nlp-00983:g-han-96C08D7E-957C-441E-87A9-EC05E21D1AEF-11,police reform programme in,2026-10-13,0.26977099887749445,0.1049864156587404,81,5,217,unlikely,False,,,1
+nlp-00984:g-han-8DF58DA3-0393-4B17-9BA6-569E26ADEC2B-60,we publish will have detailed impact assessments at that point,2026-10-15,0.26954742919235236,0.1047988596713958,81,5,217,unlikely,False,,,1
+nlp-00985:g-han-E1B5E71C-46D2-4C36-974F-6C288D696ED5-19,deliver our manifesto commitment to support the management of existing fields by,2026-10-21,0.17905815562908126,0.06648253847785845,87,5,220,unlikely,False,,,0

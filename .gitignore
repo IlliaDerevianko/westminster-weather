@@ -27,6 +27,8 @@ htmlcov/
 *.sqlite3
 data/raw/
 data/processed/
+backend/data/
+backend/models/
 
 # Node / Frontend (future)
 node_modules/
@@ -42,3 +44,7 @@ build/
 .vscode/
 *.swp
 .neon
+
+# Passage model local data and fitted models
+backend/data/
+backend/models/

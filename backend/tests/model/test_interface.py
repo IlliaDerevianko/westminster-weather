@@ -151,3 +151,21 @@ def test_other_functions_never_after_as_of(real, as_of):
     assert (cal["sessions"]["end_date"].dropna() <= as_of).all()
     assert (cal["parliaments"]["dissolution_date"].dropna() <= as_of).all()
     assert real.get_scheduled_sittings(as_of).empty
+
+
+@pytest.mark.parametrize("as_of", AS_OF_DATES)
+def test_stage_sittings_never_after_as_of(real, as_of):
+    st = real.get_stage_sittings(as_of)
+    assert len(st) > 0
+    assert (st["event_date"] <= as_of).all()
+    assert set(st["model_state"].dropna()) <= {
+        "commons_1st_reading", "commons_2nd_reading", "commons_committee",
+        "commons_report_stage", "commons_3rd_reading", "lords_1st_and_2nd_reading",
+        "lords_committee", "lords_report_and_3rd_reading", "ping_pong", "royal_assent",
+    }  # fmt: skip
+
+
+def test_stage_sittings_on_synthetic_data(synthetic):
+    st = synthetic.get_stage_sittings(date(2016, 6, 20))
+    assert set(st["bill_id"]) == {1, 2}  # bill 3 not introduced yet
+    assert st.loc[st["api_stage_id"] == 49, "model_state"].iloc[0] == "commons_committee"

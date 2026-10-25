@@ -1,0 +1,711 @@
+{
+  "train_cut": "2019-01-01",
+  "data_end": "2026-10-21",
+  "n_test_acts": 219,
+  "model": {
+    "cut": "2019-01-01",
+    "n_train_acts": 303,
+    "n_first_order_events": 179,
+    "z_features": [
+      "z_dept_hm_treasury",
+      "z_dept_home_office",
+      "z_dept_ministry_of_justice",
+      "z_dept_communities_and_local_government",
+      "z_dept_work_and_pensions",
+      "z_dept_northern_ireland_office",
+      "z_lords_first",
+      "z_ping_pong",
+      "z_log_stage_sittings",
+      "z_years_1r_to_ra",
+      "z_months_into_session",
+      "z_years_since_election"
+    ],
+    "cure_parameters": [
+      {
+        "parameter": "intercept",
+        "estimate": 0.4382262540447314
+      },
+      {
+        "parameter": "z_dept_hm_treasury",
+        "estimate": -0.1074075668465718
+      },
+      {
+        "parameter": "z_dept_home_office",
+        "estimate": 0.45770012939174953
+      },
+      {
+        "parameter": "z_dept_ministry_of_justice",
+        "estimate": 0.007428094621748694
+      },
+      {
+        "parameter": "z_dept_communities_and_local_government",
+        "estimate": -1.686196779878902
+      },
+      {
+        "parameter": "z_dept_work_and_pensions",
+        "estimate": 1.089896910280287
+      },
+      {
+        "parameter": "z_dept_northern_ireland_office",
+        "estimate": 1.956246306020531
+      },
+      {
+        "parameter": "z_lords_first",
+        "estimate": 1.2298033797319763
+      },
+      {
+        "parameter": "z_ping_pong",
+        "estimate": 0.09137627586793742
+      },
+      {
+        "parameter": "z_log_stage_sittings",
+        "estimate": 2.28148326683075
+      },
+      {
+        "parameter": "z_years_1r_to_ra",
+        "estimate": 0.5125584808157931
+      },
+      {
+        "parameter": "z_months_into_session",
+        "estimate": 0.007547828151268472
+      },
+      {
+        "parameter": "z_years_since_election",
+        "estimate": 0.2185108852009085
+      },
+      {
+        "parameter": "alpha_weeks_1+",
+        "estimate": -2.5755082760136476
+      },
+      {
+        "parameter": "alpha_weeks_5+",
+        "estimate": -2.550395188714873
+      },
+      {
+        "parameter": "alpha_weeks_13+",
+        "estimate": -2.6930236849626352
+      },
+      {
+        "parameter": "alpha_weeks_27+",
+        "estimate": -3.015850968396838
+      },
+      {
+        "parameter": "alpha_weeks_53+",
+        "estimate": -3.564674260249676
+      },
+      {
+        "parameter": "alpha_weeks_105+",
+        "estimate": -2.0586268590860626
+      }
+    ],
+    "order_model_C": 1.0,
+    "order_model_rows": 53681,
+    "order_model_events": 794,
+    "order_model_parameters": [
+      {
+        "parameter": "intercept",
+        "estimate": -5.37281483405487
+      },
+      {
+        "parameter": "since_ra_5+",
+        "estimate": 1.253302730789562
+      },
+      {
+        "parameter": "since_ra_13+",
+        "estimate": 1.4898866210732693
+      },
+      {
+        "parameter": "since_ra_27+",
+        "estimate": 1.5400092895664697
+      },
+      {
+        "parameter": "since_ra_53+",
+        "estimate": 1.0709245681159119
+      },
+      {
+        "parameter": "since_ra_105+",
+        "estimate": 0.7799476156849241
+      },
+      {
+        "parameter": "since_ra_209+",
+        "estimate": 0.5655614135422192
+      },
+      {
+        "parameter": "since_ra_365+",
+        "estimate": -0.5525680139842847
+      },
+      {
+        "parameter": "log_week",
+        "estimate": -0.7096415353551235
+      },
+      {
+        "parameter": "gap_5+",
+        "estimate": 0.09072501909704303
+      },
+      {
+        "parameter": "gap_13+",
+        "estimate": 0.37946019109959905
+      },
+      {
+        "parameter": "gap_27+",
+        "estimate": 0.03603237216708058
+      },
+      {
+        "parameter": "gap_53+",
+        "estimate": -0.8049954233399756
+      },
+      {
+        "parameter": "gap_105+",
+        "estimate": -1.0148948056591165
+      },
+      {
+        "parameter": "log_gap",
+        "estimate": 0.03698779036480129
+      },
+      {
+        "parameter": "log1p_orders",
+        "estimate": 0.6062397857338407
+      },
+      {
+        "parameter": "z_dept_hm_treasury",
+        "estimate": 0.10355134869250548
+      },
+      {
+        "parameter": "z_dept_home_office",
+        "estimate": 0.18700409080288677
+      },
+      {
+        "parameter": "z_dept_ministry_of_justice",
+        "estimate": 0.21359792677521694
+      },
+      {
+        "parameter": "z_dept_communities_and_local_government",
+        "estimate": 0.0124646573589454
+      },
+      {
+        "parameter": "z_dept_work_and_pensions",
+        "estimate": 0.5062708801519971
+      },
+      {
+        "parameter": "z_dept_northern_ireland_office",
+        "estimate": -0.6982901825763758
+      },
+      {
+        "parameter": "z_lords_first",
+        "estimate": -0.17303262198033634
+      },
+      {
+        "parameter": "z_ping_pong",
+        "estimate": 0.1340464398831124
+      },
+      {
+        "parameter": "z_log_stage_sittings",
+        "estimate": 0.39800076024378617
+      },
+      {
+        "parameter": "z_years_1r_to_ra",
+        "estimate": -0.0678427131615419
+      },
+      {
+        "parameter": "z_months_into_session",
+        "estimate": 0.07510669471903277
+      },
+      {
+        "parameter": "z_years_since_election",
+        "estimate": 0.06606525577214463
+      }
+    ],
+    "first_order_cqr": {
+      "alpha": 0.2,
+      "n_calibration": 57,
+      "q": 0.24,
+      "raw_coverage_on_calibration": 0.7017543859649122,
+      "years": 4
+    },
+    "finish_cqr": {
+      "n_calibration": 34,
+      "q": 0.04568527918781726,
+      "used": true,
+      "raw_coverage_on_calibration": 0.6176470588235294,
+      "years": 6
+    }
+  },
+  "definitions": {
+    "needs_orders": "1 = at least one commencement order by the data end; 0 = none and Royal Assent >= 156 weeks before the data end; else not scored",
+    "orders_finished_week": "week of the latest order, scored only when 104 weeks with no further order followed before the data end (right-truncated: slow Acts in recent years are under-represented)",
+    "orders_finished_by_Hw": "1 = the latest order is in weeks 1..H and was followed by 104 quiet weeks; 0 = an order came after week H; Acts with orders only (free of the right-truncation of orders_finished_week)",
+    "baselines": "conditional on what is known at as_of (no order by then / T >= floor)"
+  },
+  "by_offset": {
+    "0": {
+      "needs_orders": {
+        "share_positive": 0.5828571428571429,
+        "model": {
+          "n": 175,
+          "auc": 0.8815471394037067,
+          "brier": 0.13820560932547182
+        },
+        "baseline_overall": {
+          "n": 175,
+          "auc": 0.5,
+          "brier": 0.24898442217123537
+        },
+        "baseline_department": {
+          "n": 175,
+          "auc": 0.6582057480526458,
+          "brier": 0.24379328231262937
+        }
+      },
+      "orders_finished_by_52w": {
+        "share_positive": 0.3855421686746988,
+        "model": {
+          "n": 83,
+          "auc": 0.6780024509803922,
+          "brier": 0.22280428915662645
+        },
+        "baseline_overall": {
+          "n": 83,
+          "auc": 0.5,
+          "brier": 0.24814368774817647
+        },
+        "baseline_department": {
+          "n": 83,
+          "auc": 0.5389093137254901,
+          "brier": 0.2547960598289342
+        }
+      },
+      "orders_finished_by_104w": {
+        "share_positive": 0.5844155844155844,
+        "model": {
+          "n": 77,
+          "auc": 0.7104166666666667,
+          "brier": 0.2176721558441558
+        },
+        "baseline_overall": {
+          "n": 77,
+          "auc": 0.5,
+          "brier": 0.2563031374220185
+        },
+        "baseline_department": {
+          "n": 77,
+          "auc": 0.5524305555555555,
+          "brier": 0.2685832484020575
+        }
+      },
+      "orders_finished_by_208w": {
+        "share_positive": 0.896551724137931,
+        "model": {
+          "n": 58,
+          "auc": 0.7756410256410257,
+          "brier": 0.11192536206896554
+        },
+        "baseline_overall": {
+          "n": 58,
+          "auc": 0.5,
+          "brier": 0.13296772413793106
+        },
+        "baseline_department": {
+          "n": 58,
+          "auc": 0.6506410256410258,
+          "brier": 0.12479284076429649
+        }
+      },
+      "first_order_week": {
+        "n": 102,
+        "median_actual": 10.5,
+        "mae_model_p50": 15.07843137254902,
+        "mae_baseline_overall": 15.117647058823529,
+        "mae_baseline_department": 15.235294117647058,
+        "coverage_80_raw": 0.7549019607843137,
+        "coverage_80_cqr": 0.8725490196078431,
+        "by_department": {
+          "hm_treasury": {
+            "n": 15,
+            "mae_model_p50": 10.666666666666666,
+            "mae_baseline_department": 10.666666666666666
+          },
+          "home_office": {
+            "n": 17,
+            "mae_model_p50": 18.176470588235293,
+            "mae_baseline_department": 18.91176470588235
+          },
+          "ministry_of_justice": {
+            "n": 8,
+            "mae_model_p50": 15.375,
+            "mae_baseline_department": 15.375
+          },
+          "northern_ireland_office": {
+            "n": 3,
+            "mae_model_p50": 5.666666666666667,
+            "mae_baseline_department": 8.166666666666666
+          },
+          "other": {
+            "n": 55,
+            "mae_model_p50": 16.381818181818183,
+            "mae_baseline_department": 16.30909090909091
+          },
+          "work_and_pensions": {
+            "n": 4,
+            "mae_model_p50": 7.0,
+            "mae_baseline_department": 7.0
+          }
+        }
+      },
+      "orders_finished_week": {
+        "n": 52,
+        "median_actual": 40.0,
+        "mae_model_p50": 61.92307692307692,
+        "mae_baseline_overall": 41.65384615384615,
+        "mae_baseline_department": 49.40384615384615,
+        "coverage_80_raw": 0.7307692307692307,
+        "coverage_80_cqr": 0.9423076923076923,
+        "by_department": {
+          "hm_treasury": {
+            "n": 10,
+            "mae_model_p50": 41.4,
+            "mae_baseline_department": 31.7
+          },
+          "home_office": {
+            "n": 10,
+            "mae_model_p50": 95.7,
+            "mae_baseline_department": 90.6
+          },
+          "ministry_of_justice": {
+            "n": 2,
+            "mae_model_p50": 48.5,
+            "mae_baseline_department": 41.0
+          },
+          "northern_ireland_office": {
+            "n": 1,
+            "mae_model_p50": 17.0,
+            "mae_baseline_department": 28.0
+          },
+          "other": {
+            "n": 27,
+            "mae_model_p50": 61.0,
+            "mae_baseline_department": 38.81481481481482
+          },
+          "work_and_pensions": {
+            "n": 2,
+            "mae_model_p50": 44.0,
+            "mae_baseline_department": 94.0
+          }
+        }
+      }
+    },
+    "13": {
+      "needs_orders": {
+        "share_positive": 0.3652173913043478,
+        "model": {
+          "n": 115,
+          "auc": 0.8966079582517938,
+          "brier": 0.12301800415904952
+        },
+        "baseline_overall": {
+          "n": 115,
+          "auc": 0.5,
+          "brier": 0.2346993885869565
+        },
+        "baseline_department": {
+          "n": 115,
+          "auc": 0.5984996738421395,
+          "brier": 0.2367766345038594
+        }
+      },
+      "orders_finished_by_52w": {
+        "share_positive": 0.3855421686746988,
+        "model": {
+          "n": 83,
+          "auc": 0.6856617647058824,
+          "brier": 0.21879751807228917
+        },
+        "baseline_overall": {
+          "n": 83,
+          "auc": 0.39552696078431365,
+          "brier": 0.24934086217733392
+        },
+        "baseline_department": {
+          "n": 83,
+          "auc": 0.5073529411764706,
+          "brier": 0.2677925565181439
+        }
+      },
+      "orders_finished_by_104w": {
+        "share_positive": 0.5844155844155844,
+        "model": {
+          "n": 77,
+          "auc": 0.71875,
+          "brier": 0.21217154545454547
+        },
+        "baseline_overall": {
+          "n": 77,
+          "auc": 0.5392361111111111,
+          "brier": 0.2465594311927219
+        },
+        "baseline_department": {
+          "n": 77,
+          "auc": 0.4881944444444444,
+          "brier": 0.2687521471471633
+        }
+      },
+      "orders_finished_by_208w": {
+        "share_positive": 0.896551724137931,
+        "model": {
+          "n": 58,
+          "auc": 0.8108974358974358,
+          "brier": 0.10618286206896553
+        },
+        "baseline_overall": {
+          "n": 58,
+          "auc": 0.6378205128205128,
+          "brier": 0.11486455172413794
+        },
+        "baseline_department": {
+          "n": 58,
+          "auc": 0.7580128205128205,
+          "brier": 0.1013513013579408
+        }
+      },
+      "first_order_week": {
+        "n": 42,
+        "median_actual": 24.0,
+        "mae_model_p50": 21.404761904761905,
+        "mae_baseline_overall": 21.547619047619047,
+        "mae_baseline_department": 22.547619047619047,
+        "coverage_80_raw": 0.7619047619047619,
+        "coverage_80_cqr": 0.8095238095238095
+      },
+      "orders_finished_week": {
+        "n": 52,
+        "median_actual": 40.0,
+        "mae_model_p50": 59.53846153846154,
+        "mae_baseline_overall": 45.82692307692308,
+        "mae_baseline_department": 52.10576923076923,
+        "coverage_80_raw": 0.8846153846153846,
+        "coverage_80_cqr": 0.9423076923076923
+      }
+    },
+    "26": {
+      "needs_orders": {
+        "share_positive": 0.20652173913043478,
+        "model": {
+          "n": 92,
+          "auc": 0.8925739005046864,
+          "brier": 0.1058170391751521
+        },
+        "baseline_overall": {
+          "n": 92,
+          "auc": 0.5,
+          "brier": 0.16693778960859706
+        },
+        "baseline_department": {
+          "n": 92,
+          "auc": 0.5634462869502523,
+          "brier": 0.1841109791572017
+        }
+      },
+      "orders_finished_by_52w": {
+        "share_positive": 0.3855421686746988,
+        "model": {
+          "n": 83,
+          "auc": 0.7371323529411764,
+          "brier": 0.20343415662650605
+        },
+        "baseline_overall": {
+          "n": 83,
+          "auc": 0.4154411764705882,
+          "brier": 0.2498700581423724
+        },
+        "baseline_department": {
+          "n": 83,
+          "auc": 0.5110294117647058,
+          "brier": 0.2604930409753829
+        }
+      },
+      "orders_finished_by_104w": {
+        "share_positive": 0.5844155844155844,
+        "model": {
+          "n": 77,
+          "auc": 0.7194444444444443,
+          "brier": 0.20780600000000002
+        },
+        "baseline_overall": {
+          "n": 77,
+          "auc": 0.48611111111111116,
+          "brier": 0.25471315609586426
+        },
+        "baseline_department": {
+          "n": 77,
+          "auc": 0.5666666666666667,
+          "brier": 0.2625857003701987
+        }
+      },
+      "orders_finished_by_208w": {
+        "share_positive": 0.896551724137931,
+        "model": {
+          "n": 58,
+          "auc": 0.7852564102564102,
+          "brier": 0.10524903448275862
+        },
+        "baseline_overall": {
+          "n": 58,
+          "auc": 0.625,
+          "brier": 0.1212193103448276
+        },
+        "baseline_department": {
+          "n": 58,
+          "auc": 0.6826923076923077,
+          "brier": 0.12142077439241547
+        }
+      },
+      "first_order_week": {
+        "n": 19,
+        "median_actual": 56.0,
+        "mae_model_p50": 28.31578947368421,
+        "mae_baseline_overall": 29.736842105263158,
+        "mae_baseline_department": 26.736842105263158,
+        "coverage_80_raw": 0.7894736842105263,
+        "coverage_80_cqr": 0.8947368421052632
+      },
+      "orders_finished_week": {
+        "n": 52,
+        "median_actual": 40.0,
+        "mae_model_p50": 53.98076923076923,
+        "mae_baseline_overall": 46.49038461538461,
+        "mae_baseline_department": 53.77884615384615,
+        "coverage_80_raw": 0.9423076923076923,
+        "coverage_80_cqr": 1.0
+      }
+    },
+    "52": {
+      "needs_orders": {
+        "share_positive": 0.13095238095238096,
+        "model": {
+          "n": 84,
+          "auc": 0.9115815691158157,
+          "brier": 0.09216368251696387
+        },
+        "baseline_overall": {
+          "n": 84,
+          "auc": 0.5,
+          "brier": 0.11495069325684847
+        },
+        "baseline_department": {
+          "n": 84,
+          "auc": 0.5603985056039851,
+          "brier": 0.11816643868088217
+        }
+      },
+      "orders_finished_by_104w": {
+        "share_positive": 0.5945945945945946,
+        "model": {
+          "n": 74,
+          "auc": 0.7481060606060607,
+          "brier": 0.2065790810810811
+        },
+        "baseline_overall": {
+          "n": 74,
+          "auc": 0.49318181818181817,
+          "brier": 0.26349372503218654
+        },
+        "baseline_department": {
+          "n": 74,
+          "auc": 0.5420454545454546,
+          "brier": 0.2835016596458765
+        }
+      },
+      "orders_finished_by_208w": {
+        "share_positive": 0.8888888888888888,
+        "model": {
+          "n": 54,
+          "auc": 0.8003472222222222,
+          "brier": 0.10624181481481482
+        },
+        "baseline_overall": {
+          "n": 54,
+          "auc": 0.4583333333333333,
+          "brier": 0.13735637860082306
+        },
+        "baseline_department": {
+          "n": 54,
+          "auc": 0.6736111111111112,
+          "brier": 0.12813069790309015
+        }
+      },
+      "first_order_week": {
+        "n": 11,
+        "median_actual": 82.0,
+        "mae_model_p50": 17.181818181818183,
+        "mae_baseline_overall": 16.045454545454547,
+        "mae_baseline_department": 74.18181818181819,
+        "coverage_80_raw": 0.8181818181818182,
+        "coverage_80_cqr": 0.9090909090909091
+      },
+      "orders_finished_week": {
+        "n": 52,
+        "median_actual": 40.0,
+        "mae_model_p50": 45.38461538461539,
+        "mae_baseline_overall": 66.5673076923077,
+        "mae_baseline_department": 69.40384615384616,
+        "coverage_80_raw": 0.9615384615384616,
+        "coverage_80_cqr": 1.0
+      }
+    },
+    "104": {
+      "needs_orders": {
+        "share_positive": 0.02666666666666667,
+        "model": {
+          "n": 75,
+          "auc": 0.8493150684931507,
+          "brier": 0.02682998916622748
+        },
+        "baseline_overall": {
+          "n": 75,
+          "auc": 0.5,
+          "brier": 0.0259765625
+        },
+        "baseline_department": {
+          "n": 75,
+          "auc": 0.7465753424657534,
+          "brier": 0.02750434385002286
+        }
+      },
+      "orders_finished_by_208w": {
+        "share_positive": 0.896551724137931,
+        "model": {
+          "n": 58,
+          "auc": 0.8621794871794871,
+          "brier": 0.09042739655172415
+        },
+        "baseline_overall": {
+          "n": 58,
+          "auc": 0.5,
+          "brier": 0.13296772413793106
+        },
+        "baseline_department": {
+          "n": 58,
+          "auc": 0.6506410256410258,
+          "brier": 0.12479284076429649
+        }
+      },
+      "first_order_week": {
+        "n": 2,
+        "median_actual": 125.5,
+        "mae_model_p50": 15.5,
+        "mae_baseline_overall": 13.5,
+        "mae_baseline_department": 13.5,
+        "coverage_80_raw": 0.5,
+        "coverage_80_cqr": 0.5
+      },
+      "orders_finished_week": {
+        "n": 52,
+        "median_actual": 40.0,
+        "mae_model_p50": 24.673076923076923,
+        "mae_baseline_overall": 77.28846153846153,
+        "mae_baseline_department": 81.02884615384616,
+        "coverage_80_raw": 1.0,
+        "coverage_80_cqr": 1.0
+      }
+    }
+  }
+}

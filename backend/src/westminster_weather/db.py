@@ -671,4 +671,17 @@ def fetch_post_royal_assent_events_df() -> pd.DataFrame:
         engine.dispose()
 
 
+def save_backtest_forecasts_to_db(df: pd.DataFrame) -> int:
+    """Upsert backtest forecasts (DATA_CONTRACT §6.5) by (model_name, bill_id, forecast_date)."""
+    from westminster_weather.models import BacktestForecastRow
 
+    ensure_reference_tables_seeded_sync()
+    engine = get_sync_direct_engine()
+    try:
+        with engine.begin() as conn:
+            Base.metadata.create_all(conn)
+            records = [_clean_record(r) for r in df.to_dict("records")]
+            _upsert_rows(conn, BacktestForecastRow.__table__, records)
+        return len(records)
+    finally:
+        engine.dispose()

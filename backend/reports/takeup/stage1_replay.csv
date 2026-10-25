@@ -1,0 +1,29 @@
+idea_id,as_of,pi_now,p52,verdict,real_bill_within_52w,actual
+nlp-00362,2016-07-18,0.29156998673707946,0.1322191012392427,uncertain,False,"bill introduced 2021-07-05 (Building Safety Act 2022), 259 weeks after the promise"
+nlp-00362,2017-07-17,0.16445543916750427,0.05391995117281923,unlikely,False,"bill introduced 2021-07-05 (Building Safety Act 2022), 259 weeks after the promise"
+nlp-00362,2018-07-16,0.0788704712866558,0.033170136276824906,unlikely,False,"bill introduced 2021-07-05 (Building Safety Act 2022), 259 weeks after the promise"
+nlp-00362,2020-07-13,0.03425109770361859,0.03425109770361859,unlikely,True,"bill introduced 2021-07-05 (Building Safety Act 2022), 259 weeks after the promise"
+nlp-00392,2017-11-01,0.35326475729534285,0.1361851900111653,uncertain,False,"bill introduced 2019-07-16 (Domestic Abuse Bill), 88 weeks after the promise"
+nlp-00392,2018-10-31,0.19194552454867594,0.05226318639827057,unlikely,True,"bill introduced 2019-07-16 (Domestic Abuse Bill), 88 weeks after the promise"
+nlp-00403,2018-01-24,0.23506113718218383,0.08167482089915103,unlikely,False,"bill introduced 2022-03-01 (Economic Crime (Transparency and Enforcement) Act 2022), 213 weeks after the promise"
+nlp-00403,2019-01-23,0.3735115137064971,0.10700846748592341,uncertain,False,"bill introduced 2022-03-01 (Economic Crime (Transparency and Enforcement) Act 2022), 213 weeks after the promise"
+nlp-00403,2020-01-22,0.37447224021326625,0.17422024430646998,uncertain,False,"bill introduced 2022-03-01 (Economic Crime (Transparency and Enforcement) Act 2022), 213 weeks after the promise"
+nlp-00403,2022-01-19,0.10754028896560795,0.10754028896560795,unlikely,True,"bill introduced 2022-03-01 (Economic Crime (Transparency and Enforcement) Act 2022), 213 weeks after the promise"
+nlp-00419,2018-05-15,0.29109784194905103,0.09913232973629679,unlikely,False,"bill introduced 2021-05-12 (Leasehold Reform (Ground Rent) Act 2022), 156 weeks after the promise"
+nlp-00419,2019-05-14,0.33017014022725766,0.08889096462406433,uncertain,False,"bill introduced 2021-05-12 (Leasehold Reform (Ground Rent) Act 2022), 156 weeks after the promise"
+nlp-00419,2020-05-12,0.4815463994846079,0.22866299805806117,uncertain,False,"bill introduced 2021-05-12 (Leasehold Reform (Ground Rent) Act 2022), 156 weeks after the promise"
+nlp-00500,2020-02-13,0.30032935043553116,0.1476532552877661,uncertain,False,"bill introduced 2022-03-17 (Online Safety Act 2023), 109 weeks after the promise"
+nlp-00500,2021-02-11,0.1526276761659408,0.03513257646087899,unlikely,False,"bill introduced 2022-03-17 (Online Safety Act 2023), 109 weeks after the promise"
+nlp-00500,2022-02-10,0.06516936876426342,0.03049356716021862,unlikely,True,"bill introduced 2022-03-17 (Online Safety Act 2023), 109 weeks after the promise"
+nlp-00556,2021-03-18,0.1959927648386309,0.06587608852807188,unlikely,False,"bill introduced 2024-03-19 (Football Governance Bill), 156 weeks after the promise"
+nlp-00556,2022-03-17,0.11300583141001189,0.02977714169879525,unlikely,False,"bill introduced 2024-03-19 (Football Governance Bill), 156 weeks after the promise"
+nlp-00556,2023-03-16,0.046885987331436854,0.019851780940111318,unlikely,False,"bill introduced 2024-03-19 (Football Governance Bill), 156 weeks after the promise"
+nlp-00666,2022-09-23,0.20121757564122983,0.06487881159738645,unlikely,False,"bill introduced 2023-11-29 (Post Office (Horizon System) Compensation Act 2024), 61 weeks after the promise"
+nlp-00666,2023-09-22,0.945492237103485,0.4235085384626877,uncertain,True,"bill introduced 2023-11-29 (Post Office (Horizon System) Compensation Act 2024), 61 weeks after the promise"
+nlp-00318,2015-03-23,0.14852755177478114,0.06784098690988778,unlikely,False,no Government Bill (as of data end)
+nlp-00318,2016-03-21,0.13981585407494848,0.04076526169563743,unlikely,False,no Government Bill (as of data end)
+nlp-00318,2017-03-20,0.0914043712720818,0.04722745422094182,unlikely,False,no Government Bill (as of data end)
+nlp-00318,2019-03-18,0.028147143656701734,0.028147143656701734,unlikely,False,no Government Bill (as of data end)
+nlp-00688,2023-01-17,0.24640967370196173,0.06986795278915078,uncertain,False,no Government Bill (as of data end)
+nlp-00688,2024-01-16,0.7279894077300714,0.23243269854870555,uncertain,False,no Government Bill (as of data end)
+nlp-00688,2025-01-14,0.8253267610222356,0.5547038725141455,uncertain,False,no Government Bill (as of data end)

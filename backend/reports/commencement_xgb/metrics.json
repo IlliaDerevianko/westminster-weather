@@ -1,0 +1,243 @@
+{
+  "split": {
+    "train_sessions": [
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35
+    ],
+    "test_sessions": [
+      36,
+      37,
+      38,
+      39
+    ],
+    "train_acts": 374,
+    "test_acts": 131,
+    "train_share": 0.741,
+    "test_left_out_too_recent": 11,
+    "test_years": "2021\u20132026",
+    "train_years": "2006\u20132022"
+  },
+  "by_checkpoint": {
+    "XGBoost (two step)": {
+      "Royal Assent": {
+        "n": 131,
+        "median_miss_days": 12.7,
+        "mean_miss_days": 57.7
+      },
+      "+30 days": {
+        "n": 51,
+        "median_miss_days": 30.8,
+        "mean_miss_days": 102.1
+      },
+      "+90 days": {
+        "n": 29,
+        "median_miss_days": 65.9,
+        "mean_miss_days": 141.4
+      },
+      "+180 days": {
+        "n": 10,
+        "median_miss_days": 202.3,
+        "mean_miss_days": 243.2
+      },
+      "+1 year": {
+        "n": 6,
+        "median_miss_days": 125.6,
+        "mean_miss_days": 208.6
+      }
+    },
+    "XGBoost (one step)": {
+      "Royal Assent": {
+        "n": 131,
+        "median_miss_days": 8.3,
+        "mean_miss_days": 62.0
+      },
+      "+30 days": {
+        "n": 51,
+        "median_miss_days": 32.4,
+        "mean_miss_days": 98.5
+      },
+      "+90 days": {
+        "n": 29,
+        "median_miss_days": 50.4,
+        "mean_miss_days": 128.7
+      },
+      "+180 days": {
+        "n": 10,
+        "median_miss_days": 194.1,
+        "mean_miss_days": 245.6
+      },
+      "+1 year": {
+        "n": 6,
+        "median_miss_days": 132.0,
+        "mean_miss_days": 209.5
+      }
+    },
+    "Current stage 3 model": {
+      "Royal Assent": {
+        "n": 131,
+        "median_miss_days": 19.0,
+        "mean_miss_days": 60.6
+      },
+      "+30 days": {
+        "n": 51,
+        "median_miss_days": 47.0,
+        "mean_miss_days": 102.6
+      },
+      "+90 days": {
+        "n": 29,
+        "median_miss_days": 51.0,
+        "mean_miss_days": 130.6
+      },
+      "+180 days": {
+        "n": 10,
+        "median_miss_days": 147.5,
+        "mean_miss_days": 217.3
+      },
+      "+1 year": {
+        "n": 6,
+        "median_miss_days": 144.5,
+        "mean_miss_days": 160.5
+      }
+    },
+    "Rule of thumb": {
+      "Royal Assent": {
+        "n": 131,
+        "median_miss_days": 6.0,
+        "mean_miss_days": 68.2
+      },
+      "+30 days": {
+        "n": 51,
+        "median_miss_days": 41.5,
+        "mean_miss_days": 102.7
+      },
+      "+90 days": {
+        "n": 29,
+        "median_miss_days": 83.5,
+        "mean_miss_days": 144.1
+      },
+      "+180 days": {
+        "n": 10,
+        "median_miss_days": 147.5,
+        "mean_miss_days": 207.2
+      },
+      "+1 year": {
+        "n": 6,
+        "median_miss_days": 151.0,
+        "mean_miss_days": 155.7
+      }
+    }
+  },
+  "at_royal_assent_by_kind": {
+    "XGBoost (two step)": {
+      "all": {
+        "n": 131,
+        "median_miss_days": 12.7,
+        "mean_miss_days": 57.7,
+        "within_30_days": 0.61
+      },
+      "Same day": {
+        "n": 63,
+        "median_miss_days": 0.0
+      },
+      "Within 3 months": {
+        "n": 39,
+        "median_miss_days": 25.7
+      },
+      "3-12 months": {
+        "n": 23,
+        "median_miss_days": 79.0
+      },
+      "Over a year": {
+        "n": 6,
+        "median_miss_days": 503.5
+      }
+    },
+    "XGBoost (one step)": {
+      "all": {
+        "n": 131,
+        "median_miss_days": 8.3,
+        "mean_miss_days": 62.0,
+        "within_30_days": 0.63
+      },
+      "Same day": {
+        "n": 63,
+        "median_miss_days": 0.2
+      },
+      "Within 3 months": {
+        "n": 39,
+        "median_miss_days": 33.9
+      },
+      "3-12 months": {
+        "n": 23,
+        "median_miss_days": 122.0
+      },
+      "Over a year": {
+        "n": 6,
+        "median_miss_days": 554.2
+      }
+    },
+    "Current stage 3 model": {
+      "all": {
+        "n": 131,
+        "median_miss_days": 19.0,
+        "mean_miss_days": 60.6,
+        "within_30_days": 0.54
+      },
+      "Same day": {
+        "n": 63,
+        "median_miss_days": 0.0
+      },
+      "Within 3 months": {
+        "n": 39,
+        "median_miss_days": 21.0
+      },
+      "3-12 months": {
+        "n": 23,
+        "median_miss_days": 75.0
+      },
+      "Over a year": {
+        "n": 6,
+        "median_miss_days": 499.0
+      }
+    },
+    "Rule of thumb": {
+      "all": {
+        "n": 131,
+        "median_miss_days": 6.0,
+        "mean_miss_days": 68.2,
+        "within_30_days": 0.63
+      },
+      "Same day": {
+        "n": 63,
+        "median_miss_days": 6.0
+      },
+      "Within 3 months": {
+        "n": 39,
+        "median_miss_days": 43.0
+      },
+      "3-12 months": {
+        "n": 23,
+        "median_miss_days": 133.0
+      },
+      "Over a year": {
+        "n": 6,
+        "median_miss_days": 563.0
+      }
+    }
+  },
+  "same_day_classifier_accuracy": 0.92
+}

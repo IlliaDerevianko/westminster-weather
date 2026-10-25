@@ -8,6 +8,7 @@ from sqlalchemy import (
     Boolean,
     Date,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
     String,
@@ -248,4 +249,21 @@ class PostRoyalAssentEventRow(Base):
     ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class BacktestForecastRow(Base):
+    """One backtest forecast of any model (DATA_CONTRACT §6.5), keyed by ``model_name``."""
 
+    __tablename__ = "backtest_forecasts"
+
+    model_name: Mapped[str] = mapped_column(String(64), primary_key=True)
+    bill_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    forecast_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    state_at_forecast: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    p_royal_assent: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ra_date_p10: Mapped[date | None] = mapped_column(Date, nullable=True)
+    ra_date_p50: Mapped[date | None] = mapped_column(Date, nullable=True)
+    ra_date_p90: Mapped[date | None] = mapped_column(Date, nullable=True)
+    actual_outcome: Mapped[str] = mapped_column(String(32), nullable=False)
+    actual_ra_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )

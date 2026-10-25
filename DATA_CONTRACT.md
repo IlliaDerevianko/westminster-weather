@@ -222,7 +222,7 @@ Build only if time allows. The model must still run if these are empty.
 
 ## 5. Model interface (the protocol)
 
-The model calls **only these four functions**. The database side implements them as SQL views or Python functions with identical signatures and outputs. Every function takes `as_of` and returns nothing dated after it.
+The model calls **only these five functions** (5.1–5.4a). The database side implements them as SQL views or Python functions with identical signatures and outputs. Every function takes `as_of` and returns nothing dated after it.
 
 ### 5.1 `get_bills(as_of) -> table`
 One row per bill introduced on or before `as_of`. Only columns marked "intro", plus:
@@ -258,6 +258,14 @@ Time-varying features in long format, one row per change. The model forward-fill
 | `announced` | Future dates from `announced_dates` with `announced_on ≤ as_of` |
 | `sessions` | All sessions with `start_date ≤ as_of`, `end_date` hidden if after `as_of` |
 | `parliaments` | Same rule |
+
+### 5.4a `get_stage_sittings(as_of) -> table`
+Individual stage sittings, needed where a state has several sittings that matter on their own (ping-pong rounds, MODEL_SPEC §4.4).
+| Column | Notes |
+|---|---|
+| `bill_id`, `sitting_id`, `api_stage_id`, `house`, `session_id` | As in `stage_sittings` |
+| `model_state` | From `stage_map`; `NULL` for stages the model ignores |
+| `event_date` | Only sittings with `event_date ≤ as_of`, for bills introduced by `as_of` |
 
 ### 5.5 Feature registry
 The model requests features by name. Adding a feature = adding a row here and a source in `get_covariates`.
@@ -345,6 +353,22 @@ Per remaining stage, for the timeline and failure chart.
 
 **Alert rule:** write an alert if the trigger is `stage_change`, `prorogation_announced` or `dissolution_announced`, or if `|delta_ra_days| > 14`, or if `|delta_p_royal_assent| > 0.05`.
 
+### 6.5 `backtest_forecasts`
+Backtest results of any model, one row per forecast. Each model writes under its own `model_name` (e.g. `passage_v1`), so models can be compared in one table. Forecasts must use only data available on `forecast_date`.
+| Column | Type | Notes |
+|---|---|---|
+| `model_name` | TEXT | Part of PK; e.g. `passage_v1` |
+| `bill_id` | INTEGER FK | Part of PK |
+| `forecast_date` | DATE | Part of PK; the `as_of` the forecast was made on |
+| `state_at_forecast` | TEXT NULL | `model_state` on `forecast_date` |
+| `p_royal_assent` | REAL NULL | Forecast probability of Royal Assent |
+| `ra_date_p10` | DATE NULL | 10th percentile Royal Assent date (among passing paths) |
+| `ra_date_p50` | DATE NULL | Median Royal Assent date |
+| `ra_date_p90` | DATE NULL | 90th percentile Royal Assent date |
+| `actual_outcome` | TEXT | `bills.outcome` as finally known (§3.1 values) |
+| `actual_ra_date` | DATE NULL | Actual Royal Assent date; `NULL` if the bill did not pass |
+| `created_at` | TIMESTAMP | When the row was written |
+
 ---
 
 ## 7. Update cycle
@@ -376,3 +400,179 @@ Per remaining stage, for the timeline and failure chart.
 | Section 5 (interface implementation) | Data, reviewed by Models |
 | Section 5.5 (feature registry), section 6 (outputs) | Models |
 | Reads section 6 tables | Front end |
+
+---
+
+## 10. Take-up model tables (Phase 1 → 2)
+
+Status: **draft for approval** (checkpoint 2 of `docs/model/TAKEUP_PLAN.md`). Owner: Roman.
+
+The take-up model asks whether a government commitment to legislate becomes a bill, and when. These tables are separate from the passage model's: they are defined on their own SQLAlchemy `MetaData` (`takeup/tables.py`), are **not** created by the app's start-up `create_all`, and are migrated first on the Neon branch `takeup-dev` (`DATABASE_URL_TAKEUP`), then on `production` only after review.
+
+Naming follows the take-up task spec: **Tier A** is the model (cure model, `takeup/model.py`), **Tier B** is the data pipeline that fills these tables (sources, NLP triggers, ideas, links, events).
+
+An **idea** is one commitment to legislate on one topic. Ideas come only from ministers' words (written ministerial statements, Hansard), found by NLP and grouped by topic; the earliest commitment is the trigger. King's/Queen's Speech data is **not** used (decision of 2026-10-24); `bills.kings_speech_flag` in section 3 belongs to the passage model and is unaffected.
+
+**Raw sources are stored too** (10.0a, 10.0b), so the database is the source of truth: the NLP pipeline reads from them, every commitment sentence points back to its source document, and changing the trigger lexicon never needs a re-fetch. About 25,000 documents with 86 MB of text (2006–2026; 71 MB of it from 2015), roughly 40–50 MB once Postgres compresses it. The fetcher's local cache (`backend/data/cache/takeup/`) is only a download speed-up.
+
+### 10.0a `source_documents`
+One row per written ministerial statement (all, Nov 2014 onwards) or Hansard contribution that contains a trigger phrase.
+| Column | Type | Notes |
+|---|---|---|
+| `doc_id` | TEXT PK | `wms-<statement id>`, `han-<ContributionExtId>` (spoken) or `hanw-<ContributionExtId>` (written, pre-2015) |
+| `source` | TEXT | `'wms'`, `'hansard_spoken'` or `'hansard_written'` |
+| `source_id` | TEXT | API ID as published |
+| `event_date` | DATE | Date made / sitting date |
+| `member_id` | INTEGER NULL | Members API ID of the minister or speaker |
+| `house` | TEXT NULL | `'Commons'` or `'Lords'` |
+| `title` | TEXT | Statement title or debate section |
+| `department` | TEXT NULL | Answering body (written statements) |
+| `text` | TEXT | Full text, HTML stripped |
+| `matched_phrases` | TEXT NULL | Hansard only: the search phrases that returned it, comma-separated |
+| `fetched_at` | TIMESTAMP | |
+
+### 10.0b `member_government_posts`
+Government posts per member, for the "was the speaker a minister on that date" check.
+| Column | Type | Notes |
+|---|---|---|
+| `member_id` | INTEGER | Members API ID |
+| `post_name` | TEXT | e.g. `Secretary of State for Transport` |
+| `start_date` | DATE | |
+| `end_date` | DATE NULL | `NULL` = still in post |
+| `fetched_at` | TIMESTAMP | |
+| PK | (`member_id`, `post_name`, `start_date`) | |
+
+A member with no rows has held no government post. Members whose posts were fetched are listed in the fetch log, so "no rows" is distinguishable from "not fetched".
+
+### 10.2 `signal_mentions`
+One row per sentence in which the government commits (or seems to commit) to legislate.
+| Column | Type | Notes |
+|---|---|---|
+| `mention_id` | TEXT PK | `<doc_id>-<sentence index>` |
+| `source` | TEXT | `'wms'`, `'hansard_spoken'` or `'hansard_written'` |
+| `doc_id` | TEXT FK → `source_documents` | Document the sentence comes from |
+| `event_date` | DATE | Date made / sitting date |
+| `member_id` | INTEGER NULL | Members API ID of the speaker |
+| `is_minister` | BOOLEAN NULL | Speaker held a government post on `event_date`; `NULL` = unknown |
+| `department` | TEXT NULL | Answering body (written statements) |
+| `title` | TEXT | Statement title or debate section |
+| `sentence` | TEXT | The matched sentence |
+| `snippet` | TEXT | Sentence plus one either side |
+| `phrase` | TEXT | Trigger phrase matched |
+| `firmness` | INTEGER | 0 vague, 1 medium, 2 firm |
+| `is_commitment` | BOOLEAN | Kept as a government commitment |
+| `topic` | TEXT | Short topic phrase |
+| `labelled_by` | TEXT | `'rules'`, `'gemini'` or `'hand'` |
+| `ingested_at` | TIMESTAMP | |
+
+### 10.3 `ideas`
+| Column | Type | Notes |
+|---|---|---|
+| `idea_id` | TEXT PK | `nlp-<nnnnn>` |
+| `origin` | TEXT | Always `'nlp'` (kept for future sources) |
+| `topic` | TEXT | |
+| `trigger_date` | DATE | Earliest mention (all data); `get_takeup_signals` recomputes it as of a date |
+| `department` | TEXT NULL | |
+| `first_source` | TEXT | `'wms'`, `'hansard_spoken'`, `'hansard_written'` |
+| `initial_firmness` | INTEGER | Firmness of the first mention |
+| `n_mentions` | INTEGER | |
+| `ingested_at` | TIMESTAMP | |
+
+### 10.4 `idea_mentions`
+| Column | Type | Notes |
+|---|---|---|
+| `idea_id` | TEXT FK → `ideas` | |
+| `mention_id` | TEXT | `signal_mentions.mention_id` |
+| `group_id` | TEXT | Topic group before ideas linked to the same bill were merged |
+| PK | (`idea_id`, `mention_id`) | |
+
+`group_id` exists for leakage control: merging two groups because they link to the same bill uses knowledge of that bill, so `get_takeup_signals(as_of)` applies the merge only if the bill's first reading is ≤ `as_of`.
+
+### 10.5 `idea_events`
+Time-varying events for an idea (the model's `x` features).
+| Column | Type | Notes |
+|---|---|---|
+| `idea_id` | TEXT FK → `ideas` | |
+| `event_type` | TEXT | `'consultation'`, `'consultation_response'`, `'green_paper'`, `'white_paper'`, `'draft_bill'` |
+| `event_date` | DATE | |
+| `title` | TEXT | |
+| `source_url` | TEXT | |
+| `ingested_at` | TIMESTAMP | |
+| PK | (`idea_id`, `event_type`, `event_date`) | |
+
+### 10.6 `idea_bill_links`
+| Column | Type | Notes |
+|---|---|---|
+| `idea_id` | TEXT PK, FK → `ideas` | One link per idea |
+| `bill_id` | INTEGER NULL FK → `bills` | `NULL` = checked, no matching bill |
+| `similarity` | REAL NULL | Text similarity of idea vs bill title + long title |
+| `decided_by` | TEXT | `'auto'`, `'gemini'`, `'rule'` or `'hand'` |
+| `checked` | BOOLEAN | Hand-checked |
+| `ingested_at` | TIMESTAMP | |
+
+The bill's first reading date is not copied here; it is read from `stage_sittings` (stage 6 or 1), so it can never disagree with the bills data.
+
+### 10.7 `takeup_runs`
+| Column | Type | Notes |
+|---|---|---|
+| `run_id` | INTEGER PK | |
+| `created_at` | TIMESTAMP | |
+| `code_version` | TEXT | Git commit |
+| `train_cut` | DATE | Ideas with trigger before this date were used for fitting |
+| `features` | TEXT | Comma-separated `z_*` and `x_*` names |
+| `parameters` | TEXT | JSON: estimates and standard errors |
+| `metrics` | TEXT | JSON: evaluation results |
+
+### 10.8 `takeup_forecasts`
+| Column | Type | Notes |
+|---|---|---|
+| `run_id` | INTEGER FK → `takeup_runs` | |
+| `signal_id` | TEXT | Row of `get_takeup_signals(as_of)`: the `idea_id`, or `<idea_id>:<group_id>` for a group not yet merged at `as_of` (10.4) |
+| `idea_id` | TEXT FK → `ideas` | |
+| `as_of` | DATE | |
+| PK | (`run_id`, `signal_id`, `as_of`) | |
+| `pi`, `pi_lo`, `pi_hi` | REAL | Chance ever taken up and its 95% CI |
+| `verdict` | TEXT | `'likely'`, `'unlikely'` or `'uncertain'` |
+| `weeks_elapsed` | INTEGER | Weeks since trigger with no bill |
+| `pi_now` | REAL | Updated chance after `weeks_elapsed` silent weeks |
+| `p26`, `p52` | REAL | Chance of a first reading within the next 26 / 52 weeks from `as_of` |
+| `t_10`, `t_50`, `t_90` | INTEGER NULL | Timing quantiles in weeks from trigger, conditional on `weeks_elapsed` silent weeks (always > `weeks_elapsed`); `NULL` beyond the 5-year window |
+| `created_at` | TIMESTAMP | |
+
+### 10.9 Interface: `get_takeup_signals(as_of) -> table`
+The take-up model reads data only through this function. One row per idea with at least one mention dated ≤ `as_of`.
+| Column | Notes |
+|---|---|
+| `signal_id`, `title` | `idea_id`, or `<idea_id>:<group_id>` for a group whose merge is not yet visible at `as_of` (10.4); topic |
+| `signal_date` | Earliest mention ≤ `as_of` |
+| `bill_date` | First reading of the linked bill if ≤ `as_of`, else `NULL` |
+| `data_end` | `as_of`, or the dissolution date if the governing party later changed before a bill appeared (censored, not failed) |
+| `z_*` | Features known at `signal_date` |
+| `x_*` | Dates time-varying events happened, only if ≤ `as_of` |
+
+Rules: mentions, events and links dated after `as_of` are invisible; merges of groups follow `idea_mentions.group_id` (10.4); first reading = earliest sitting of Bills API stage 6 or 1. Merging through a shared bill de-duplicates ideas and stays invisible until that bill's first reading.
+
+### 10.10 Validation checks
+- Every `idea_mentions.mention_id` exists in `signal_mentions`.
+- Every `signal_mentions.doc_id` exists in `source_documents`; every `source_documents.member_id` of a Hansard row has been checked against `member_government_posts`.
+- Every `idea_bill_links.bill_id` (non-null) exists in `bills` and has a first-reading sitting on or after the idea's `trigger_date` minus 7 days.
+- No `signal_mentions.event_date` or `idea_events.event_date` after `ingested_at`.
+
+### 10.11 Take-up feature registry
+Features the take-up model requests by name (separate from the passage model's registry in 5.5). All are computed by `get_takeup_signals(as_of)` from information dated ≤ `as_of`. Any feature with fewer than ~15 positive cases in the training data is dropped and logged.
+
+| Feature | Type | Definition | Source |
+|---|---|---|---|
+| `first_source` | z, one-hot | Where the idea first appeared: `written_statement` (reference), `hansard` | `ideas.first_source` |
+| `initial_firmness` | z, 0/1/2 | Firmness of the first mention | `signal_mentions.firmness` |
+| `department` | z, one-hot | Lead department; small departments pooled into `other` | `source_documents.department` |
+| `years_since_election` | z, real | Years from the last general election to the trigger | `parliaments` |
+| `months_into_session` | z, real | Months from the session's start to the trigger | `sessions` |
+| `working_majority` | z, int | **Skipped:** needs `political_snapshots`, which does not exist yet | — |
+| `firm_commitment` | x, date | First firm (2) mention after the trigger | `signal_mentions` |
+| `repeat_mention` | x, date | Second mention of the idea | `signal_mentions` |
+| `consultation` | x, date | Consultation launched | `idea_events` (GOV.UK) |
+| `consultation_response` | x, date | Government response published | `idea_events` (GOV.UK) |
+| `white_paper` | x, date | White or green paper published | `idea_events` (GOV.UK) |
+| `draft_bill` | x, date | Draft bill published | `idea_events` (GOV.UK) |
+| `new_parliament` | x, date | State Opening after a same-party election (2015, 2017, 2019) | `sessions`, `parliaments` |
