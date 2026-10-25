@@ -1,5 +1,12 @@
 # Agent log: `chore/remove-promises-page`
 
+## 2026-10-25 07:20 — feat(frontend): outlook chart y-axis at 0, 25, 50, 75 and 100%
+
+- **What:** Replaced the 90% gridline and label with 25% and 75%; the inner lines (25/50/75%) are dashed.
+- **Why:** User asked for 25% and 75% on the axis instead of 90%.
+- **Checks:** `npx tsc --noEmit`: clean.
+- **Notes:** The curve sentence still mentions when the chance passes 90% (from the API). The user's own uncommitted edit in this file was left out.
+
 ## 2026-10-25 07:19 — feat(frontend): outlook chart shows one year with monthly ticks and larger axis text
 
 - **What:** The "Chance of becoming law by date" chart now ends one year after the forecast date (was 2 years), has a tick and gridline at the start of every month (short month name; year under January and the first tick) instead of yearly marks, and axis labels at 13px (was 10px). Bottom padding grows for the two-line labels.

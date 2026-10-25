@@ -55,9 +55,9 @@ function Curve({
   const tx = x(targetDate);
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Chance of becoming law by date">
-      {[0, 0.5, 0.9, 1].map((g) => (
+      {[0, 0.25, 0.5, 0.75, 1].map((g) => (
         <g key={g}>
-          <line x1={pad.l} x2={W - pad.r} y1={y(g)} y2={y(g)} stroke="#e2e8f0" strokeDasharray={g === 0.5 || g === 0.9 ? "4 4" : undefined} />
+          <line x1={pad.l} x2={W - pad.r} y1={y(g)} y2={y(g)} stroke="#e2e8f0" strokeDasharray={g > 0 && g < 1 ? "4 4" : undefined} />
           <text x={pad.l - 6} y={y(g) + 4} textAnchor="end" fontSize={axisFont} fill="#64748b">
             {pct(g)}
           </text>
