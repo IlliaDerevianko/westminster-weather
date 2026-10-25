@@ -238,7 +238,7 @@ function BillTrackerContent() {
           setError(
             err instanceof Error
               ? err.message
-              : "Failed to fetch bill data from Neon Lakebase Postgres"
+              : "Failed to fetch bill data"
           );
         }
       } finally {
@@ -282,10 +282,10 @@ function BillTrackerContent() {
       <nav className="rounded-xl border border-slate-200 bg-slate-900 text-white px-5 py-3.5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-            Neon Database Bill Selector
+            Bill Selector
           </span>
           <select
-            aria-label="Select a bill from Neon Postgres"
+            aria-label="Select a bill"
             value={activeBillId ?? ""}
             onChange={(e) => {
               const nextId = e.target.value;
@@ -463,8 +463,7 @@ function BillTrackerContent() {
               </label>
               <p className="text-xs text-slate-500">
                 Time-travel across all 3 phases of{" "}
-                <strong>{bill?.short_title ?? "this bill"}</strong> using real
-                dates from Neon Lakebase Postgres (
+                <strong>{bill?.short_title ?? "this bill"}</strong> (
                 {bill?.earliest_signal_date ?? "—"} →{" "}
                 {bill?.outcome_date ?? bill?.as_of_date ?? "—"}).
               </p>
@@ -494,7 +493,7 @@ function BillTrackerContent() {
           {bill && bill.milestone_dates.length > 0 && (
             <div className="space-y-1.5 pt-1">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                Jump to Bill Milestone Dates (from Neon Database):
+                Jump to Bill Milestone Dates:
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {bill.milestone_dates.map((milestone) => {
@@ -877,7 +876,7 @@ export default function BillTrackerPage() {
     <Suspense
       fallback={
         <main className="max-w-7xl mx-auto px-6 py-8 text-sm text-slate-600">
-          Loading 3-phase lifecycle tracker from Neon Lakebase Postgres...
+          Loading bill tracker...
         </main>
       }
     >
