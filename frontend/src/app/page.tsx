@@ -591,10 +591,6 @@ function BillTrackerContent() {
                         ? stage.sitting_count === 1
                           ? "SI"
                           : "SIs"
-                        : stage.stage === "amended_or_repealed"
-                        ? stage.sitting_count === 1
-                          ? "instrument"
-                          : "instruments"
                         : null;
                     const countLabel = countUnit
                       ? `${stage.sitting_count} ${countUnit}`
