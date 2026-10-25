@@ -311,7 +311,7 @@ export default function BillsDirectoryPage() {
                     href={`/?bill_id=${b.bill_id}`}
                     className="rounded-lg bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 transition-colors"
                   >
-                    Display on 3-Phase Tracker →
+                    Details →
                   </Link>
                 </div>
 
