@@ -1,3 +1,9 @@
+## 2026-10-25 — feat(ui): increase the base font size by 1.5 pixels
+
+- **What:** Increased the root font size from 16px to 17.5px, scaling rem-based interface typography proportionally.
+- **Why:** User requested a 1.5px font increase.
+- **Checks:** Frontend production build and type checks passed; backend ruff passed; pytest still exits 139 due to the previously diagnosed local Python readline crash. Diff whitespace check passed.
+
 ## 2026-10-25 — fix(frontend): isolate development assets from production builds
 
 - **What:** Configured Next.js development to use .next-dev while production continues to use .next; updated generated-type includes, ignore rules and restart instructions.
