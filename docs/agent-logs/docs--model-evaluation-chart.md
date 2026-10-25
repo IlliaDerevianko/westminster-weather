@@ -1,5 +1,11 @@
 # Agent log: `docs/model-evaluation-chart`
 
+## 2026-10-25 08:27 — docs(analysis): stakeholder chart shows deadline chances on the test set only
+
+- **What:** The chart is now a single panel: deadline chances, what we said vs how often it happened, on the held-out test set (222 bills, 2019–2026, 3,787 forecasts), with a "TEST SET" tag, "said about 70%: happened 70%" and "46% more accurate than always guessing the historical average". The Royal Assent date error panel is removed.
+- **Why:** User asked to keep only the right-hand chart and to say it was evaluated on the test set.
+- **Checks:** `uv run ruff check` on the module: clean. Rendered and checked visually: no clipping or overlaps.
+
 ## 2026-10-25 08:22 — docs(analysis): stakeholder chart of how the passage model's forecasts held up
 
 - **What:** New `analysis/model_evaluation_chart.py` draws `reports/model_evaluation_for_stakeholders.png` from the existing backtest results (no re-running): left, average Royal Assent date error by the stage the forecast was made at, model vs rule of thumb (±61 vs ±83 days, closer at all 9 stages); right, deadline chances said vs happened (10 bins, test era, as served), with "said about 70%: happened 70%" and "46% more accurate than always guessing the historical average" (Brier 0.097 vs 0.180).
