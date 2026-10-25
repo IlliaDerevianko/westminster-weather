@@ -574,6 +574,18 @@ function BillTrackerContent() {
                     const isPingPong = stage.stage === "ping_pong";
                     const isPostRoyalAssent =
                       stage.phase === "after_royal_assent";
+                    // Upcoming after Royal Assent with none recorded yet (the backend adds a
+                    // summary), as opposed to a bill that has not reached Royal Assent
+                    const noneYetLabel =
+                      stage.status === "upcoming" && isPostRoyalAssent && stage.summary
+                        ? stage.stage === "regulations_drafted"
+                          ? "None drafted yet"
+                          : stage.stage === "regulations_laid"
+                          ? "None laid yet"
+                          : stage.stage === "commencement_orders"
+                          ? "None made yet"
+                          : null
+                        : null;
                     const countUnit =
                       stage.stage === "ping_pong"
                         ? stage.sitting_count === 1
@@ -627,6 +639,8 @@ function BillTrackerContent() {
                                 ? "border-sky-300 bg-sky-50/60"
                                 : isSkipped
                                 ? "border-teal-300 bg-teal-50/60"
+                                : noneYetLabel
+                                ? "border-dashed border-slate-300 bg-white"
                                 : "border-slate-200 bg-slate-50/60 opacity-75"
                             }`}
                           >
@@ -700,7 +714,7 @@ function BillTrackerContent() {
                                   ? countLabel
                                     ? `Done (${countLabel})`
                                     : "Done"
-                                  : "Upcoming"}
+                                  : noneYetLabel ?? "Upcoming"}
                               </span>
                             </div>
 

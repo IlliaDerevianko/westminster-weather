@@ -1,5 +1,11 @@
 # Agent log: `fix/zero-regulations-label`
 
+## 2026-10-25 06:55 — fix(frontend): show "None drafted/laid yet" instead of a faded "Upcoming"
+
+- **What:** Post-Royal-Assent stages that are upcoming with a backend summary get a "None drafted yet" / "None laid yet" / "None made yet" badge and a dashed white card instead of the faded grey "Upcoming" card. The summary already shows in the card's detail box.
+- **Why:** User chose option 2: make zero-SI regulation stages on bills like 3751 readable as "none yet", not "not reached".
+- **Checks:** `npx tsc --noEmit`: clean; `/?bill_id=3751` loads (200) on the dev server. ESLint is not configured in the frontend, so not run. Badge not checked visually in a browser.
+
 ## 2026-10-25 06:55 — fix(stages): say "none yet" for post-Royal-Assent stages with zero SIs
 
 - **What:** When an Act has no Commencement Orders, Draft SIs or laid SIs and is not yet fully in force, those stages stay `upcoming` but now carry a summary ("None drafted yet — …", "None laid yet — …") and a legislation.gov.uk link. New test for bill 3751 (Water (Special Measures) Act 2025).
