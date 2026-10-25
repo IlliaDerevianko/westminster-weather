@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 05:06 — refactor(takeup): bill record cache in one file instead of one per bill
+
+- **What:** `takeup/bill_text.py` caches Bills API bill records in one file, `backend/data/cache/takeup/bills.json` (bill id -> record), instead of 588 files under `bills/`; `bill_long_titles` takes `cache_file`. The existing 588 records were merged into it and the folder removed. Also cleaned the local fetch cache (written statements, members, Hansard, GOV.UK pages, logs: ~19,800 files, 214 MB; gitignored, contents already in the database). Rebuilding the take-up source tables from scratch (`takeup/loaders.py`) would now need a fresh fetch; if labelling is rerun without the members cache, members with no stored posts count as never a minister (existing fallback).
+- **Why:** Roman asked to clean up the many JSON files and combine them into one.
+- **Checks:** `ruff check`: clean; `pytest tests/takeup`: 227 passed; 588 records, 583 non-empty long titles read back; `remaining_time_tails --75` results unchanged (median miss 10.2 weeks, quick bills 2.5).
+
 ## 2026-10-25 04:59 — docs(analysis): stakeholder chart, forecast miss vs days still to go by stage
 
 - **What:** `remaining_time_tails.py` draws `3_miss_vs_time_left.png` (75/25 test bills): at each stage, typical days still to go (bars) and the new model's typical miss (line), both medians in days on one axis; listed in the stakeholder README.
