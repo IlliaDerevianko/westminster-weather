@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Larger text across the site: every rem-based size scales from this (default 16px) */
+html {
+  font-size: 18px;
+}
+
 body {
   background-color: #f8fafc;
   color: #0f172a;

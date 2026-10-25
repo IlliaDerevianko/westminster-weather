@@ -84,7 +84,7 @@ function Curve({
       {tx >= pad.l && tx <= W - pad.r && (
         <g>
           <line x1={tx} x2={tx} y1={pad.t} y2={H - pad.b} stroke="#f59e0b" strokeWidth="1.5" />
-          <text x={tx + 4} y={pad.t + 10} fontSize="10" fill="#b45309">
+          <text x={tx + 4} y={pad.t + 10} fontSize="12" fill="#b45309">
             target
           </text>
         </g>

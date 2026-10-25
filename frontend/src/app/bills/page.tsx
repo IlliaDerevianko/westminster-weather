@@ -303,7 +303,7 @@ export default function BillsDirectoryPage() {
 
                 <div className="flex flex-wrap items-center gap-2 shrink-0">
                   {b.has_pre_parliament_data && (
-                    <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-900">
+                    <span className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
                       Includes GOV.UK Pre-Parliament Events
                     </span>
                   )}

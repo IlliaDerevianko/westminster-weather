@@ -485,7 +485,7 @@ function BillTrackerContent() {
           {/* Dynamic Milestone Dates from Database */}
           {bill && bill.milestone_dates.length > 0 && (
             <div className="space-y-1.5 pt-1">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Jump to Bill Milestone Dates:
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -590,7 +590,7 @@ function BillTrackerContent() {
                       {phaseCfg.subtitle}
                     </p>
                   </div>
-                  <span className="shrink-0 rounded bg-slate-100 px-2 py-0.5 text-[11px] font-mono font-semibold text-slate-700">
+                  <span className="shrink-0 rounded bg-slate-100 px-2 py-0.5 text-xs font-mono font-semibold text-slate-700">
                     {completedCount}/{phaseStages.length}
                   </span>
                 </div>
@@ -668,7 +668,7 @@ function BillTrackerContent() {
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex items-start gap-2">
                                 <span
-                                  className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
+                                  className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                                     isStageStopped
                                       ? "bg-red-600 text-white"
                                       : isCurrent
@@ -696,14 +696,14 @@ function BillTrackerContent() {
                                   <div className="text-sm font-bold text-slate-900 leading-snug">
                                     {stage.label}
                                   </div>
-                                  <div className="text-[11px] text-slate-600 mt-0.5">
+                                  <div className="text-xs text-slate-600 mt-0.5">
                                     {stage.description}
                                   </div>
                                 </div>
                               </div>
 
                               <span
-                                className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                                className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-bold uppercase ${
                                   isStageStopped
                                     ? "bg-red-600 text-white"
                                     : isCurrent
@@ -748,7 +748,7 @@ function BillTrackerContent() {
                                 isSkipped ||
                                 isFastTracked) &&
                                 stage.summary)) && (
-                              <div className="mt-2.5 rounded border border-slate-200/80 bg-white p-2 text-[11px] space-y-1.5">
+                              <div className="mt-2.5 rounded border border-slate-200/80 bg-white p-2 text-xs space-y-1.5">
                                 {(stage.phase === "before_parliament" ||
                                   isPingPong ||
                                   isPostRoyalAssent ||
@@ -798,7 +798,7 @@ function BillTrackerContent() {
                                           <div className="font-semibold text-slate-800">
                                             {ev.event_date} — {ev.title}
                                           </div>
-                                          <div className="text-[10px] text-slate-600 mt-0.5">
+                                          <div className="text-xs text-slate-600 mt-0.5">
                                             {ev.note}
                                           </div>
                                         </li>
@@ -825,10 +825,10 @@ function BillTrackerContent() {
                                     : "border-red-300 bg-red-50/40 opacity-75"
                                 }`}
                               >
-                                <div className="text-[11px] font-bold text-slate-900 leading-tight">
+                                <div className="text-xs font-bold text-slate-900 leading-tight">
                                   {stopMeta.title}
                                 </div>
-                                <div className="text-[10px] text-slate-600 mt-0.5 leading-tight">
+                                <div className="text-xs text-slate-600 mt-0.5 leading-tight">
                                   {stopMeta.subtitle}
                                 </div>
                               </div>
