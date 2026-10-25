@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 04:54 — docs(analysis): predicted vs real chart on test bills only
+
+- **What:** `remaining_time_tails.py` draws `2_predicted_vs_real_test.png`: the 142 test bills (75/25 split), sorted by real time, one line for real weeks to Royal Assent and one for the new model's day-one prediction; listed in the stakeholder README.
+- **Why:** Roman asked for a test-data-only graph with one predicted line and one real line.
+- **Checks:** `ruff check`: clean; rendered and checked. Typical miss 10 weeks; predictions stay under ~50 weeks while real times reach 104.
+
 ## 2026-10-25 04:52 — docs(analysis): general by-stage stakeholder chart for the XGBoost tails
 
 - **What:** `remaining_time_tails.py` saves the rule-of-thumb forecast (v2's B1, from training bills) with the test predictions and draws `1_by_stage_for_stakeholders.png` in the layout of `stakeholder_chart.plot_v2` (average error in days by stage: new model, previous model, rule of thumb, all bills), for both splits. Listed in the 75/25 stakeholder README.

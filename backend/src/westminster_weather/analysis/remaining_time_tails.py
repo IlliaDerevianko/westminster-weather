@@ -618,9 +618,105 @@ def stage_chart(report_dir: Path = REPORT_DIR) -> Path:
     return path
 
 
+def pred_vs_real_chart(report_dir: Path = REPORT_DIR) -> Path:
+    """Test bills only: predicted (new model, made at introduction) and real weeks to Royal
+    Assent, one line each, bills sorted by real time."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    from westminster_weather.analysis.stakeholder_chart import (
+        GRID,
+        INK,
+        INK_SOFT,
+        MODEL_COLOUR,
+        SURFACE,
+        V1_COLOUR,
+    )
+
+    t = pd.read_csv(report_dir / "test_predictions.csv")
+    sp = json.loads((report_dir / "metrics.json").read_text())["split"]
+    f = t[t["anchor"] == FIRST_READING].sort_values("target_days").reset_index(drop=True)
+    real, pred = f["target_days"] / 7, f[NEW] / 7
+    miss = (pred - real).abs().median()
+    x = range(len(f))
+
+    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11})
+    fig, ax = plt.subplots(figsize=(12, 6.4), facecolor=SURFACE)
+    ax.set_facecolor(SURFACE)
+    ax.fill_between(x, pred, real, color=MODEL_COLOUR, alpha=0.07, lw=0)
+    ax.plot(x, real, color=V1_COLOUR, lw=2.5, solid_capstyle="round")
+    ax.plot(x, pred, color=MODEL_COLOUR, lw=2, solid_capstyle="round")
+    last = len(f) - 1
+    ax.annotate(
+        "Real",
+        (last, real.iloc[-1]),
+        xytext=(8, 0),
+        textcoords="offset points",
+        color=V1_COLOUR,
+        fontsize=12,
+        fontweight="bold",
+        va="center",
+    )
+    ax.annotate(
+        "Predicted",
+        (last, pred.iloc[-1]),
+        xytext=(8, 0),
+        textcoords="offset points",
+        color=MODEL_COLOUR,
+        fontsize=12,
+        fontweight="bold",
+        va="center",
+    )
+    ax.set_xlim(-1, last + 12)
+    ax.set_ylim(0, max(real.max(), pred.max()) * 1.08)
+    ax.set_xticks([])
+    ax.set_xlabel(f"{len(f)} test bills, sorted by how long they really took", color=INK_SOFT)
+    ax.set_ylabel("Weeks from introduction to Royal Assent", color=INK_SOFT)
+    ax.yaxis.grid(True, color=GRID, lw=1)
+    ax.set_axisbelow(True)
+    for side in ("top", "right", "left"):
+        ax.spines[side].set_visible(False)
+    ax.spines["bottom"].set_color(GRID)
+    ax.tick_params(axis="both", length=0, colors=INK_SOFT)
+
+    fig.text(
+        0.06,
+        0.95,
+        "Predicted vs real time to Royal Assent, forecast on day one",
+        fontsize=16,
+        fontweight="bold",
+        color=INK,
+    )
+    fig.text(
+        0.06,
+        0.905,
+        f"Test bills only ({sp['test_years']}), never seen in training. "
+        f"Typical miss {miss:.0f} weeks.",
+        fontsize=11,
+        color=INK_SOFT,
+    )
+    fig.text(
+        0.06,
+        0.02,
+        "Predicted = new model (Illia's tuned XGBoost plus what the bill's long title "
+        "says it does), forecast on the day the bill is introduced.\n"
+        f"Trained on {sp['train_years']} bills only ({sp['train_share']:.0%} of bills).",
+        fontsize=9,
+        color=INK_SOFT,
+    )
+    fig.subplots_adjust(left=0.07, right=0.97, top=0.85, bottom=0.14)
+    path = report_dir / "2_predicted_vs_real_test.png"
+    fig.savefig(path, dpi=200, facecolor=SURFACE)
+    plt.close(fig)
+    return path
+
+
 if __name__ == "__main__":
     split = "75/25" if "--75" in sys.argv else "62/38"
     if "--chart" not in sys.argv:
         main(split)
     print(stakeholder_chart(report_dir_for(split)))
     print(stage_chart(report_dir_for(split)))
+    print(pred_vs_real_chart(report_dir_for(split)))

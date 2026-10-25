@@ -105,6 +105,7 @@ for quick bills drops from 11 weeks to 6.
 |---|---|
 | `0_summary_for_stakeholders.png` | The chart above |
 | `1_by_stage_for_stakeholders.png` | Average error in days at each stage: new model, previous model and rule of thumb, all bills. Same layout as the v2 stakeholder chart. New model ±53 days on average, previous ±54, rule of thumb ±73 |
+| `2_predicted_vs_real_test.png` | Test bills only: predicted (day one) and real weeks to Royal Assent, one line each, bills sorted by real time |
 | `metrics.json` | All numbers, including the split and the what-if test |
 | `test_predictions.csv` | Every test forecast, for every model version |
 
