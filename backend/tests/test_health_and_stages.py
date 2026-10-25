@@ -183,5 +183,30 @@ async def test_post_royal_assent_stages_and_model_interface_from_neon_db() -> No
     assert by_stage["law_fully_in_force"]["status"] == StageStatus.COMPLETED
 
 
+async def test_fast_tracked_bypassed_stages_marked_for_bill_4296() -> None:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/bills/4296")
+    assert response.status_code == 200
+    data = response.json()
+    by_stage = {s["stage"]: s for s in data["stages"]}
+    # Stages 1..5 in Before Parliament have no separate formal records prior to 1st Reading
+    for st in (
+        "signal_appears",
+        "government_commits",
+        "consultation",
+        "drafting",
+        "slot_in_programme",
+    ):
+        assert by_stage[st]["status"] == StageStatus.FAST_TRACKED
+        assert by_stage[st]["sitting_count"] == 0
+        assert "Fast-tracked / bypassed" in by_stage[st]["summary"]
+    # Stage 10 (commons_report_stage) had 0 sittings as the bill went straight to 3rd Reading
+    assert by_stage["commons_report_stage"]["status"] == StageStatus.FAST_TRACKED
+    assert by_stage["commons_report_stage"]["sitting_count"] == 0
+    assert "0 sittings" in by_stage["commons_report_stage"]["summary"]
+
+
+
 
 

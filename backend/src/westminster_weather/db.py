@@ -6,6 +6,7 @@ Follows neon-postgres skill best practices:
 - Uses `DATABASE_URL_UNPOOLED` (direct connection) for schema migrations / DDL.
 """
 
+import asyncio
 from datetime import date
 from typing import Any
 
@@ -80,6 +81,7 @@ def get_sync_direct_engine() -> Engine:
 pooled_engine = get_pooled_engine()
 SessionLocal = async_sessionmaker(pooled_engine, expire_on_commit=False)
 _reference_tables_initialized = False
+_init_db_lock = asyncio.Lock()
 
 
 def _seed_reference_tables(conn: Connection) -> None:
@@ -127,15 +129,20 @@ def ensure_reference_tables_seeded_sync() -> None:
 async def init_db() -> None:
     """Create database tables and seed reference tables using the direct Neon connection."""
     global _reference_tables_initialized
-    import westminster_weather.models  # noqa: F401
+    if _reference_tables_initialized:
+        return
+    async with _init_db_lock:
+        if _reference_tables_initialized:
+            return
+        import westminster_weather.models  # noqa: F401
 
-    engine = get_direct_engine()
-    try:
-        async with engine.begin() as conn:
-            await conn.run_sync(_seed_reference_tables)
-        _reference_tables_initialized = True
-    finally:
-        await engine.dispose()
+        engine = get_direct_engine()
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(_seed_reference_tables)
+            _reference_tables_initialized = True
+        finally:
+            await engine.dispose()
 
 
 async def check_db_connection() -> str:
