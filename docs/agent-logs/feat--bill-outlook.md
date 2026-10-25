@@ -1,5 +1,11 @@
 # Agent log: `feat/bill-outlook`
 
+## 2026-10-25 06:29 — feat(outlook): BillOutlook schema and assembler
+
+- **What:** `schemas/outlook.py` (Pydantic `BillOutlook` with distribution, deadlines, weather, curve, pace, next milestone and all sentences in display order) and `outlook.build_outlook(bill_id, as_of, target_date)`. Every "chance by a date" (deadlines, weather, curve, what-if) goes through `calibrate()`, which applies the isotonic recalibration stored in `reports/deadline_calibration.json` when the calibration check calls for it (tracked, so fresh clones match); `p_royal_assent` stays the model's raw value. `model_version` = passage model set and fit date + `outlook-v1`.
+- **Why:** output format of the outlook spec.
+- **Checks:** `ruff check`: clean; bill 4035 on 2026-10-25 in 2.9 s: "Changeable: 72% chance of Royal Assent before the Christmas recess (17 Dec 2026, estimated)"; custom target 2027-06-30 -> "On track: 94% ...".
+
 ## 2026-10-25 06:26 — feat(outlook): next milestone and what-if
 
 - **What:** `outlook.next_milestone_block`: the next stage and its date (a future scheduled sitting if one exists, else the median entry date of the simulated paths, marked expected), and a what-if: the chance by the target date from paths with no scheduled date vs paths with the next stage forced to that date (`run_paths(next_entry=...)`). Sentences: "If X happens on D as scheduled, the chance of law before ... rises from A to B"; for expected dates "only happens on D (its expected date)", since pinning the median date removes the faster paths. `calibrate()` hook applies a saved isotonic recalibration (identity until one is fitted).

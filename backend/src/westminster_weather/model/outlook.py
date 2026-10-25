@@ -96,6 +96,10 @@ class Distribution:
         k = np.searchsorted(self.ra_dates, np.datetime64(d, "D"), side="right")
         return float(k) / self.n_paths
 
+    def p_law_by(self, d: date) -> float:
+        """P(Royal Assent on or before ``d``) as shown: after recalibration, if any."""
+        return calibrate(self.p_by(d))
+
     def quantiles(self) -> dict[str, str | None]:
         """Royal Assent date quantiles 5%-95% among paths that pass."""
         if not len(self.ra_dates):
@@ -243,7 +247,7 @@ def deadline_list(
             {"kind": "custom", "label": "by the chosen date", "date": custom, "estimated": False}
         )
     for it in sorted(items, key=lambda x: x["date"]):
-        it["p"] = dist.p_by(it["date"])
+        it["p"] = dist.p_law_by(it["date"])
         note = ", estimated" if it["estimated"] else ""
         what = it["label"].replace("before ", "").replace("by ", "")
         it["sentence"] = (
@@ -277,9 +281,10 @@ def weather(p_by_target: float, p_fail: float) -> str:
 
 
 def weather_block(dist: Distribution, target: dict[str, Any], short_title: str) -> dict[str, Any]:
-    p = dist.p_by(target["date"])
+    p = dist.p_law_by(target["date"])
     status = weather(p, dist.p_fail)
-    when = f"{target['label']} ({fmt_date(target['date'])})"
+    est = ", estimated" if target.get("estimated") else ""
+    when = f"{target['label']} ({fmt_date(target['date'])}{est})"
     if status == "storm":
         headline = (
             f"Storm warning: {pct(dist.p_fail)} chance {short_title} fails before "
@@ -307,7 +312,7 @@ def curve_block(dist: Distribution) -> dict[str, Any]:
     points = [
         {
             "date": dist.as_of + timedelta(weeks=w),
-            "p_law_by_date": dist.p_by(dist.as_of + timedelta(weeks=w)),
+            "p_law_by_date": dist.p_law_by(dist.as_of + timedelta(weeks=w)),
         }
         for w in range(weeks + 1)
     ]
@@ -463,7 +468,7 @@ def next_milestone_block(
         "p_by_target_without": None,
         "p_by_target_with": None,
     }
-    shown = f"{fmt_date(when)}" + (" (expected)" if kind == "expected" else "")
+    shown = f"{fmt_date(when)} ({kind})"
     out["sentence"] = f"Next: {stage_name(state)}, {shown}."
     if state == "royal_assent" or when <= as_of:
         return out
@@ -494,15 +499,101 @@ _CALIBRATOR: Any = None
 
 def calibrate(p: float) -> float:
     """Deadline probabilities after isotonic recalibration (fitted on training-era forecasts
-    only, ``outlook_calibration``), or unchanged when none was saved."""
+    only by ``outlook_calibration``, stored in ``reports/deadline_calibration.json``), or
+    unchanged when the calibration check did not call for it."""
     global _CALIBRATOR
     if _CALIBRATOR is None:
-        import joblib
+        import json
 
-        from westminster_weather.model.forecast import MODELS_DIR
+        from westminster_weather.model.outlook_calibration import METRICS_JSON
 
-        path = MODELS_DIR / "deadline_isotonic.joblib"
-        _CALIBRATOR = joblib.load(path) if path.exists() else False
+        iso = None
+        if METRICS_JSON.exists():
+            iso = json.loads(METRICS_JSON.read_text()).get("isotonic")
+        _CALIBRATOR = (np.array(iso["x"]), np.array(iso["y"])) if iso else False
     if _CALIBRATOR is False:
         return float(p)
-    return float(_CALIBRATOR.predict([p])[0])
+    x, y = _CALIBRATOR
+    return float(np.interp(p, x, y))
+
+
+def is_recalibrated() -> bool:
+    calibrate(0.5)
+    return _CALIBRATOR is not False
+
+
+# ---------------------------------------------------------------------- assembling
+
+
+class NotInParliament(ValueError):
+    """The bill already reached Royal Assent or failed by the forecast date."""
+
+
+def build_outlook(
+    bill_id: int, as_of: date, target_date: date | None = None, n: int | None = None
+) -> Any:
+    """The full ``BillOutlook`` for a bill in Parliament on ``as_of``."""
+    from datetime import UTC, datetime
+
+    from westminster_weather.data.calendar import sitting_dates
+    from westminster_weather.model import states
+    from westminster_weather.model.forecast import run_paths
+    from westminster_weather.model.simulate import N_PATHS
+    from westminster_weather.schemas.outlook import BillOutlook
+
+    n = n or N_PATHS
+    base = run_paths(bill_id, as_of, n=n)
+    if base.start is None:
+        raise NotInParliament(f"bill {bill_id} is not in Parliament on {as_of}")
+    src = base.src
+    cal = src.get_calendar(as_of)
+    dist = Distribution.from_result(base.result)
+    deadlines = deadline_list(
+        dist, _sitting_dates(cal["sitting_days"]), base.start.announced_session_end, target_date
+    )
+    target = (
+        next(d for d in deadlines if d["kind"] == "custom")
+        if target_date
+        else default_target(deadlines, as_of)
+    )
+    trans_all = states.build_transitions(as_of, src)
+    pace = pace_block(
+        bill_id, as_of, trans_all, src.get_bills(as_of), sitting_dates(cal["sitting_days"])
+    )
+    nxt = next_milestone_block(bill_id, as_of, base, target, n)
+    curve = curve_block(dist)
+    wthr = weather_block(dist, target, base.bill["short_title"])
+    fitted = getattr(base.models.failure, "fitted_as_of", None)
+    sentences = [wthr["headline"], curve["sentence"]]
+    sentences += [d["sentence"] for d in deadlines]
+    sentences.append(pace["sentence"])
+    if nxt is not None:
+        sentences += [nxt["sentence"]] + (
+            [nxt["what_if_sentence"]] if nxt.get("what_if_sentence") else []
+        )
+    state = base.start.chain[base.start.k0]
+    return BillOutlook(
+        bill_id=bill_id,
+        short_title=base.bill["short_title"],
+        generated_at=datetime.now(UTC),
+        forecast_date=as_of,
+        model_version=f"passage-{base.variant}-{fitted}+outlook-v1",
+        recalibrated=is_recalibrated(),
+        current_stage=state,
+        current_stage_name=stage_name(state),
+        distribution={
+            "n_paths": dist.n_paths,
+            "p_royal_assent": dist.p_royal_assent,
+            "p_fail": dist.p_fail,
+            "royal_assent_date_quantiles": dist.quantiles(),
+        },
+        deadlines=[
+            {k: d[k] for k in ("kind", "label", "date", "estimated", "p", "sentence")}
+            for d in deadlines
+        ],
+        weather=wthr,
+        curve=curve,
+        pace=pace,
+        next_milestone=nxt,
+        sentences=sentences,
+    )
