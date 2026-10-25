@@ -574,17 +574,11 @@ function BillTrackerContent() {
                     const isPingPong = stage.stage === "ping_pong";
                     const isPostRoyalAssent =
                       stage.phase === "after_royal_assent";
-                    // Upcoming after Royal Assent with none recorded yet (the backend adds a
-                    // summary), as opposed to a bill that has not reached Royal Assent
+                    // Upcoming after Royal Assent with none recorded yet: the backend sends a
+                    // summary "<badge> — <detail>"; a stage not reached yet has no summary
                     const noneYetLabel =
                       stage.status === "upcoming" && isPostRoyalAssent && stage.summary
-                        ? stage.stage === "regulations_drafted"
-                          ? "None drafted yet"
-                          : stage.stage === "regulations_laid"
-                          ? "None laid yet"
-                          : stage.stage === "commencement_orders"
-                          ? "None made yet"
-                          : null
+                        ? stage.summary.split(" — ")[0]
                         : null;
                     const countUnit =
                       stage.stage === "ping_pong"

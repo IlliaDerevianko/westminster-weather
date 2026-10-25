@@ -186,22 +186,27 @@ async def test_post_royal_assent_stages_and_model_interface_from_neon_db() -> No
     assert "prospective" in by_stage["law_fully_in_force"]["summary"]
 
 
-async def test_zero_regulations_upcoming_with_none_yet_summary_for_bill_3751() -> None:
+@pytest.mark.parametrize("bill_id", [33, 40, 45, 57, 3751])
+async def test_zero_si_post_royal_assent_stages_are_skipped_or_none_yet(bill_id: int) -> None:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/api/v1/bills/3751")
+        response = await client.get(f"/api/v1/bills/{bill_id}")
     assert response.status_code == 200
-    data = response.json()
-    by_stage = {s["stage"]: s for s in data["stages"]}
-    # Water (Special Measures) Act 2025: no regulations under it, but some provisions are
-    # still prospective, so the regulation stages stay upcoming with a "none yet" summary
-    assert by_stage["law_fully_in_force"]["status"] == StageStatus.CURRENT
-    for st, phrase in (("regulations_drafted", "None drafted yet"),
-                       ("regulations_laid", "None laid yet")):
-        assert by_stage[st]["status"] == StageStatus.UPCOMING
-        assert by_stage[st]["sitting_count"] == 0
-        assert by_stage[st]["summary"].startswith(phrase)
-        assert by_stage[st]["web_url"] == "https://www.legislation.gov.uk/ukpga/2025/5"
+    by_stage = {s["stage"]: s for s in response.json()["stages"]}
+    fully_in_force = by_stage["law_fully_in_force"]["status"] == StageStatus.COMPLETED
+    # A stage with no SIs after Royal Assent is skipped once the Act is fully in force;
+    # otherwise it stays upcoming but says none exist yet, with a link to the Act
+    for st in ("commencement_orders", "regulations_drafted", "regulations_laid"):
+        stage = by_stage[st]
+        if stage["sitting_count"] > 0:
+            continue
+        if fully_in_force:
+            assert stage["status"] == StageStatus.SKIPPED
+        else:
+            assert stage["status"] == StageStatus.UPCOMING
+            assert stage["summary"].startswith("None ")
+            assert " yet — " in stage["summary"]
+            assert stage["web_url"].startswith("https://www.legislation.gov.uk/ukpga/")
 
 
 async def test_fast_tracked_bypassed_stages_marked_for_bill_4296() -> None:

@@ -1,5 +1,11 @@
 # Agent log: `fix/zero-regulations-label`
 
+## 2026-10-25 06:59 — refactor(stages): take the "none yet" badge from the backend summary; test the rule generally
+
+- **What:** The frontend reads the badge from the backend summary's text before " — " instead of mapping stage names to labels. The bill-3751 test is replaced by one rule checked on Acts 33, 40, 45, 57 and 3751: a zero-SI stage after Royal Assent is `skipped` if the Act is fully in force, otherwise `upcoming` with a "None … yet — …" summary and a legislation.gov.uk link.
+- **Why:** User: "don't hardcode it for specific one make it general!" The backend rule was already general; the frontend label map and the single-bill test were not.
+- **Checks:** `uv run ruff check .`: clean; `uv run pytest`: 384 passed; `npx tsc --noEmit`: clean. Scan of all 418 Acts with a zero-SI stage: 639 stages now "None … yet", 331 skipped, none left as a bare "Upcoming".
+
 ## 2026-10-25 06:55 — fix(frontend): show "None drafted/laid yet" instead of a faded "Upcoming"
 
 - **What:** Post-Royal-Assent stages that are upcoming with a backend summary get a "None drafted yet" / "None laid yet" / "None made yet" badge and a dashed white card instead of the faded grey "Upcoming" card. The summary already shows in the card's detail box.
