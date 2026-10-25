@@ -1,5 +1,12 @@
 # Agent log: `chore/remove-promises-page`
 
+## 2026-10-25 07:19 — feat(frontend): outlook chart shows one year with monthly ticks and larger axis text
+
+- **What:** The "Chance of becoming law by date" chart now ends one year after the forecast date (was 2 years), has a tick and gridline at the start of every month (short month name; year under January and the first tick) instead of yearly marks, and axis labels at 13px (was 10px). Bottom padding grows for the two-line labels.
+- **Why:** User asked for bigger axis fonts, monthly marks and a one-year cutoff.
+- **Checks:** `npx tsc --noEmit`: clean; `/?bill_id=4305` loads (200). Not checked visually in a browser.
+- **Notes:** Only the chart is cut; the API still returns 2 years of points, and the curve sentence above the chart can name a month beyond the one-year window. The target line is hidden if the target falls after the cutoff. The user's own uncommitted edit in this file was left out.
+
 ## 2026-10-25 07:17 — feat(frontend): summary boxes filter the bills directory by outcome
 
 - **What:** The four summary boxes on `/bills` (Total, Royal Assent, In Progress, Fell / Withdrawn) are now toggle buttons that filter the list; "Total Government Bills" (all bills) is selected by default. The Outcome dropdown is removed and the search box widened to fill its space. Box definitions, counts and filtering share one `OUTCOME_GROUPS` list.

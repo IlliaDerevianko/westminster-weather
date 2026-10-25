@@ -21,45 +21,66 @@ const fmtDate = (iso: string) =>
   });
 
 function Curve({
-  points,
+  points: allPoints,
   targetDate,
 }: {
   points: CurvePoint[];
   targetDate: string;
 }) {
   const W = 640;
-  const H = 180;
-  const pad = { l: 36, r: 12, t: 10, b: 24 };
-  const t0 = new Date(points[0].date).getTime();
-  const t1 = new Date(points[points.length - 1].date).getTime();
-  const x = (d: string) =>
-    pad.l + ((new Date(d).getTime() - t0) / (t1 - t0)) * (W - pad.l - pad.r);
+  const H = 200;
+  const pad = { l: 46, r: 12, t: 10, b: 40 };
+  const axisFont = 13;
+  // Show one year from the forecast date, with a tick at the start of each month
+  const start = new Date(allPoints[0].date);
+  const end = new Date(start);
+  end.setUTCFullYear(end.getUTCFullYear() + 1);
+  const points = allPoints.filter((p) => new Date(p.date) <= end);
+  const t0 = start.getTime();
+  const t1 = end.getTime();
+  const xt = (t: number) => pad.l + ((t - t0) / (t1 - t0)) * (W - pad.l - pad.r);
+  const x = (d: string) => xt(new Date(d).getTime());
   const y = (p: number) => pad.t + (1 - p) * (H - pad.t - pad.b);
   const path = points
     .map((p, i) => `${i ? "L" : "M"}${x(p.date).toFixed(1)},${y(p.p_law_by_date).toFixed(1)}`)
     .join(" ");
-  const years = Array.from(
-    new Set(points.map((p) => p.date.slice(0, 4)))
-  ).filter((yr) => new Date(`${yr}-01-01`).getTime() > t0);
+  const months: Date[] = [];
+  for (
+    let m = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1));
+    m <= end;
+    m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 1))
+  ) {
+    months.push(m);
+  }
   const tx = x(targetDate);
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Chance of becoming law by date">
       {[0, 0.5, 0.9, 1].map((g) => (
         <g key={g}>
           <line x1={pad.l} x2={W - pad.r} y1={y(g)} y2={y(g)} stroke="#e2e8f0" strokeDasharray={g === 0.5 || g === 0.9 ? "4 4" : undefined} />
-          <text x={pad.l - 6} y={y(g) + 4} textAnchor="end" fontSize="10" fill="#64748b">
+          <text x={pad.l - 6} y={y(g) + 4} textAnchor="end" fontSize={axisFont} fill="#64748b">
             {pct(g)}
           </text>
         </g>
       ))}
-      {years.map((yr) => (
-        <g key={yr}>
-          <line x1={x(`${yr}-01-01`)} x2={x(`${yr}-01-01`)} y1={pad.t} y2={H - pad.b} stroke="#f1f5f9" />
-          <text x={x(`${yr}-01-01`)} y={H - 6} textAnchor="middle" fontSize="10" fill="#64748b">
-            {yr}
-          </text>
-        </g>
-      ))}
+      {months.map((m, i) => {
+        const mx = xt(m.getTime());
+        const showYear = i === 0 || m.getUTCMonth() === 0;
+        return (
+          <g key={m.toISOString()}>
+            <line x1={mx} x2={mx} y1={pad.t} y2={H - pad.b} stroke="#f1f5f9" />
+            <line x1={mx} x2={mx} y1={H - pad.b} y2={H - pad.b + 4} stroke="#94a3b8" />
+            <text x={mx} y={H - pad.b + 17} textAnchor="middle" fontSize={axisFont} fill="#64748b">
+              {m.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" })}
+            </text>
+            {showYear && (
+              <text x={mx} y={H - pad.b + 33} textAnchor="middle" fontSize={axisFont} fontWeight="600" fill="#475569">
+                {m.getUTCFullYear()}
+              </text>
+            )}
+          </g>
+        );
+      })}
       {tx >= pad.l && tx <= W - pad.r && (
         <g>
           <line x1={tx} x2={tx} y1={pad.t} y2={H - pad.b} stroke="#f59e0b" strokeWidth="1.5" />
