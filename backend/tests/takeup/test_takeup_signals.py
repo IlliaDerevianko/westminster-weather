@@ -314,6 +314,24 @@ def test_invisible_mentions_are_ignored(synthetic):
     assert latest["x_consultation_response"] == pd.Timestamp("2019-01-01")
 
 
+def test_firm_start_begins_at_first_firm_commitment(synthetic):
+    firm = TakeupData(synthetic, firm_start=True)
+    df = firm.get_takeup_signals("2016-01-01", min_positive=0).set_index("signal_id")
+    # nlp-00001: the firmness-1 mention of 2015-07-01 is ignored, the clock starts 2015-09-01
+    assert df.loc["nlp-00001:g1", "signal_date"] == pd.Timestamp("2015-09-01")
+    assert df.loc["nlp-00001:g1", "z_initial_firmness"] == 2
+    assert "nlp-00007:g8" not in df.index  # never firmly committed
+    early = firm.get_takeup_signals("2015-08-15", min_positive=0)
+    assert "nlp-00001" not in set(early["idea_id"])  # not firm yet on that day
+
+
+def test_firm_start_uses_no_future_rows(synthetic):
+    as_of = date(2016, 1, 1)
+    full = TakeupData(synthetic, firm_start=True).get_takeup_signals(as_of, min_positive=0)
+    cut = TakeupData(_truncate(synthetic, as_of), firm_start=True)
+    pd.testing.assert_frame_equal(full, cut.get_takeup_signals(as_of, min_positive=0))
+
+
 # --------------------------------------------------------------- merge and split
 
 

@@ -8,9 +8,12 @@ using only information known that day:
   forecast for the bill (`backtest_forecasts`), Royal Assent p50.
 - Stage 3 (Royal Assent -> law applied): `journey.commencement.forecast_act` at Royal Assent:
   first commencement order p50 if orders are likely, else Royal Assent itself.
-Read-only. Run: uv run python -m westminster_weather.journey.stage_durations
+`--firm`: stage 1 starts at the idea's first firm commitment (firmness >= 2), not its first
+mention; ideas never firmly committed are left out.
+Read-only. Run: uv run python -m westminster_weather.journey.stage_durations [--firm]
 """
 
+import sys
 import warnings
 
 import pandas as pd
@@ -24,8 +27,8 @@ from westminster_weather.takeup.signals import TakeupData
 warnings.filterwarnings("ignore")
 
 
-def run() -> pd.DataFrame:
-    td = TakeupData()
+def run(firm: bool = False) -> pd.DataFrame:
+    td = TakeupData(firm_start=firm)
     T = td.tables
     data = load()
     bt, ac = data["bt"], data["ac"]
@@ -37,7 +40,14 @@ def run() -> pd.DataFrame:
     )
     links["bill_id"] = links["bill_id"].astype(int)
     cases = links[links["bill_id"].isin(bt["bill_id"])].merge(ac, on="bill_id")
-    cases = cases[cases["royal_assent_date"] <= "2025-06-30"].sort_values("trigger_date")
+    cases = cases[cases["royal_assent_date"] <= "2025-06-30"]
+    if firm:  # the promise is the first firm commitment
+        m = td.visible_mentions(pd.Timestamp("2025-06-30"))
+        starts = m.groupby("idea_id")["event_date"].min()
+        cases = cases.assign(trigger_date=cases["idea_id"].map(starts)).dropna(
+            subset=["trigger_date"]
+        )
+    cases = cases.sort_values("trigger_date")
 
     rows = []
     for _, c in cases.iterrows():
@@ -93,19 +103,24 @@ def run() -> pd.DataFrame:
     d = pd.DataFrame(rows)
     for k in (1, 2, 3):
         d[f"stage{k}_error_weeks"] = d[f"stage{k}_pred_weeks"] - d[f"stage{k}_real_weeks"]
-    d.round(1).to_csv(OUT_DIR / "stage_durations_predicted.csv", index=False)
+    d.round(1).to_csv(OUT_DIR / out_name(firm), index=False)
     return d
 
 
+def out_name(firm: bool) -> str:
+    return "stage_durations_predicted_firm.csv" if firm else "stage_durations_predicted.csv"
+
+
 def main() -> None:
-    d = run()
+    firm = "--firm" in sys.argv
+    d = run(firm)
     print(f"{len(d)} cases (promise -> Government Bill -> Act -> law applied)\n")
     print(
         f"{'stage':40s} {'n':>3s} {'pred median':>12s} {'real median':>12s} "
         f"{'median |err|':>13s} {'within 4 wk':>12s}"
     )
     names = {
-        1: "Stage 1: promise -> first reading",
+        1: f"Stage 1: {'firm commitment' if firm else 'promise'} -> 1st reading",
         2: "Stage 2: first reading -> RA",
         3: "Stage 3: RA -> law applied",
     }
@@ -117,7 +132,7 @@ def main() -> None:
             f"{g[f'stage{k}_real_weeks'].median():10.1f}wk {err.median():11.1f}wk "
             f"{(err <= 4).mean():11.0%}"
         )
-    print(f"\nwrote {OUT_DIR / 'stage_durations_predicted.csv'}")
+    print(f"\nwrote {OUT_DIR / out_name(firm)}")
 
 
 if __name__ == "__main__":

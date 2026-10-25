@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 04:15 — feat(takeup): firm-start option for stage 1 (firm commitment -> first reading)
+
+- **What:** `TakeupData(firm_start=True)`: an idea's clock starts at its first firm commitment (firmness >= 2) visible at `as_of`; earlier mentions are ignored and ideas not yet firmly committed are not visible. `journey/stage_durations.py --firm` reruns predicted vs real with it (`backend/reports/journey/stage_durations_predicted_firm.csv`). Two tests (start date, no future rows).
+- **Why:** Roman chose to narrow stage 1 to "Government commits" -> first reading (flowchart), firm commitments only.
+- **Checks:** `pytest tests/takeup`: 227 passed; `ruff check`: clean. Stage 1, 27 cases: median miss 38.3 -> 31.3 weeks (mean 45.8 -> 43.0), predicted median 34 vs real 23.7. Baseline "median of earlier cases" is still better (28.8 median, 41.1 mean): firm start shortens the clock but gives no case-level timing skill.
+
 ## 2026-10-25 03:46 — Merge origin/main into feat/takeup-model
 
 - **What:** merged PRs #20 and #22 (first-signal milestone and UI cleanup; stage-duration and originating-House analyses; tree models for days left to Royal Assent in `analysis/`). Only conflict: `backend/pyproject.toml` dependencies, kept all (pypdf, matplotlib, pyarrow, xgboost, optuna, catboost) and relocked. Unfinished files from two stopped feature-analysis agents (which used the same `analysis/` folder) were moved to a local backup instead of merged.

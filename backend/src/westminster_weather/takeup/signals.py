@@ -139,10 +139,16 @@ class TakeupData:
     """Take-up data as of a date. ``tables`` (by table name) is injectable for tests; by
     default the take-up tables come from ``DATABASE_URL_TAKEUP`` and the reference tables
     (bills, stage_sittings, sessions, parliaments, sitting_days) from production, read-only.
+
+    ``firm_start``: a promise starts at its idea's first firm commitment (firmness >= 2);
+    earlier mentions are ignored and ideas with no firm commitment yet are not visible.
     """
 
-    def __init__(self, tables: dict[str, pd.DataFrame] | None = None) -> None:
+    def __init__(
+        self, tables: dict[str, pd.DataFrame] | None = None, firm_start: bool = False
+    ) -> None:
         self._tables = tables
+        self.firm_start = firm_start
         self.dropped_features: dict[str, int] = {}
         # signal_id -> linked bill_id, for signals dropped because their bill was first read
         # more than BILL_BEFORE_SIGNAL_DAYS before the first mention (an existing bill).
@@ -318,6 +324,9 @@ class TakeupData:
         im = self.tables["idea_mentions"][["idea_id", "mention_id", "group_id"]].copy()
         im["mention_id"] = im["mention_id"].astype(str)
         out = im.merge(nlp, on="mention_id", how="inner")
+        if self.firm_start:
+            firm = out[out["firmness"] >= 2].groupby("idea_id")["event_date"].min()
+            out = out[out["event_date"] >= out["idea_id"].map(firm)]  # NaN start: dropped
         return out[MENTION_COLUMNS]
 
     def mention_timeline(self, as_of: date | str | pd.Timestamp) -> pd.DataFrame:
