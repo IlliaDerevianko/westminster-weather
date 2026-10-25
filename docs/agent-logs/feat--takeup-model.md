@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 01:51 — docs(journey): predicted vs real per case, current model vs improved timing rule
+
+- **What:** `backend/reports/journey/predicted_vs_real_by_case.png` (scatter per stage) and updated `stage_durations_predicted.csv` with improved timing: stage 1 model timing corrected by its median bias on earlier resolved cases; stage 3 = median wait of earlier Acts; stage 2 unchanged.
+- **Why:** Roman asked for a predicted vs real comparison after the gap remained large.
+- **Checks:** median miss stage 1 38.3 -> 24.1 weeks (mean 45.8 -> 40.3); stage 2 12.7 (kept); stage 3 7.9 -> 2.4 (mean 11.5 -> 12.9). Scatter shows stage 1 and 3 predictions barely vary with the real duration (no case-level timing skill); stage 2 tracks reality.
+
 ## 2026-10-25 01:47 — docs(journey): predicted vs real time in each stage
 
 - **What:** ran `journey/stage_durations.py` on the cleaned links (47 cases) and charted predicted vs real per stage (`backend/reports/journey/stage_durations_pred_vs_real.png`, `stage_durations_predicted.csv`).
