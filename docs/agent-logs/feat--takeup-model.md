@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 01:47 — docs(journey): predicted vs real time in each stage
+
+- **What:** ran `journey/stage_durations.py` on the cleaned links (47 cases) and charted predicted vs real per stage (`backend/reports/journey/stage_durations_pred_vs_real.png`, `stage_durations_predicted.csv`).
+- **Why:** Roman asked for the predicted vs actual comparison per stage.
+- **Checks:** median |error|: stage 1 38 weeks (predicted median 50 vs real 24), stage 2 13 weeks (29 vs 30), stage 3 8 weeks (10 vs 3). Predicted distributions are much narrower than the real ones (models predict the typical case; the real data has long tails).
+
 ## 2026-10-25 01:43 — fix(takeup): stricter promise -> bill links; rerun checks
 
 - **What:** `nlp.link_groups` now never links routine money bills (Supply and Appropriation, Consolidated Fund), links Finance Bills only within ~1 year, refuses procedural topics ("Madam Deputy Speaker"), and requires a strong match (≥ 0.45, or a named bill with ≥ 0.35) for links more than 2 years after the promise; 4 regression tests. Re-ran NLP on takeup-dev, the stage 1 evaluation (report and charts regenerated), the one-year-later check and the journey test; added the stage-duration charts.
