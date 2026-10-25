@@ -13,11 +13,14 @@ const nextConfig = {
       },
     ];
   },
+  // The browser calls /api/v1/* on this site and Next forwards it to the backend:
+  // locally the dev API on port 8000, on Vercel the URL in BACKEND_URL (read at build time)
   async rewrites() {
+    const backend = (process.env.BACKEND_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
     return [
       {
         source: "/api/v1/:path*",
-        destination: "http://127.0.0.1:8000/api/v1/:path*",
+        destination: `${backend}/api/v1/:path*`,
       },
     ];
   },
