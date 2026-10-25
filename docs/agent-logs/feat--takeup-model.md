@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 04:30 — feat(analysis): long-title features and bill weights for the XGBoost tails
+
+- **What:** `analysis/remaining_time_tails.py` retrains Illia's tuned v2 XGBoost (same bills, forecast points, train sessions 20-30 / test 34-39) with long-title features known at introduction (size: words, purposes, Acts named; flags: routine money, temporary, emergency, establish, regulate, criminal, NI executive), bill weights and recent-session weights, plus a p10-p90 quantile range. Results in `backend/reports/remaining_time_tails/`.
+- **Why:** Roman asked to make the XGBoost more reliable for bills under 10 weeks and over 50 weeks.
+- **Checks:** `ruff check`: clean. At first reading (196 test bills): under 10 weeks, median miss 10.9 -> 6.0 weeks (long title + bill weights) or 4.3 (recent weights); 10-30 weeks 9.9 -> 7.9; over 50 weeks no change (28.6 -> 30.7, always too early) and 0% inside the 80% range. Long title barely separates long bills in training (Spearman 0.03). Long bills are caught as they move: miss 31 weeks at first reading, 18 at 2nd-House first reading, 10 at 2nd-House committee. Mean error over all forecast points unchanged (59.9 -> 60.6 days).
+
 ## 2026-10-25 04:35 — feat(journey): stage 2 chart, Royal Assent predicted at first reading vs real
 
 - **What:** `journey/stage2_ra.py`: for every Government Bill in the passage-model rolling backtest that got Royal Assent (194), the first forecast (made when the bill came out) vs the real Royal Assent. Charts `backend/reports/journey/stage2_ra_by_bill.png` (per bill: predicted p50, 80% band, real) and `stage2_ra_pred_vs_real.png` (scatter + error histogram); per-bill table `stage2_ra_pred_vs_real.csv`.

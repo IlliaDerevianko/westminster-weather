@@ -1,0 +1,157 @@
+{
+  "all_points_mae_days": {
+    "v2 XGBoost": 59.9,
+    "+ long title": 60.1,
+    "+ long title, bill weights": 60.6,
+    "+ long title, recent bills weigh more": 61.0
+  },
+  "first_reading": {
+    "v2 XGBoost": {
+      "median_abs_err_wk": 11.5,
+      "mean_abs_err_wk": 15.1,
+      "corr_pred_real": 0.56,
+      "by_band": {
+        "< 10 wk": {
+          "n": 59,
+          "pred_median_wk": 11.7,
+          "real_median_wk": 2.1,
+          "median_abs_err_wk": 10.9,
+          "median_signed_err_wk": 10.9
+        },
+        "10-30 wk": {
+          "n": 52,
+          "pred_median_wk": 28.3,
+          "real_median_wk": 20.2,
+          "median_abs_err_wk": 9.9,
+          "median_signed_err_wk": 5.7
+        },
+        "30-50 wk": {
+          "n": 49,
+          "pred_median_wk": 33.6,
+          "real_median_wk": 42.3,
+          "median_abs_err_wk": 8.7,
+          "median_signed_err_wk": -8.7
+        },
+        "> 50 wk": {
+          "n": 36,
+          "pred_median_wk": 34.9,
+          "real_median_wk": 59.8,
+          "median_abs_err_wk": 28.6,
+          "median_signed_err_wk": -28.6
+        }
+      }
+    },
+    "+ long title": {
+      "median_abs_err_wk": 10.5,
+      "mean_abs_err_wk": 14.6,
+      "corr_pred_real": 0.58,
+      "by_band": {
+        "< 10 wk": {
+          "n": 59,
+          "pred_median_wk": 11.4,
+          "real_median_wk": 2.1,
+          "median_abs_err_wk": 10.1,
+          "median_signed_err_wk": 10.1
+        },
+        "10-30 wk": {
+          "n": 52,
+          "pred_median_wk": 24.1,
+          "real_median_wk": 20.2,
+          "median_abs_err_wk": 7.9,
+          "median_signed_err_wk": 2.5
+        },
+        "30-50 wk": {
+          "n": 49,
+          "pred_median_wk": 33.2,
+          "real_median_wk": 42.3,
+          "median_abs_err_wk": 10.3,
+          "median_signed_err_wk": -10.3
+        },
+        "> 50 wk": {
+          "n": 36,
+          "pred_median_wk": 32.5,
+          "real_median_wk": 59.8,
+          "median_abs_err_wk": 29.0,
+          "median_signed_err_wk": -29.0
+        }
+      }
+    },
+    "+ long title, bill weights": {
+      "median_abs_err_wk": 10.3,
+      "mean_abs_err_wk": 14.3,
+      "corr_pred_real": 0.58,
+      "by_band": {
+        "< 10 wk": {
+          "n": 59,
+          "pred_median_wk": 7.1,
+          "real_median_wk": 2.1,
+          "median_abs_err_wk": 6.0,
+          "median_signed_err_wk": 6.0
+        },
+        "10-30 wk": {
+          "n": 52,
+          "pred_median_wk": 22.6,
+          "real_median_wk": 20.2,
+          "median_abs_err_wk": 7.9,
+          "median_signed_err_wk": 0.3
+        },
+        "30-50 wk": {
+          "n": 49,
+          "pred_median_wk": 31.9,
+          "real_median_wk": 42.3,
+          "median_abs_err_wk": 10.6,
+          "median_signed_err_wk": -10.6
+        },
+        "> 50 wk": {
+          "n": 36,
+          "pred_median_wk": 31.4,
+          "real_median_wk": 59.8,
+          "median_abs_err_wk": 30.7,
+          "median_signed_err_wk": -30.7
+        }
+      }
+    },
+    "+ long title, recent bills weigh more": {
+      "median_abs_err_wk": 10.7,
+      "mean_abs_err_wk": 14.5,
+      "corr_pred_real": 0.56,
+      "by_band": {
+        "< 10 wk": {
+          "n": 59,
+          "pred_median_wk": 6.1,
+          "real_median_wk": 2.1,
+          "median_abs_err_wk": 4.3,
+          "median_signed_err_wk": 4.3
+        },
+        "10-30 wk": {
+          "n": 52,
+          "pred_median_wk": 23.8,
+          "real_median_wk": 20.2,
+          "median_abs_err_wk": 8.5,
+          "median_signed_err_wk": 2.4
+        },
+        "30-50 wk": {
+          "n": 49,
+          "pred_median_wk": 31.8,
+          "real_median_wk": 42.3,
+          "median_abs_err_wk": 10.3,
+          "median_signed_err_wk": -10.3
+        },
+        "> 50 wk": {
+          "n": 36,
+          "pred_median_wk": 30.9,
+          "real_median_wk": 59.8,
+          "median_abs_err_wk": 29.4,
+          "median_signed_err_wk": -29.4
+        }
+      }
+    }
+  },
+  "first_reading_inside_80_band": {
+    "all": 0.62,
+    "< 10 wk": 0.68,
+    "10-30 wk": 0.92,
+    "30-50 wk": 0.69,
+    "> 50 wk": 0.0
+  }
+}
