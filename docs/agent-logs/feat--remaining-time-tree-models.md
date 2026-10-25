@@ -1,5 +1,12 @@
 # Agent log: `feat/remaining-time-tree-models`
 
+## 2026-10-25 — docs(reports): add stakeholder summary chart of forecast error by stage
+
+- **What:** New `backend/src/westminster_weather/analysis/stakeholder_chart.py`, which draws `0_summary_for_stakeholders.png` from the saved `mae_by_stage.csv` (no retraining): the chosen model (XGBoost) against the B1 rule of thumb, in plain language, with three call-outs (±111 days at introduction, the biggest gain of 34 days, ±17 days at the final stage). Listed it in the report README.
+- **Why:** User asked for a noise-free summary graph of how the error changes, to show stakeholders.
+- **Checks:** `uv run ruff check`: clean. Chart checked visually and label overlaps fixed; colours checked with the dataviz palette validator (only the intentionally gray baseline fails the chroma check).
+- **Notes:** "±N days" is the mean absolute error at that stage.
+
 ## 2026-10-25 — docs(reports): add tree model evaluation charts and findings
 
 - **What:** Committed the generated outputs in `backend/reports/remaining_time_models/`: 6 PNG charts, error tables by stage and by days since introduction, all test predictions, feature importance, `metrics.json` and a `README.md` with set-up, results and caveats. Also widened the ablation chart's x-axis so labels are not clipped.

@@ -176,7 +176,8 @@ For regular bills it still improves on B1 by about 14 days.
 
 | File | Contents |
 |---|---|
-| `1_error_by_stage.png` | **Main chart:** error by stage forecast point, all models and baselines |
+| `0_summary_for_stakeholders.png` | **One-slide summary:** our model against the rule of thumb, by stage (regenerate with `uv run python -m westminster_weather.analysis.stakeholder_chart`) |
+| `1_error_by_stage.png` | **Detailed chart:** error by stage forecast point, all models and baselines |
 | `2_error_by_days_since_introduction.png` | Error by days since introduction |
 | `3_model_comparison.png` | Overall error per model with 95% bootstrap intervals |
 | `4_feature_importance.png` | Top 20 features (permutation importance, XGBoost) |
