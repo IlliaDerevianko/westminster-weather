@@ -8,6 +8,7 @@ interface BillSummary {
   short_title: string;
   originating_house: string;
   introduced_session_id: number;
+  earliest_signal_date?: string | null;
   introduced_date: string | null;
   department: string | null;
   outcome: string;
@@ -69,7 +70,7 @@ export default function BillsDirectoryPage() {
         setError(
           err instanceof Error
             ? err.message
-            : "Failed to load bills from Neon Lakebase Postgres"
+            : "Failed to load bills"
         );
       } finally {
         setLoading(false);
@@ -115,9 +116,6 @@ export default function BillsDirectoryPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider">
-              <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-blue-800">
-                Neon Lakebase Postgres Database
-              </span>
               <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">
                 {counts.total} UK Government Bills
               </span>
@@ -126,7 +124,7 @@ export default function BillsDirectoryPage() {
               Select a UK Government Bill
             </h1>
             <p className="mt-1 text-sm text-slate-600">
-              Choose any bill stored in Neon Lakebase Postgres to inspect its
+              Choose any bill to inspect its
               stage-by-stage timeline and historical snapshot dates on the
               tracker page.
             </p>
@@ -256,7 +254,7 @@ export default function BillsDirectoryPage() {
           </span>
           {loading && (
             <span className="text-xs font-medium text-blue-600">
-              Loading from Neon Lakebase Postgres...
+              Loading bills...
             </span>
           )}
         </div>
@@ -294,9 +292,9 @@ export default function BillsDirectoryPage() {
                       <strong>Department:</strong>{" "}
                       {b.department ?? "HM Government"}
                     </span>
-                    {b.introduced_date && (
+                    {b.earliest_signal_date && (
                       <span>
-                        <strong>Introduced:</strong> {b.introduced_date}
+                        <strong>First Signal:</strong> {b.earliest_signal_date}
                       </span>
                     )}
                     {b.outcome_date && (

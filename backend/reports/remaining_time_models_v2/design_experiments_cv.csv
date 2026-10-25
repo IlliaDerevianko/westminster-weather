@@ -1,0 +1,27 @@
+,cv_mae
+v1 features (baseline),50.75
+v1 XGBoost setup (reference),46.38
++ Time in each House so far,49.78
++ Bill size: sittings per stage,49.91
++ Calendar: recess and 5-year limit,51.33
++ Congestion: other bills in progress,50.48
+"+ Politics: majority, coalition",50.8
++ Title signals,48.25
++ Policy area (merged departments),48.93
++ Rule of thumb + area speed (encoded),50.18
+all features,46.9
+all − Time in each House so far,47.56
+all − Bill size: sittings per stage,47.55
+all − Calendar: recess and 5-year limit,45.86
+all − Congestion: other bills in progress,46.37
+"all − Politics: majority, coalition",46.31
+all − Title signals,48.44
+all − Policy area (merged departments),47.0
+all − Rule of thumb + area speed (encoded),47.79
+"target=log, weights=none",45.86
+"target=log, weights=bill",48.07
+"target=log, weights=bill_recent",48.48
+"target=resid, weights=none",48.38
+"target=resid, weights=bill",49.66
+"target=resid, weights=bill_recent",48.93
+monotonic constraints,46.56

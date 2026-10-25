@@ -23,6 +23,9 @@ dependencies = [
     "pypdf>=6.21.2",
     "matplotlib>=3.11.2",
     "pyarrow>=26.0.0",
+    "xgboost>=3.4.1",
+    "optuna>=5.0.0",
+    "catboost>=1.2.10",
 ]
 
 [dependency-groups]

@@ -1,0 +1,336 @@
+{
+  "bills_commons_first": 438,
+  "bills_with_any_duration": 431,
+  "fast_tracked_bills": 108,
+  "median_days": {
+    "c_1r_2r": 13.0,
+    "c_2r_3r": 49.0,
+    "l_1r_comm": 41.0,
+    "l_comm_rep": 29.0,
+    "l_rep_ra": 14.0,
+    "commons_total": 74.0,
+    "lords_total": 64.0
+  },
+  "spearman_calendar_days_all": [
+    {
+      "earlier": "c_1r_2r",
+      "later": "c_2r_3r",
+      "rho": 0.538,
+      "p": 7.306091946224789e-32,
+      "n": 406
+    },
+    {
+      "earlier": "c_1r_2r",
+      "later": "l_1r_comm",
+      "rho": 0.435,
+      "p": 7.527497946901327e-15,
+      "n": 290
+    },
+    {
+      "earlier": "c_2r_3r",
+      "later": "l_1r_comm",
+      "rho": 0.528,
+      "p": 4.835484654550672e-22,
+      "n": 287
+    },
+    {
+      "earlier": "c_1r_2r",
+      "later": "l_comm_rep",
+      "rho": 0.399,
+      "p": 3.0898064650882495e-12,
+      "n": 283
+    },
+    {
+      "earlier": "c_2r_3r",
+      "later": "l_comm_rep",
+      "rho": 0.625,
+      "p": 9.387393873443686e-32,
+      "n": 280
+    },
+    {
+      "earlier": "l_1r_comm",
+      "later": "l_comm_rep",
+      "rho": 0.57,
+      "p": 8.845100555254915e-26,
+      "n": 283
+    },
+    {
+      "earlier": "c_1r_2r",
+      "later": "l_rep_ra",
+      "rho": 0.481,
+      "p": 5.904765091185921e-24,
+      "n": 390
+    },
+    {
+      "earlier": "c_2r_3r",
+      "later": "l_rep_ra",
+      "rho": 0.619,
+      "p": 6.28970445859395e-42,
+      "n": 384
+    },
+    {
+      "earlier": "l_1r_comm",
+      "later": "l_rep_ra",
+      "rho": 0.596,
+      "p": 2.356023993808717e-28,
+      "n": 280
+    },
+    {
+      "earlier": "l_comm_rep",
+      "later": "l_rep_ra",
+      "rho": 0.667,
+      "p": 2.333864621380796e-37,
+      "n": 280
+    }
+  ],
+  "spearman_calendar_days_regular": [
+    {
+      "earlier": "c_1r_2r",
+      "later": "c_2r_3r",
+      "rho": 0.08,
+      "p": 0.17045266894815989,
+      "n": 298
+    },
+    {
+      "earlier": "c_1r_2r",
+      "later": "l_1r_comm",
+      "rho": 0.134,
+      "p": 0.03747951372468721,
+      "n": 243
+    },
+    {
+      "earlier": "c_2r_3r",
+      "later": "l_1r_comm",
+      "rho": 0.213,
+      "p": 0.0008945201073849277,
+      "n": 240
+    },
+    {
+      "earlier": "c_1r_2r",
+      "later": "l_comm_rep",
+      "rho": 0.117,
+      "p": 0.07363300945744189,
+      "n": 236
+    },
+    {
+      "earlier": "c_2r_3r",
+      "later": "l_comm_rep",
+      "rho": 0.418,
+      "p": 2.94459480246557e-11,
+      "n": 233
+    },
+    {
+      "earlier": "l_1r_comm",
+      "later": "l_comm_rep",
+      "rho": 0.295,
+      "p": 4.162310141491585e-06,
+      "n": 236
+    },
+    {
+      "earlier": "c_1r_2r",
+      "later": "l_rep_ra",
+      "rho": 0.114,
+      "p": 0.0551344203583228,
+      "n": 285
+    },
+    {
+      "earlier": "c_2r_3r",
+      "later": "l_rep_ra",
+      "rho": 0.345,
+      "p": 3.1892966505078532e-09,
+      "n": 279
+    },
+    {
+      "earlier": "l_1r_comm",
+      "later": "l_rep_ra",
+      "rho": 0.363,
+      "p": 1.1792457260152858e-08,
+      "n": 233
+    },
+    {
+      "earlier": "l_comm_rep",
+      "later": "l_rep_ra",
+      "rho": 0.474,
+      "p": 1.9922391574092852e-14,
+      "n": 233
+    }
+  ],
+  "spearman_sitting_days_all": [
+    {
+      "earlier": "c_1r_2r",
+      "later": "c_2r_3r",
+      "rho": 0.538,
+      "p": 8.96873237287391e-32,
+      "n": 406
+    },
+    {
+      "earlier": "c_1r_2r",
+      "later": "l_1r_comm",
+      "rho": 0.459,
+      "p": 1.5581109736297357e-16,
+      "n": 290
+    },
+    {
+      "earlier": "c_2r_3r",
+      "later": "l_1r_comm",
+      "rho": 0.534,
+      "p": 1.540534310631346e-22,
+      "n": 287
+    },
+    {
+      "earlier": "c_1r_2r",
+      "later": "l_comm_rep",
+      "rho": 0.393,
+      "p": 7.17500753371664e-12,
+      "n": 283
+    },
+    {
+      "earlier": "c_2r_3r",
+      "later": "l_comm_rep",
+      "rho": 0.671,
+      "p": 4.589011159921972e-38,
+      "n": 280
+    },
+    {
+      "earlier": "l_1r_comm",
+      "later": "l_comm_rep",
+      "rho": 0.588,
+      "p": 1.0729152733674615e-27,
+      "n": 283
+    },
+    {
+      "earlier": "c_1r_2r",
+      "later": "l_rep_ra",
+      "rho": 0.444,
+      "p": 2.816027904044556e-20,
+      "n": 390
+    },
+    {
+      "earlier": "c_2r_3r",
+      "later": "l_rep_ra",
+      "rho": 0.634,
+      "p": 1.4541826381969997e-44,
+      "n": 384
+    },
+    {
+      "earlier": "l_1r_comm",
+      "later": "l_rep_ra",
+      "rho": 0.551,
+      "p": 1.2588187781148876e-23,
+      "n": 280
+    },
+    {
+      "earlier": "l_comm_rep",
+      "later": "l_rep_ra",
+      "rho": 0.695,
+      "p": 9.957155588729888e-42,
+      "n": 280
+    }
+  ],
+  "spearman_sitting_days_regular": [
+    {
+      "earlier": "c_1r_2r",
+      "later": "c_2r_3r",
+      "rho": 0.147,
+      "p": 0.011012908646791783,
+      "n": 298
+    },
+    {
+      "earlier": "c_1r_2r",
+      "later": "l_1r_comm",
+      "rho": 0.205,
+      "p": 0.0012883489512667257,
+      "n": 243
+    },
+    {
+      "earlier": "c_2r_3r",
+      "later": "l_1r_comm",
+      "rho": 0.224,
+      "p": 0.00048036530929942316,
+      "n": 240
+    },
+    {
+      "earlier": "c_1r_2r",
+      "later": "l_comm_rep",
+      "rho": 0.146,
+      "p": 0.025335544915572102,
+      "n": 236
+    },
+    {
+      "earlier": "c_2r_3r",
+      "later": "l_comm_rep",
+      "rho": 0.496,
+      "p": 7.316839178529325e-16,
+      "n": 233
+    },
+    {
+      "earlier": "l_1r_comm",
+      "later": "l_comm_rep",
+      "rho": 0.333,
+      "p": 1.5505921998803364e-07,
+      "n": 236
+    },
+    {
+      "earlier": "c_1r_2r",
+      "later": "l_rep_ra",
+      "rho": 0.061,
+      "p": 0.30629826888002776,
+      "n": 285
+    },
+    {
+      "earlier": "c_2r_3r",
+      "later": "l_rep_ra",
+      "rho": 0.362,
+      "p": 4.420772617650997e-10,
+      "n": 279
+    },
+    {
+      "earlier": "l_1r_comm",
+      "later": "l_rep_ra",
+      "rho": 0.292,
+      "p": 5.791531361747925e-06,
+      "n": 233
+    },
+    {
+      "earlier": "l_comm_rep",
+      "later": "l_rep_ra",
+      "rho": 0.518,
+      "p": 2.1244538428329643e-17,
+      "n": 233
+    }
+  ],
+  "commons_total_vs_lords_total": {
+    "all": {
+      "rho": 0.746,
+      "p": 6.705102805909478e-70,
+      "n": 387
+    },
+    "regular": {
+      "rho": 0.456,
+      "p": 8.210021036008316e-16,
+      "n": 280
+    }
+  },
+  "royal_assent_share_by_c_1r_2r_quartile": {
+    "Q1": {
+      "days": "0-6",
+      "bills": 105,
+      "share": 0.981
+    },
+    "Q2": {
+      "days": "6-13",
+      "bills": 105,
+      "share": 0.943
+    },
+    "Q3": {
+      "days": "13-28",
+      "bills": 104,
+      "share": 0.913
+    },
+    "Q4": {
+      "days": "28-189",
+      "bills": 105,
+      "share": 0.914
+    }
+  }
+}

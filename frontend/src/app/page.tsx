@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 
-type StageStatus = "completed" | "current" | "upcoming" | "stopped" | "skipped";
+type StageStatus =
+  | "completed"
+  | "fast_tracked"
+  | "current"
+  | "upcoming"
+  | "stopped"
+  | "skipped";
 type PhaseKey = "before_parliament" | "inside_parliament" | "after_royal_assent";
 
 interface ApiEvidenceEvent {
@@ -172,7 +178,6 @@ function BillTrackerContent() {
   const [bill, setBill] = useState<GovernmentBillTracking | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [layoutMode, setLayoutMode] = useState<"columns" | "stacked">("columns");
 
   // Load directory of bills from Neon Postgres
   useEffect(() => {
@@ -233,7 +238,7 @@ function BillTrackerContent() {
           setError(
             err instanceof Error
               ? err.message
-              : "Failed to fetch bill data from Neon Lakebase Postgres"
+              : "Failed to fetch bill data"
           );
         }
       } finally {
@@ -277,10 +282,10 @@ function BillTrackerContent() {
       <nav className="rounded-xl border border-slate-200 bg-slate-900 text-white px-5 py-3.5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-            Neon Database Bill Selector
+            Bill Selector
           </span>
           <select
-            aria-label="Select a bill from Neon Postgres"
+            aria-label="Select a bill"
             value={activeBillId ?? ""}
             onChange={(e) => {
               const nextId = e.target.value;
@@ -301,30 +306,6 @@ function BillTrackerContent() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <div className="inline-flex rounded-lg border border-slate-700 bg-slate-800 p-0.5 text-xs">
-            <button
-              type="button"
-              onClick={() => setLayoutMode("columns")}
-              className={`rounded-md px-2.5 py-1 font-semibold transition-colors ${
-                layoutMode === "columns"
-                  ? "bg-amber-500 text-slate-950"
-                  : "text-slate-300 hover:text-white"
-              }`}
-            >
-              3-Column Pipeline
-            </button>
-            <button
-              type="button"
-              onClick={() => setLayoutMode("stacked")}
-              className={`rounded-md px-2.5 py-1 font-semibold transition-colors ${
-                layoutMode === "stacked"
-                  ? "bg-amber-500 text-slate-950"
-                  : "text-slate-300 hover:text-white"
-              }`}
-            >
-              Detailed Stack
-            </button>
-          </div>
           <Link
             href="/promises"
             className="rounded-lg border border-amber-500 px-3.5 py-1.5 text-xs font-bold text-amber-400 hover:bg-amber-500 hover:text-slate-950 transition-colors"
@@ -345,9 +326,6 @@ function BillTrackerContent() {
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider">
-              <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-white">
-                Full 3-Phase UK Government Bill Lifecycle
-              </span>
               {bill && (
                 <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">
                   Originating House: {bill.originating_house}
@@ -379,6 +357,18 @@ function BillTrackerContent() {
                   </span>{" "}
                   {bill.sponsoring_department}
                 </p>
+                <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                  <span>
+                    <strong className="text-slate-700">First Signal:</strong>{" "}
+                    {bill.earliest_signal_date}
+                  </span>
+                  {bill.outcome_date && (
+                    <span>
+                      <strong className="text-slate-700">Outcome Date:</strong>{" "}
+                      {bill.outcome_date}
+                    </span>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -427,43 +417,6 @@ function BillTrackerContent() {
           )}
         </div>
 
-        {/* 3-Phase Overview Progress Bar */}
-        {bill && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-            {PHASE_CONFIG.map((phaseCfg) => {
-              const phaseStages = stagesByPhase[phaseCfg.key] ?? [];
-              const completedCount = phaseStages.filter(
-                (s) => s.status === "completed" || s.status === "skipped"
-              ).length;
-              const isActivePhase = bill.current_phase === phaseCfg.key;
-              return (
-                <div
-                  key={phaseCfg.key}
-                  className={`rounded-lg border p-3 transition-all ${
-                    isActivePhase
-                      ? "border-2 border-slate-900 bg-slate-50 shadow-sm"
-                      : "border-slate-200 bg-white"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${phaseCfg.badgeClass}`}
-                    >
-                      {phaseCfg.title}
-                    </span>
-                    <span className="text-xs font-mono font-semibold text-slate-600">
-                      {completedCount}/{phaseStages.length} done
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[11px] text-slate-500">
-                    {phaseCfg.subtitle}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
         {/* Date Picker Controls */}
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -476,8 +429,7 @@ function BillTrackerContent() {
               </label>
               <p className="text-xs text-slate-500">
                 Time-travel across all 3 phases of{" "}
-                <strong>{bill?.short_title ?? "this bill"}</strong> using real
-                dates from Neon Lakebase Postgres (
+                <strong>{bill?.short_title ?? "this bill"}</strong> (
                 {bill?.earliest_signal_date ?? "—"} →{" "}
                 {bill?.outcome_date ?? bill?.as_of_date ?? "—"}).
               </p>
@@ -507,7 +459,7 @@ function BillTrackerContent() {
           {bill && bill.milestone_dates.length > 0 && (
             <div className="space-y-1.5 pt-1">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                Jump to Bill Milestone Dates (from Neon Database):
+                Jump to Bill Milestone Dates:
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {bill.milestone_dates.map((milestone) => {
@@ -537,9 +489,9 @@ function BillTrackerContent() {
         {/* Legend */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-slate-600 border-t border-slate-100">
           <span>
-            Each phase column shows the main legislative path on the left and{" "}
-            <strong className="text-red-700">dashed red stop risks</strong> on
-            the right.
+            Each phase column shows the main legislative path, with a{" "}
+            <strong className="text-red-700">red stop branch</strong> on the
+            right only when a bill actually stopped at that stage.
           </span>
           <div className="flex flex-wrap items-center gap-4">
             <span className="flex items-center gap-1.5">
@@ -547,8 +499,12 @@ function BillTrackerContent() {
               Completed
             </span>
             <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 rounded-full bg-sky-500"></span>
+              Fast-Tracked / Bypassed
+            </span>
+            <span className="flex items-center gap-1.5">
               <span className="inline-block h-3 w-3 rounded-full bg-teal-500"></span>
-              Skipped (0 rounds)
+              Skipped (0 rounds/SIs)
             </span>
             <span className="flex items-center gap-1.5">
               <span className="inline-block h-3 w-3 rounded-full bg-amber-500 ring-4 ring-amber-200"></span>
@@ -576,16 +532,15 @@ function BillTrackerContent() {
       {/* 3-Phase Pipeline Grid (1. Before Parliament | 2. Inside Parliament | 3. After Royal Assent) */}
       {bill && (
         <div
-          className={
-            layoutMode === "columns"
-              ? "grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
-              : "space-y-6"
-          }
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
         >
           {PHASE_CONFIG.map((phaseCfg) => {
             const phaseStages = stagesByPhase[phaseCfg.key] ?? [];
             const completedCount = phaseStages.filter(
-              (s) => s.status === "completed" || s.status === "skipped"
+              (s) =>
+                s.status === "completed" ||
+                s.status === "fast_tracked" ||
+                s.status === "skipped"
             ).length;
 
             return (
@@ -612,6 +567,7 @@ function BillTrackerContent() {
                 <div className="space-y-3">
                   {phaseStages.map((stage, idx) => {
                     const isCompleted = stage.status === "completed";
+                    const isFastTracked = stage.status === "fast_tracked";
                     const isSkipped = stage.status === "skipped";
                     const isCurrent = stage.status === "current";
                     const isStageStopped = stage.status === "stopped";
@@ -643,10 +599,14 @@ function BillTrackerContent() {
                     const countLabel = countUnit
                       ? `${stage.sitting_count} ${countUnit}`
                       : null;
-                    const stopRiskKey =
-                      stage.active_stop_reason ?? stage.stop_risks[0];
+                    const stopRiskKey = isStageStopped
+                      ? stage.active_stop_reason
+                      : null;
                     const stopMeta = stopRiskKey
-                      ? STOP_RISK_DESCRIPTIONS[stopRiskKey]
+                      ? STOP_RISK_DESCRIPTIONS[stopRiskKey] ?? {
+                          title: stopRiskKey.replace(/_/g, " "),
+                          subtitle: "Bill stopped at this stage",
+                        }
                       : null;
 
                     return (
@@ -663,6 +623,8 @@ function BillTrackerContent() {
                                 ? "border-2 border-amber-500 bg-amber-50/90 shadow-md ring-2 ring-amber-200"
                                 : isCompleted
                                 ? "border-emerald-300 bg-emerald-50/70"
+                                : isFastTracked
+                                ? "border-sky-300 bg-sky-50/60"
                                 : isSkipped
                                 ? "border-teal-300 bg-teal-50/60"
                                 : "border-slate-200 bg-slate-50/60 opacity-75"
@@ -678,6 +640,8 @@ function BillTrackerContent() {
                                       ? "bg-amber-500 text-white"
                                       : isCompleted
                                       ? "bg-emerald-600 text-white"
+                                      : isFastTracked
+                                      ? "bg-sky-600 text-white"
                                       : isSkipped
                                       ? "bg-teal-600 text-white"
                                       : "bg-slate-200 text-slate-700"
@@ -685,6 +649,8 @@ function BillTrackerContent() {
                                 >
                                   {isCompleted
                                     ? "✓"
+                                    : isFastTracked
+                                    ? "»"
                                     : isSkipped
                                     ? "0"
                                     : isStageStopped
@@ -709,6 +675,8 @@ function BillTrackerContent() {
                                     ? "bg-amber-500 text-white"
                                     : isCompleted
                                     ? "bg-emerald-100 text-emerald-800"
+                                    : isFastTracked
+                                    ? "bg-sky-100 text-sky-800"
                                     : isSkipped
                                     ? "bg-teal-100 text-teal-800"
                                     : "bg-slate-200 text-slate-600"
@@ -716,6 +684,10 @@ function BillTrackerContent() {
                               >
                                 {isStageStopped
                                   ? "Stopped"
+                                  : isFastTracked
+                                  ? stage.phase === "inside_parliament"
+                                    ? "Fast-Tracked (0 sittings)"
+                                    : "Fast-Tracked"
                                   : isSkipped
                                   ? countLabel
                                     ? `Skipped (${countLabel})`
@@ -735,18 +707,34 @@ function BillTrackerContent() {
                             {/* Entered/Completed Dates & Collapsible Sittings */}
                             {(stage.entered_date ||
                               stage.visible_events.length > 0 ||
-                              ((isPingPong || isPostRoyalAssent || isSkipped) &&
+                              ((stage.phase === "before_parliament" ||
+                                isPingPong ||
+                                isPostRoyalAssent ||
+                                isSkipped ||
+                                isFastTracked) &&
                                 stage.summary)) && (
                               <div className="mt-2.5 rounded border border-slate-200/80 bg-white p-2 text-[11px] space-y-1.5">
-                                {(isPingPong ||
+                                {(stage.phase === "before_parliament" ||
+                                  isPingPong ||
                                   isPostRoyalAssent ||
-                                  isSkipped) &&
+                                  isSkipped ||
+                                  isFastTracked) &&
                                   stage.summary && (
-                                    <div className="font-medium text-teal-900">
+                                    <div
+                                      className={`font-medium ${
+                                        isFastTracked
+                                          ? "text-sky-900"
+                                          : stage.phase === "before_parliament"
+                                          ? "text-slate-800"
+                                          : "text-teal-900"
+                                      }`}
+                                    >
                                       {stage.summary}
                                     </div>
                                   )}
-                                {stage.entered_date && !isSkipped && (
+                                {stage.entered_date &&
+                                  !isSkipped &&
+                                  !isFastTracked && (
                                   <div className="flex flex-wrap items-center justify-between gap-1 text-slate-700 font-medium">
                                     <span>
                                       {stage.entered_date}
@@ -755,16 +743,6 @@ function BillTrackerContent() {
                                         ? ` → ${stage.completed_date}`
                                         : ""}
                                     </span>
-                                    {stage.source_api_url && (
-                                      <a
-                                        href={stage.source_api_url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-[10px] text-blue-600 hover:underline"
-                                      >
-                                        API ↗
-                                      </a>
-                                    )}
                                   </div>
                                 )}
 
@@ -854,7 +832,7 @@ export default function BillTrackerPage() {
     <Suspense
       fallback={
         <main className="max-w-7xl mx-auto px-6 py-8 text-sm text-slate-600">
-          Loading 3-phase lifecycle tracker from Neon Lakebase Postgres...
+          Loading bill tracker...
         </main>
       }
     >

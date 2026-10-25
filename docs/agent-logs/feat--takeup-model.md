@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 03:46 — Merge origin/main into feat/takeup-model
+
+- **What:** merged PRs #20 and #22 (first-signal milestone and UI cleanup; stage-duration and originating-House analyses; tree models for days left to Royal Assent in `analysis/`). Only conflict: `backend/pyproject.toml` dependencies, kept all (pypdf, matplotlib, pyarrow, xgboost, optuna, catboost) and relocked. Unfinished files from two stopped feature-analysis agents (which used the same `analysis/` folder) were moved to a local backup instead of merged.
+- **Why:** Roman asked to pull `main`.
+- **Checks:** `pytest tests/takeup tests/journey tests/test_config.py`: 237 passed; `pytest tests/model tests/test_health_and_stages.py`: 131 passed, 2 skipped; `ruff check`: clean.
+
 ## 2026-10-25 01:51 — docs(journey): predicted vs real per case, current model vs improved timing rule
 
 - **What:** `backend/reports/journey/predicted_vs_real_by_case.png` (scatter per stage) and updated `stage_durations_predicted.csv` with improved timing: stage 1 model timing corrected by its median bias on earlier resolved cases; stage 3 = median wait of earlier Acts; stage 2 unchanged.
