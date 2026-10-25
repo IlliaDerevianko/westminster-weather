@@ -1,0 +1,228 @@
+bill_id,act_title,checkpoint,as_of,royal_assent_date,target_days,XGBoost (one step),XGBoost (two step),p_same_day,Rule of thumb,Current stage 3 model
+3366,Counsellors of State Act 2022,Royal Assent,2022-12-06,2022-12-06,0.0,0.02507786,0.0,0.9932273,6.0,0.0
+2858,"Northern Ireland (Ministers, Elections and Petitions of Concern) Act 2022",Royal Assent,2022-02-08,2022-02-08,0.0,4.003741,0.0,0.76950943,6.0,70.0
+2859,Dissolution and Calling of Parliament Act 2022,Royal Assent,2022-03-24,2022-03-24,0.0,4.001195,0.0,0.80262077,6.0,0.0
+2860,National Insurance Contributions Act 2022,Royal Assent,2022-03-14,2022-03-14,0.0,5.0798283,0.0,0.72924906,6.0,0.0
+2861,Rating (Coronavirus) and Directors Disqualification (Dissolved Companies) Act 2021,Royal Assent,2021-12-15,2021-12-15,0.0,1.3698262,0.0,0.900039,6.0,0.0
+2862,Higher Education (Freedom of Speech) Act 2023,Royal Assent,2023-05-11,2023-05-11,67.0,19.112162,45.455757,0.042502362,6.0,70.0
+2862,Higher Education (Freedom of Speech) Act 2023,+30 days,2023-06-10,2023-05-11,37.0,64.6236,50.007874,0.0,65.5,75.0
+2863,Compensation (London Capital & Finance plc and Fraud Compensation Fund) Act 2021,Royal Assent,2021-10-20,2021-10-20,0.0,0.0,0.0,0.99227476,6.0,0.0
+2864,Leasehold Reform (Ground Rent) Act 2022,Royal Assent,2022-02-08,2022-02-08,133.0,14.474841,116.86692,0.05333375,6.0,70.0
+2864,Leasehold Reform (Ground Rent) Act 2022,+30 days,2022-03-10,2022-02-08,103.0,54.09075,133.07646,0.0,65.5,68.0
+2864,Leasehold Reform (Ground Rent) Act 2022,+90 days,2022-05-09,2022-02-08,43.0,54.09075,135.84702,0.0,120.5,85.0
+2865,Professional Qualifications Act 2022,Royal Assent,2022-04-28,2022-04-28,127.0,39.158287,81.77133,0.007551537,6.0,70.0
+2865,Professional Qualifications Act 2022,+30 days,2022-05-28,2022-04-28,97.0,97.12814,89.6614,0.0,65.5,68.0
+2865,Professional Qualifications Act 2022,+90 days,2022-07-27,2022-04-28,37.0,97.12814,91.44713,0.0,120.5,78.0
+2866,Dormant Assets Act 2022,Royal Assent,2022-02-24,2022-02-24,89.0,23.457304,70.2782,0.02334639,6.0,70.0
+2866,Dormant Assets Act 2022,+30 days,2022-03-26,2022-02-24,59.0,83.908775,83.39389,0.0,65.5,68.0
+2867,Animal Welfare (Sentience) Act 2022,Royal Assent,2022-04-28,2022-04-28,386.0,20.712378,62.742134,0.031185418,6.0,70.0
+2867,Animal Welfare (Sentience) Act 2022,+30 days,2022-05-28,2022-04-28,356.0,71.95271,70.43471,0.0,65.5,68.0
+2867,Animal Welfare (Sentience) Act 2022,+90 days,2022-07-27,2022-04-28,296.0,71.95271,71.77679,0.0,120.5,78.0
+2867,Animal Welfare (Sentience) Act 2022,+180 days,2022-10-25,2022-04-28,206.0,71.95271,71.77679,0.0,162.0,135.0
+2867,Animal Welfare (Sentience) Act 2022,+1 year,2023-04-28,2022-04-28,21.0,71.95271,71.77679,0.0,230.0,209.0
+2868,Skills and Post-16 Education Act 2022,Royal Assent,2022-04-28,2022-04-28,145.0,37.779137,65.96383,0.012199111,6.0,70.0
+2868,Skills and Post-16 Education Act 2022,+30 days,2022-05-28,2022-04-28,115.0,93.78571,73.50096,0.0,65.5,68.0
+2868,Skills and Post-16 Education Act 2022,+90 days,2022-07-27,2022-04-28,55.0,93.78571,74.95386,0.0,120.5,78.0
+2877,Charities Act 2022,Royal Assent,2022-02-24,2022-02-24,244.0,21.054998,53.531433,0.008765764,6.0,0.0
+2877,Charities Act 2022,+30 days,2022-03-26,2022-02-24,214.0,72.44255,68.01432,0.0,65.5,68.0
+2877,Charities Act 2022,+90 days,2022-05-25,2022-02-24,154.0,72.44255,69.72241,0.0,120.5,85.0
+2877,Charities Act 2022,+180 days,2022-08-23,2022-02-24,64.0,72.44255,69.72241,0.0,162.0,135.0
+3014,Supply and Appropriation (Main Estimates) Act 2021,Royal Assent,2021-07-19,2021-07-19,0.0,0.045202903,0.0,0.9909253,6.0,0.0
+3015,Subsidy Control Act 2022,Royal Assent,2022-04-28,2022-04-28,232.0,43.90658,64.12598,0.0069485307,6.0,70.0
+3015,Subsidy Control Act 2022,+30 days,2022-05-28,2022-04-28,202.0,106.398636,74.61095,0.0,65.5,68.0
+3015,Subsidy Control Act 2022,+90 days,2022-07-27,2022-04-28,142.0,106.398636,76.069275,0.0,120.5,78.0
+3015,Subsidy Control Act 2022,+180 days,2022-10-25,2022-04-28,52.0,106.398636,76.069275,0.0,162.0,135.0
+3020,Elections Act 2022,Royal Assent,2022-04-28,2022-04-28,106.0,23.063032,27.632156,0.009065408,6.0,70.0
+3020,Elections Act 2022,+30 days,2022-05-28,2022-04-28,76.0,52.81588,31.176548,0.0,65.5,68.0
+3020,Elections Act 2022,+90 days,2022-07-27,2022-04-28,16.0,52.81588,31.545246,0.0,120.5,78.0
+3021,Building Safety Act 2022,Royal Assent,2022-04-28,2022-04-28,21.0,21.061043,31.374691,0.0071640997,6.0,70.0
+3022,Health and Care Act 2022,Royal Assent,2022-04-28,2022-04-28,8.0,17.358356,18.053513,0.020738702,6.0,70.0
+3023,Nationality and Borders Act 2022,Royal Assent,2022-04-28,2022-04-28,28.0,19.153915,37.795082,0.012373267,6.0,70.0
+3032,Public Service Pensions and Judicial Offices Act 2022,Royal Assent,2022-03-10,2022-03-10,480.0,18.65863,24.778713,0.12759861,6.0,70.0
+3032,Public Service Pensions and Judicial Offices Act 2022,+30 days,2022-04-09,2022-03-10,450.0,45.85952,29.242777,0.0,65.5,68.0
+3032,Public Service Pensions and Judicial Offices Act 2022,+90 days,2022-06-08,2022-03-10,390.0,45.85952,29.68609,0.0,120.5,85.0
+3032,Public Service Pensions and Judicial Offices Act 2022,+180 days,2022-09-06,2022-03-10,300.0,45.85952,29.68609,0.0,162.0,135.0
+3032,Public Service Pensions and Judicial Offices Act 2022,+1 year,2023-03-10,2022-03-10,115.0,45.85952,29.68609,0.0,230.0,216.0
+3035,Judicial Review and Courts Act 2022,Royal Assent,2022-04-28,2022-04-28,76.0,37.26388,46.922676,0.0041454406,6.0,70.0
+3035,Judicial Review and Courts Act 2022,+30 days,2022-05-28,2022-04-28,46.0,83.070114,55.369637,0.0,65.5,68.0
+3041,Health and Social Care Levy Act 2021,Royal Assent,2021-10-20,2021-10-20,0.0,0.15005055,0.0,0.9659525,6.0,0.0
+3042,Social Security (Up-rating of Benefits) Act 2021,Royal Assent,2021-11-17,2021-11-17,0.0,0.001982315,0.0,0.9923767,6.0,0.0
+3045,Critical Benchmarks (References and Administrators' Liability) Act 2021,Royal Assent,2021-12-15,2021-12-15,0.0,0.15918958,0.0,0.9489231,6.0,0.0
+3057,Nuclear Energy (Financing) Act 2022,Royal Assent,2022-03-31,2022-03-31,0.0,2.9846072,0.0,0.523744,6.0,70.0
+3060,Finance Act 2022,Royal Assent,2022-02-24,2022-02-24,88.0,2.571996,23.946499,0.07582565,6.0,0.0
+3060,Finance Act 2022,+30 days,2022-03-26,2022-02-24,58.0,25.550066,28.606434,0.0,65.5,68.0
+3064,Commercial Rent (Coronavirus) Act 2022,Royal Assent,2022-03-24,2022-03-24,0.0,0.59313256,0.0,0.8942777,6.0,70.0
+3069,Product Security and Telecommunications Infrastructure Act 2022,Royal Assent,2022-12-06,2022-12-06,58.0,20.030392,32.2546,0.010707204,6.0,70.0
+3069,Product Security and Telecommunications Infrastructure Act 2022,+30 days,2023-01-05,2022-12-06,28.0,62.20048,39.084667,0.0,65.5,75.0
+3120,Economic Crime (Transparency and Enforcement) Act 2022,Royal Assent,2022-03-14,2022-03-14,56.0,6.299266,52.853752,0.15727118,6.0,0.0
+3120,Economic Crime (Transparency and Enforcement) Act 2022,+30 days,2022-04-13,2022-03-14,26.0,46.63368,64.44877,0.0,65.5,68.0
+3124,Supply and Appropriation (Anticipation and Adjustments) Act 2022,Royal Assent,2022-03-14,2022-03-14,0.0,0.1132826,0.0,0.9934491,6.0,0.0
+3137,Online Safety Act 2023,Royal Assent,2023-10-26,2023-10-26,26.0,16.631502,12.993884,0.010761059,6.0,70.0
+3142,National Insurance Contributions (Increase of Thresholds) Act 2022,Royal Assent,2022-03-31,2022-03-31,0.0,0.0035903777,0.0,0.9947828,6.0,0.0
+3152,Trade (Australia and New Zealand) Act 2023,Royal Assent,2023-03-23,2023-03-23,0.0,4.8904166,74.882706,0.48350397,6.0,70.0
+3153,Public Order Act 2023,Royal Assent,2023-05-02,2023-05-02,0.0,22.249645,64.30626,0.013479059,6.0,7.0
+3154,National Security Act 2023,Royal Assent,2023-07-11,2023-07-11,139.0,18.762985,16.714104,0.012262265,6.0,70.0
+3154,National Security Act 2023,+30 days,2023-08-10,2023-07-11,109.0,41.92626,17.72897,0.0,65.5,75.0
+3154,National Security Act 2023,+90 days,2023-10-09,2023-07-11,49.0,41.92626,17.954834,0.0,120.5,85.0
+3155,Levelling-up and Regeneration Act 2023,Royal Assent,2023-10-26,2023-10-26,53.0,15.02623,12.521841,0.010863239,6.0,70.0
+3155,Levelling-up and Regeneration Act 2023,+30 days,2023-11-25,2023-10-26,23.0,33.205315,13.214144,0.0,65.5,75.0
+3157,Social Security (Special Rules for End of Life) Act 2022,Royal Assent,2022-10-25,2022-10-25,153.0,3.0428796,104.139854,0.31203008,6.0,70.0
+3157,Social Security (Special Rules for End of Life) Act 2022,+30 days,2022-11-24,2022-10-25,123.0,50.723156,117.535805,0.0,65.5,75.0
+3157,Social Security (Special Rules for End of Life) Act 2022,+90 days,2023-01-23,2022-10-25,63.0,50.723156,119.913246,0.0,120.5,85.0
+3158,UK Infrastructure Bank Act 2023,Royal Assent,2023-03-23,2023-03-23,0.0,4.190175,0.0,0.8578655,6.0,70.0
+3159,Procurement Act 2023,Royal Assent,2023-10-26,2023-10-26,82.0,20.218142,20.734722,0.010572278,6.0,70.0
+3159,Procurement Act 2023,+30 days,2023-11-25,2023-10-26,52.0,49.072914,23.540026,0.0,65.5,75.0
+3160,Northern Ireland Troubles (Legacy and Reconciliation) Act 2023,Royal Assent,2023-09-18,2023-09-18,72.0,24.266798,25.488628,0.0063002384,6.0,70.0
+3160,Northern Ireland Troubles (Legacy and Reconciliation) Act 2023,+30 days,2023-10-18,2023-09-18,42.0,58.253387,29.14328,0.0,65.5,75.0
+3167,Genetic Technology (Precision Breeding) Act 2023,Royal Assent,2023-03-23,2023-03-23,782.0,21.217031,71.9283,0.046176348,6.0,70.0
+3167,Genetic Technology (Precision Breeding) Act 2023,+30 days,2023-04-22,2023-03-23,752.0,76.77634,78.53463,0.0,65.5,75.0
+3167,Genetic Technology (Precision Breeding) Act 2023,+90 days,2023-06-21,2023-03-23,692.0,76.77634,80.031204,0.0,120.5,78.0
+3167,Genetic Technology (Precision Breeding) Act 2023,+180 days,2023-09-19,2023-03-23,602.0,76.77634,80.031204,0.0,162.0,135.0
+3167,Genetic Technology (Precision Breeding) Act 2023,+1 year,2024-03-22,2023-03-23,417.0,76.77634,80.031204,0.0,230.0,188.0
+3168,Identity and Language (Northern Ireland) Act 2022,Royal Assent,2022-12-06,2022-12-06,167.0,6.193741,56.30422,0.046133302,6.0,70.0
+3168,Identity and Language (Northern Ireland) Act 2022,+30 days,2023-01-05,2022-12-06,137.0,64.76937,68.39264,0.0,65.5,75.0
+3168,Identity and Language (Northern Ireland) Act 2022,+90 days,2023-03-06,2022-12-06,77.0,64.76937,70.458145,0.0,120.5,85.0
+3177,Social Housing (Regulation) Act 2023,Royal Assent,2023-07-20,2023-07-20,56.0,11.728431,36.650154,0.042393006,6.0,70.0
+3177,Social Housing (Regulation) Act 2023,+30 days,2023-08-19,2023-07-20,26.0,42.688023,40.950367,0.0,65.5,75.0
+3187,Social Security (Additional Payments) Act 2022,Royal Assent,2022-06-28,2022-06-28,0.0,0.21088104,0.0,0.97257966,6.0,0.0
+3306,Energy (Oil and Gas) Profits Levy Act 2022,Royal Assent,2022-07-14,2022-07-14,0.0,0.1708874,0.0,0.9743692,6.0,0.0
+3307,Supply and Appropriation (Main Estimates) Act 2022,Royal Assent,2022-07-14,2022-07-14,0.0,0.0515367,0.0,0.9914033,6.0,0.0
+3310,Seafarers’ Wages Act 2023,Royal Assent,2023-03-23,2023-03-23,564.0,21.324497,68.67209,0.01899069,6.0,70.0
+3310,Seafarers’ Wages Act 2023,+30 days,2023-04-22,2023-03-23,534.0,76.11047,76.82579,0.0,65.5,75.0
+3310,Seafarers’ Wages Act 2023,+90 days,2023-06-21,2023-03-23,474.0,76.11047,78.349106,0.0,120.5,78.0
+3310,Seafarers’ Wages Act 2023,+180 days,2023-09-19,2023-03-23,384.0,76.11047,78.349106,0.0,162.0,135.0
+3310,Seafarers’ Wages Act 2023,+1 year,2024-03-22,2023-03-23,199.0,76.11047,78.349106,0.0,230.0,188.0
+3311,Energy Act 2023,Royal Assent,2023-10-26,2023-10-26,76.0,11.460162,11.195433,0.010123416,6.0,70.0
+3311,Energy Act 2023,+30 days,2023-11-25,2023-10-26,46.0,28.365482,12.287081,0.0,65.5,75.0
+3326,Financial Services and Markets Act 2023,Royal Assent,2023-06-29,2023-06-29,11.0,20.18421,20.798315,0.007206497,6.0,70.0
+3338,Health and Social Care Levy (Repeal) Act 2022,Royal Assent,2022-10-25,2022-10-25,0.0,0.15077412,0.0,0.9716438,6.0,0.0
+3339,Economic Crime and Corporate Transparency Act 2023,Royal Assent,2023-10-26,2023-10-26,18.0,16.36161,18.12976,0.0076480852,6.0,70.0
+3340,Retained EU Law (Revocation and Reform) Act 2023,Royal Assent,2023-06-29,2023-06-29,166.0,26.94289,33.778088,0.0031295712,6.0,70.0
+3340,Retained EU Law (Revocation and Reform) Act 2023,+30 days,2023-07-29,2023-06-29,136.0,65.64342,39.636562,0.0,65.5,75.0
+3340,Retained EU Law (Revocation and Reform) Act 2023,+90 days,2023-09-27,2023-06-29,76.0,65.64342,41.038673,0.0,120.5,85.0
+3341,Energy Prices Act 2022,Royal Assent,2022-10-25,2022-10-25,0.0,0.8993276,0.0,0.8080872,6.0,0.0
+3344,Electronic Trade Documents Act 2023,Royal Assent,2023-07-20,2023-07-20,0.0,4.4625435,0.0,0.7263029,6.0,70.0
+3352,Stamp Duty Land Tax (Temporary Relief) Act 2023,Royal Assent,2023-02-08,2023-02-08,0.0,0.0017620961,0.0,0.98448694,6.0,0.0
+3353,Supply and Appropriation (Adjustments) Act 2022,Royal Assent,2022-10-25,2022-10-25,0.0,0.0060895495,0.0,0.97900885,6.0,0.0
+3376,Finance Act 2023,Royal Assent,2023-01-10,2023-01-10,0.0,0.0052247574,0.0,0.9752083,6.0,0.0
+3377,Northern Ireland (Executive Formation etc) Act 2022,Royal Assent,2022-12-06,2022-12-06,55.0,2.2844596,104.7512,0.36311954,6.0,0.0
+3377,Northern Ireland (Executive Formation etc) Act 2022,+30 days,2023-01-05,2022-12-06,25.0,39.091564,123.14622,0.0,65.5,75.0
+3396,Strikes (Minimum Service Levels) Act 2023,Royal Assent,2023-07-20,2023-07-20,0.0,4.857604,104.27641,0.03616643,6.0,70.0
+3398,Northern Ireland Budget Act 2023,Royal Assent,2023-02-08,2023-02-08,0.0,0.32732573,0.0,0.9256587,6.0,0.0
+3410,Lifelong Learning (Higher Education Fee Limits) Act 2023,Royal Assent,2023-09-18,2023-09-18,966.0,17.363161,64.417274,0.022832757,6.0,0.0
+3410,Lifelong Learning (Higher Education Fee Limits) Act 2023,+30 days,2023-10-18,2023-09-18,936.0,68.007095,72.06934,0.0,65.5,75.0
+3410,Lifelong Learning (Higher Education Fee Limits) Act 2023,+90 days,2023-12-17,2023-09-18,876.0,68.007095,73.53312,0.0,120.5,85.0
+3410,Lifelong Learning (Higher Education Fee Limits) Act 2023,+180 days,2024-03-16,2023-09-18,786.0,68.007095,73.53312,0.0,162.0,135.0
+3410,Lifelong Learning (Higher Education Fee Limits) Act 2023,+1 year,2024-09-17,2023-09-18,601.0,68.007095,73.53312,0.0,230.0,188.0
+3414,Social Security (Additional Payments) Act 2023,Royal Assent,2023-03-23,2023-03-23,0.0,0.14161937,0.0,0.93400747,6.0,0.0
+3416,Northern Ireland (Executive Formation and Organ and Tissue Donation) Act 2023,Royal Assent,2023-02-28,2023-02-28,0.0,0.0,0.0,0.9920722,6.0,0.0
+3429,Illegal Migration Act 2023,Royal Assent,2023-07-20,2023-07-20,53.0,10.258725,40.318455,0.0037079095,6.0,70.0
+3429,Illegal Migration Act 2023,+30 days,2023-08-19,2023-07-20,23.0,64.12227,45.82062,0.0,65.5,75.0
+3431,Supply and Appropriation (Anticipation and Adjustments) Act 2023,Royal Assent,2023-03-23,2023-03-23,0.0,0.16141956,0.0,0.9904086,6.0,0.0
+3435,Finance (No. 2) Act 2023,Royal Assent,2023-07-11,2023-07-11,20.0,4.1896157,15.613492,0.019612022,6.0,0.0
+3442,Non-Domestic Rating Act 2023,Royal Assent,2023-10-26,2023-10-26,26.0,10.331278,60.97423,0.018510813,6.0,0.0
+3443,Victims and Prisoners Act 2024,Royal Assent,2024-05-24,2024-05-24,20.0,43.26678,52.53072,0.0043243696,6.0,70.0
+3453,"Digital Markets, Competition and Consumers Act 2024",Royal Assent,2024-05-24,2024-05-24,185.0,16.474108,14.939482,0.0069806045,6.0,70.0
+3453,"Digital Markets, Competition and Consumers Act 2024",+30 days,2024-06-23,2024-05-24,155.0,36.725105,15.9225235,0.0,65.5,75.0
+3453,"Digital Markets, Competition and Consumers Act 2024",+90 days,2024-08-22,2024-05-24,95.0,36.725105,16.124708,0.0,120.5,78.0
+3453,"Digital Markets, Competition and Consumers Act 2024",+180 days,2024-11-20,2024-05-24,5.0,36.725105,16.124708,0.0,162.0,135.0
+3455,Northern Ireland (Interim Arrangements) Act 2023,Royal Assent,2023-05-24,2023-05-24,0.0,0.029413277,0.0,0.98436946,6.0,0.0
+3465,British Nationality (Regularisation of Past Practice) Act 2023,Royal Assent,2023-06-29,2023-06-29,0.0,0.08443538,0.0,0.9841083,6.0,0.0
+3481,Northern Ireland Budget (No. 2) Act 2023,Royal Assent,2023-09-18,2023-09-18,0.0,0.3564161,0.0,0.764586,6.0,0.0
+3484,Supply and Appropriation (Main Estimates) Act 2023,Royal Assent,2023-07-11,2023-07-11,0.0,0.11588595,0.0,0.9807464,6.0,0.0
+3505,Media Act 2024,Royal Assent,2024-05-24,2024-05-24,83.0,12.093297,34.615772,0.0054765074,6.0,70.0
+3505,Media Act 2024,+30 days,2024-06-23,2024-05-24,53.0,61.404064,38.943478,0.0,65.5,75.0
+3506,Automated Vehicles Act 2024,Royal Assent,2024-05-20,2024-05-20,574.0,8.254213,62.413383,0.012955706,6.0,70.0
+3506,Automated Vehicles Act 2024,+30 days,2024-06-19,2024-05-20,544.0,67.97991,76.21001,0.0,65.5,75.0
+3506,Automated Vehicles Act 2024,+90 days,2024-08-18,2024-05-20,484.0,67.97991,78.3712,0.0,120.5,78.0
+3506,Automated Vehicles Act 2024,+180 days,2024-11-16,2024-05-20,394.0,67.97991,78.3712,0.0,162.0,135.0
+3506,Automated Vehicles Act 2024,+1 year,2025-05-20,2024-05-20,209.0,67.97991,78.3712,0.0,230.0,188.0
+3507,Pedicabs (London) Act 2024,Royal Assent,2024-04-25,2024-04-25,0.0,0.21357894,0.0,0.8349182,6.0,70.0
+3508,Investigatory Powers (Amendment) Act 2024,Royal Assent,2024-04-25,2024-04-25,168.0,6.386014,115.93205,0.017203283,6.0,70.0
+3508,Investigatory Powers (Amendment) Act 2024,+30 days,2024-05-25,2024-04-25,138.0,73.51274,134.43735,0.0,65.5,75.0
+3508,Investigatory Powers (Amendment) Act 2024,+90 days,2024-07-24,2024-04-25,78.0,73.51274,137.95605,0.0,120.5,78.0
+3509,Trade (Comprehensive and Progressive Agreement for Trans-Pacific Partnership) Act 2024,Royal Assent,2024-03-20,2024-03-20,0.0,3.3167427,125.087326,0.08234188,6.0,70.0
+3514,Finance Act 2024,Royal Assent,2024-02-22,2024-02-22,11.0,2.7047055,23.43367,0.1043996,6.0,0.0
+3520,National Insurance Contributions (Reduction in Rates) Act 2023,Royal Assent,2023-12-13,2023-12-13,0.0,0.08239283,0.0,0.9723207,6.0,0.0
+3523,Leasehold and Freehold Reform Act 2024,Royal Assent,2024-05-24,2024-05-24,136.0,4.928258,19.51192,0.016489929,6.0,70.0
+3523,Leasehold and Freehold Reform Act 2024,+30 days,2024-06-23,2024-05-24,106.0,32.60406,22.7886,0.0,65.5,75.0
+3523,Leasehold and Freehold Reform Act 2024,+90 days,2024-08-22,2024-05-24,46.0,32.60406,23.263733,0.0,120.5,78.0
+3526,Post Office (Horizon System) Compensation Act 2024,Royal Assent,2024-01-25,2024-01-25,0.0,0.048385356,0.0,0.97800714,6.0,0.0
+3533,Animal Welfare (Livestock Exports) Act 2024,Royal Assent,2024-05-20,2024-05-20,2.0,3.8688664,120.212425,0.08178111,6.0,0.0
+3540,Safety of Rwanda (Asylum and Immigration) Act 2024,Royal Assent,2024-04-25,2024-04-25,0.0,0.37568823,0.0,0.56101805,6.0,70.0
+3672,Northern Ireland (Executive Formation) Act 2024,Royal Assent,2024-01-25,2024-01-25,0.0,0.013011116,0.0,0.9763074,6.0,0.0
+3690,Finance (No. 2) Act 2024,Royal Assent,2024-05-24,2024-05-24,137.0,0.50862205,0.0,0.82008946,6.0,0.0
+3690,Finance (No. 2) Act 2024,+30 days,2024-06-23,2024-05-24,107.0,22.868692,119.580154,0.0,65.5,75.0
+3690,Finance (No. 2) Act 2024,+90 days,2024-08-22,2024-05-24,47.0,22.868692,121.52834,0.0,120.5,78.0
+3692,National Insurance Contributions (Reduction in Rates) Act 2024,Royal Assent,2024-03-20,2024-03-20,0.0,0.0,0.0,0.99143916,6.0,0.0
+3694,Post Office (Horizon System) Offences Act 2024,Royal Assent,2024-05-24,2024-05-24,0.0,0.6199589,135.36218,0.3219563,6.0,0.0
+3699,Supply and Appropriation (Anticipation and Adjustments) Act 2024,Royal Assent,2024-03-20,2024-03-20,0.0,0.23178224,0.0,0.9770912,6.0,0.0
+3731,Budget Responsibility Act 2024,Royal Assent,2024-09-10,2024-09-10,34.0,0.08211242,0.0,0.9875315,6.0,0.0
+3731,Budget Responsibility Act 2024,+30 days,2024-10-10,2024-09-10,4.0,18.228033,105.598526,0.0,65.5,75.0
+3732,Passenger Railway Services (Public Ownership) Act 2024,Royal Assent,2024-11-28,2024-11-28,0.0,0.0655516,0.0,0.93172455,6.0,0.0
+3733,Arbitration Act 2025,Royal Assent,2025-02-24,2025-02-24,142.0,20.038157,98.27716,0.023062263,6.0,0.0
+3733,Arbitration Act 2025,+30 days,2025-03-26,2025-02-24,112.0,90.27246,112.89406,0.0,65.5,75.0
+3733,Arbitration Act 2025,+90 days,2025-05-25,2025-02-24,52.0,90.27246,114.1639,0.0,120.5,85.0
+3734,Bank Resolution (Recapitalisation) Act 2025,Royal Assent,2025-05-15,2025-05-15,60.0,8.922168,0.0,0.5211077,6.0,70.0
+3734,Bank Resolution (Recapitalisation) Act 2025,+30 days,2025-06-14,2025-05-15,30.0,39.316097,84.90193,0.0,65.5,75.0
+3735,Commonwealth Parliamentary Association and International Committee of the Red Cross (Status) Act 2025,Royal Assent,2025-01-16,2025-01-16,0.0,0.019808868,0.0,0.9865487,6.0,0.0
+3736,Supply and Appropriation (Main Estimates) Act 2024,Royal Assent,2024-07-30,2024-07-30,0.0,0.009941502,0.0,0.9894512,6.0,0.0
+3737,Employment Rights Act 2025,Royal Assent,2025-12-18,2025-12-18,18.0,8.071682,15.189291,0.01517739,6.0,70.0
+3738,Great British Energy Act 2025,Royal Assent,2025-05-15,2025-05-15,0.0,2.8703015,0.0,0.9588951,6.0,70.0
+3739,Crown Estate Act 2025,Royal Assent,2025-03-11,2025-03-11,0.0,2.3557487,0.0,0.96396315,6.0,70.0
+3744,Lords Spiritual (Women) Act 2015 (Extension) Act 2025,Royal Assent,2025-01-16,2025-01-16,0.0,0.0,0.0,0.99406517,6.0,0.0
+3751,Water (Special Measures) Act 2025,Royal Assent,2025-02-24,2025-02-24,115.0,7.7212005,95.24506,0.07939422,6.0,70.0
+3751,Water (Special Measures) Act 2025,+30 days,2025-03-26,2025-02-24,85.0,77.91374,113.77946,0.0,65.5,75.0
+3751,Water (Special Measures) Act 2025,+90 days,2025-05-25,2025-02-24,25.0,77.91374,116.45717,0.0,120.5,85.0
+3752,Product Regulation and Metrology Act 2025,Royal Assent,2025-07-21,2025-07-21,0.0,10.477862,62.088867,0.127705,6.0,70.0
+3764,Renters’ Rights Act 2025,Royal Assent,2025-10-27,2025-10-27,52.0,13.146815,12.03224,0.014421905,6.0,70.0
+3764,Renters’ Rights Act 2025,+30 days,2025-11-26,2025-10-27,22.0,32.75531,14.0429,0.0,65.5,75.0
+3765,Terrorism (Protection of Premises) Act 2025,Royal Assent,2025-04-03,2025-04-03,349.0,11.607363,29.556171,0.016151447,6.0,70.0
+3765,Terrorism (Protection of Premises) Act 2025,+30 days,2025-05-03,2025-04-03,319.0,72.41776,36.70785,0.0,65.5,75.0
+3765,Terrorism (Protection of Premises) Act 2025,+90 days,2025-07-02,2025-04-03,259.0,72.41776,37.706886,0.0,120.5,85.0
+3765,Terrorism (Protection of Premises) Act 2025,+180 days,2025-09-30,2025-04-03,169.0,72.41776,37.706886,0.0,162.0,142.0
+3772,Institute for Apprenticeships and Technical Education (Transfer of Functions etc) Act 2025,Royal Assent,2025-05-15,2025-05-15,4.0,17.275707,62.493553,0.012798123,6.0,70.0
+3825,Data (Use and Access) Act 2025,Royal Assent,2025-06-19,2025-06-19,32.0,14.312129,17.12057,0.022936044,6.0,70.0
+3825,Data (Use and Access) Act 2025,+30 days,2025-07-19,2025-06-19,2.0,38.305847,21.044355,0.0,65.5,75.0
+3832,Football Governance Act 2025,Royal Assent,2025-07-21,2025-07-21,94.0,18.492405,19.621075,0.006697105,6.0,70.0
+3832,Football Governance Act 2025,+30 days,2025-08-20,2025-07-21,64.0,54.354298,25.762173,0.0,65.5,75.0
+3832,Football Governance Act 2025,+90 days,2025-10-19,2025-07-21,4.0,54.354298,26.339453,0.0,120.5,85.0
+3873,Finance Act 2025,Royal Assent,2025-03-20,2025-03-20,0.0,0.22749726,0.0,0.91606885,6.0,0.0
+3881,Armed Forces Commissioner Act 2025,Royal Assent,2025-09-03,2025-09-03,127.0,30.161417,43.26767,0.007932579,6.0,70.0
+3881,Armed Forces Commissioner Act 2025,+30 days,2025-10-03,2025-09-03,97.0,88.170815,48.881714,0.0,65.5,75.0
+3881,Armed Forces Commissioner Act 2025,+90 days,2025-12-02,2025-09-03,37.0,88.170815,49.87351,0.0,120.5,85.0
+3882,Financial Assistance to Ukraine Act 2025,Royal Assent,2025-01-16,2025-01-16,0.0,0.0,0.0,0.9952237,6.0,0.0
+3884,Mental Health Act 2025,Royal Assent,2025-12-18,2025-12-18,98.0,26.669628,30.881481,0.0063548544,6.0,70.0
+3884,Mental Health Act 2025,+30 days,2026-01-17,2025-12-18,68.0,70.00256,37.17713,0.0,65.5,75.0
+3884,Mental Health Act 2025,+90 days,2026-03-18,2025-12-18,8.0,70.00256,38.118977,0.0,120.5,85.0
+3887,Non-Domestic Rating (Multipliers and Private Schools) Act 2025,Royal Assent,2025-04-03,2025-04-03,0.0,0.21885404,0.0,0.9075573,6.0,70.0
+3888,National Insurance Contributions (Secondary Class 1 Contributions) Act 2025,Royal Assent,2025-04-03,2025-04-03,0.0,0.0,0.0,0.9928729,6.0,70.0
+3909,Children’s Wellbeing and Schools Act 2026,Royal Assent,2026-04-29,2026-04-29,21.0,25.488842,37.78491,0.006128599,6.0,70.0
+3910,Bus Services Act 2025,Royal Assent,2025-10-27,2025-10-27,85.0,31.522106,81.46244,0.006035066,6.0,70.0
+3910,Bus Services Act 2025,+30 days,2025-11-26,2025-10-27,55.0,83.87587,91.69467,0.0,65.5,75.0
+3921,"Public Authorities (Fraud, Error and Recovery) Act 2025",Royal Assent,2025-12-02,2025-12-02,1.0,29.733654,29.927631,0.004993126,6.0,70.0
+3929,"Border Security, Asylum and Immigration Act 2025",Royal Assent,2025-12-02,2025-12-02,13.0,28.032888,26.718018,0.003942064,6.0,70.0
+3936,Church of Scotland (Lord High Commissioner) Act 2025,Royal Assent,2025-04-03,2025-04-03,0.0,0.0,0.0,0.99665546,6.0,0.0
+3938,Crime and Policing Act 2026,Royal Assent,2026-04-29,2026-04-29,57.0,15.107221,15.78358,0.0072823996,6.0,70.0
+3938,Crime and Policing Act 2026,+30 days,2026-05-29,2026-04-29,27.0,37.06916,18.551172,0.0,65.5,75.0
+3941,Supply and Appropriation (Anticipation and Adjustments) Act 2025,Royal Assent,2025-03-11,2025-03-11,0.0,0.040814098,0.0,0.99363565,6.0,0.0
+3946,Planning and Infrastructure Act 2025,Royal Assent,2025-12-18,2025-12-18,0.0,21.30694,22.902157,0.0033826642,6.0,7.0
+3955,Sentencing Guidelines (Pre-sentence Reports) Act 2025,Royal Assent,2025-06-19,2025-06-19,0.0,0.011657201,0.0,0.992915,6.0,0.0
+3961,Steel Industry (Special Measures) Act 2025,Royal Assent,2025-04-12,2025-04-12,0.0,0.10372923,0.0,0.99155223,6.0,0.0
+3968,Victims and Courts Act 2026,Royal Assent,2026-04-29,2026-04-29,105.0,20.46478,72.80468,0.021577591,6.0,70.0
+3968,Victims and Courts Act 2026,+30 days,2026-05-29,2026-04-29,75.0,71.50252,91.19837,0.0,65.5,75.0
+3968,Victims and Courts Act 2026,+90 days,2026-07-28,2026-04-29,15.0,71.50252,92.809425,0.0,120.5,78.0
+3982,Pension Schemes Act 2026,Royal Assent,2026-04-29,2026-04-29,54.0,25.039585,36.7327,0.005406222,6.0,70.0
+3982,Pension Schemes Act 2026,+30 days,2026-05-29,2026-04-29,24.0,63.10627,43.78949,0.0,65.5,75.0
+3988,Universal Credit Act 2025,Royal Assent,2025-09-03,2025-09-03,0.0,0.39540228,0.0,0.8759629,6.0,0.0
+3993,Supply and Appropriation (Main Estimates) Act 2025,Royal Assent,2025-07-21,2025-07-21,0.0,0.04619902,0.0,0.990777,6.0,0.0
+4002,English Devolution and Community Empowerment Act 2026,Royal Assent,2026-04-29,2026-04-29,49.0,8.158197,18.910309,0.032773465,6.0,70.0
+4002,English Devolution and Community Empowerment Act 2026,+30 days,2026-05-29,2026-04-29,19.0,29.282806,23.454708,0.0,65.5,75.0
+4012,Sentencing Act 2026,Royal Assent,2026-01-22,2026-01-22,11.0,6.2448015,60.111225,0.045573283,6.0,70.0
+4016,Biodiversity Beyond National Jurisdiction Act 2026,Royal Assent,2026-02-12,2026-02-12,153.0,2.9191315,116.45071,0.12515463,6.0,0.0
+4016,Biodiversity Beyond National Jurisdiction Act 2026,+30 days,2026-03-14,2026-02-12,123.0,40.248123,141.01242,0.0,65.5,75.0
+4016,Biodiversity Beyond National Jurisdiction Act 2026,+90 days,2026-05-13,2026-02-12,63.0,40.248123,144.06076,0.0,120.5,78.0
+4042,Finance Act 2026,Royal Assent,2026-03-18,2026-03-18,117.0,3.474652,19.516626,0.09593844,6.0,70.0
+4042,Finance Act 2026,+30 days,2026-04-17,2026-03-18,87.0,28.345226,24.159796,0.0,65.5,75.0
+4042,Finance Act 2026,+90 days,2026-06-16,2026-03-18,27.0,28.345226,24.618076,0.0,120.5,78.0
+4062,Medical Training (Prioritisation) Act 2026,Royal Assent,2026-03-05,2026-03-05,0.0,1.1402318,153.86343,0.30923945,6.0,7.0

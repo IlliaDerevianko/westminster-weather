@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 05:16 — feat(analysis): stage 3 XGBoost, Royal Assent to law applied
+
+- **What:** `analysis/commencement_xgb.py`: the stage 2 XGBoost set-up for stage 3 (days from Royal Assent until the law applies, same definition as the journey test). Checkpoints at Royal Assent, +30, +90, +180 days and +1 year; features known at the checkpoint: the Act's commencement wording (on passing / after a period / by regulations appoint / fixed date), regulation powers, length, schedules, department, time in Parliament, timing, and regulations laid or drafted so far. One-step regressor and two-step (same-day classifier + regressor), Illia's tuned settings (classifier leaf size loosened), each Act counted once, train sessions 20-35 / test 36-39; 11 recent test Acts with no order yet left out. Compared with the rule of thumb and `journey.commencement.forecast_act`. Database only. Results in `backend/reports/commencement_xgb/`.
+- **Why:** Roman asked to extend the XGBoost to stage 3 with the error measured the same way.
+- **Checks:** `ruff check`: clean. At Royal Assent (131 test Acts), median / mean miss in days: two-step 12.7 / 57.7, one-step 8.3 / 62.0, current model 19.0 / 60.6, rule of thumb 6.0 / 68.2; same-day classifier 92% right. Within 3 months: two-step 25.7, current 21.0, rule 43.0; 3-12 months: 79 / 75 / 133. Later checkpoints (51, 29, 10, 6 Acts) are small and noisy for every model.
+
 ## 2026-10-25 05:06 — refactor(takeup): bill record cache in one file instead of one per bill
 
 - **What:** `takeup/bill_text.py` caches Bills API bill records in one file, `backend/data/cache/takeup/bills.json` (bill id -> record), instead of 588 files under `bills/`; `bill_long_titles` takes `cache_file`. The existing 588 records were merged into it and the folder removed. Also cleaned the local fetch cache (written statements, members, Hansard, GOV.UK pages, logs: ~19,800 files, 214 MB; gitignored, contents already in the database). Rebuilding the take-up source tables from scratch (`takeup/loaders.py`) would now need a fresh fetch; if labelling is rerun without the members cache, members with no stored posts count as never a minister (existing fallback).
