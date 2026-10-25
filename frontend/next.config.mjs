@@ -2,6 +2,17 @@ import { PHASE_DEVELOPMENT_SERVER } from "next/constants.js";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // The bill directory is the home page; "/?bill_id=…" still opens a bill
+  async redirects() {
+    return [
+      {
+        source: "/",
+        missing: [{ type: "query", key: "bill_id" }],
+        destination: "/bills",
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 import BillOutlookPanel from "./BillOutlookPanel";
 type StageStatus = "completed" | "fast_tracked" | "current" | "upcoming" | "stopped" | "skipped";
@@ -58,16 +58,6 @@ interface GovernmentBillTracking {
     milestone_dates: MilestoneDate[];
     full_text_url?: string | null;
     full_text_label?: string | null;
-}
-interface BillSummary {
-    bill_id: number;
-    short_title: string;
-    originating_house: string;
-    introduced_session_id: number;
-    introduced_date: string | null;
-    department: string | null;
-    outcome: string;
-    has_pre_parliament_data: boolean;
 }
 // `bills.outcome` values (DATA_CONTRACT §3.1)
 const OUTCOME_LABELS: Record<string, string> = {
@@ -138,6 +128,7 @@ const PHASE_CONFIG: {
 ];
 const formatDate = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 function BillTrackerContent() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const queryBillId = searchParams.get("bill_id");
     const [selectedPhase, setSelectedPhase] = useState<PhaseKey | null>(null);
@@ -148,32 +139,12 @@ function BillTrackerContent() {
     const [bill, setBill] = useState<GovernmentBillTracking | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    // Load directory of bills from Neon Postgres
+    // The bill directory is the home page: without a bill in the URL, go there (the server
+    // redirects "/" too, in next.config.mjs; this covers client-side navigation)
     useEffect(() => {
-        async function loadDirectory() {
-            try {
-                const res = await fetch("/api/v1/bills");
-                if (!res.ok)
-                    throw new Error("Unable to load the bill directory.");
-                const data: BillSummary[] = await res.json();
-                // No bill in the URL: open the most recently introduced bill (the list's first)
-                if (!queryBillId && data.length > 0) {
-                    setActiveBillId(String(data[0].bill_id));
-                }
-                else if (!queryBillId) {
-                    setError("No government bills are available yet.");
-                    setLoading(false);
-                }
-            }
-            catch {
-                if (!queryBillId) {
-                    setError("Unable to load bills. Please try again.");
-                    setLoading(false);
-                }
-            }
-        }
-        loadDirectory();
-    }, [queryBillId]);
+        if (!queryBillId)
+            router.replace("/bills");
+    }, [queryBillId, router]);
     // Sync activeBillId when URL query parameter changes
     useEffect(() => {
         if (queryBillId) {
