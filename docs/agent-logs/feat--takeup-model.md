@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 04:50 — docs(analysis): stakeholder summary for the 75/25 XGBoost results
+
+- **What:** `backend/reports/remaining_time_tails_75_25/README.md`: plain-language summary for stakeholders (chart, how it was tested, results by kind of bill and by stage, what changed, limits, what would help next, files).
+- **Why:** Roman asked for a stakeholder file.
+- **Checks:** numbers taken from `metrics.json` and the chart's data (75/25 run of 6b50db0).
+
 ## 2026-10-25 04:48 — feat(analysis): what-if test, does knowing a bill's length help the XGBoost
 
 - **What:** `remaining_time_tails.py` adds a hindsight variant with the final Act's length (`bill_texts`, `act_as_enacted`: log characters, schedules), read-only from the database. Not usable live: the Act exists only after Royal Assent and bills grow while debated. A day-one length source was looked for in the database and is missing: `bills.size_clauses` / `size_pages` are empty for all 588 bills, `bill_texts` holds only Acts (522) or latest versions (24), `api_evidence_events` only the demo bill. A Bills API publications fetcher was tried and removed (Roman: use the database only; the bill PDFs also refuse scripted downloads).
