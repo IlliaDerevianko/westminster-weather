@@ -81,6 +81,16 @@ interface BillSummary {
   has_pre_parliament_data: boolean;
 }
 
+// `bills.outcome` values (DATA_CONTRACT §3.1)
+const OUTCOME_LABELS: Record<string, string> = {
+  royal_assent: "Royal Assent",
+  fell_session_end: "Fell at session end",
+  fell_dissolution: "Fell at dissolution",
+  withdrawn: "Withdrawn",
+  defeated: "Defeated",
+  in_progress: "In progress",
+};
+
 const STOP_RISK_DESCRIPTIONS: Record<string, { title: string; subtitle: string }> = {
   never_adopted: {
     title: "Never adopted",
@@ -279,6 +289,16 @@ function BillTrackerContent() {
   const hasRoyalAssent =
     bill?.stages.find((s) => s.stage === "royal_assent")?.status ===
     "completed";
+  // `outcome` stops at Royal Assent; once the Act is fully in force (as of the selected
+  // date) that is the furthest point reached, so show it instead
+  const isLawFullyInForce =
+    bill?.stages.find((s) => s.stage === "law_fully_in_force")?.status ===
+    "completed";
+  const overallOutcome = !bill
+    ? null
+    : isLawFullyInForce
+    ? "Law fully in force"
+    : OUTCOME_LABELS[bill.outcome] ?? bill.outcome.replace(/_/g, " ");
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
@@ -340,7 +360,7 @@ function BillTrackerContent() {
               )}
               {bill && (
                 <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-blue-800">
-                  Overall Outcome: {bill.outcome}
+                  Overall Outcome: {overallOutcome}
                 </span>
               )}
             </div>
