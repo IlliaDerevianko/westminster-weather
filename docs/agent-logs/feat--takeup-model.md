@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 05:24 — feat(api): stage 3 XGBoost in the bill forecast endpoint
+
+- **What:** `journey/stage3_xgb.py` serves the two-step stage 3 XGBoost (same features and target as `analysis/commencement_xgb.py`): a same-day classifier plus p10/p50/p90 quantile regressors, fitted per month on checkpoints before the month's first day whose outcome was already known, using only events dated on or before `as_of`. `GET /api/v1/bills/{id}/forecast` now fills `commencement_probability` (P(law applies on Royal Assent day); 1/0 once known) and `time_to_commencement` (days from `as_of` until the law applies; negative once applied) for Acts; both stay null before Royal Assent. Recent Acts with no order whose text leaves commencement to regulations count as still awaiting their first order (Tobacco and Vapes Act 2026). `analysis/commencement_xgb.py` reads Illia's settings by path instead of importing the v2 tuning module. Database only.
+- **Why:** Roman asked to connect the stage 3 model to the app.
+- **Checks:** `ruff check .`: clean; `pytest`: 375 passed (3 new in `tests/journey/test_stage3_xgb.py`). Live API: Online Safety Act at Royal Assent -> median 2023-11-12, window 2023-10-27 to 2024-01-05 (real first order 2023-11-21); Tobacco and Vapes Act -> median 34 days from today; bill 4305 (in Parliament) -> null.
+
 ## 2026-10-25 05:16 — feat(analysis): stage 3 XGBoost, Royal Assent to law applied
 
 - **What:** `analysis/commencement_xgb.py`: the stage 2 XGBoost set-up for stage 3 (days from Royal Assent until the law applies, same definition as the journey test). Checkpoints at Royal Assent, +30, +90, +180 days and +1 year; features known at the checkpoint: the Act's commencement wording (on passing / after a period / by regulations appoint / fixed date), regulation powers, length, schedules, department, time in Parliament, timing, and regulations laid or drafted so far. One-step regressor and two-step (same-day classifier + regressor), Illia's tuned settings (classifier leaf size loosened), each Act counted once, train sessions 20-35 / test 36-39; 11 recent test Acts with no order yet left out. Compared with the rule of thumb and `journey.commencement.forecast_act`. Database only. Results in `backend/reports/commencement_xgb/`.

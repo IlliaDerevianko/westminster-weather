@@ -39,7 +39,6 @@ class TrackedStageNodeSchema(StageNodeSchema):
     sitting_count: int = 0
 
 
-
 class MilestoneDateSchema(BaseModel):
     label: str
     date: date
@@ -85,7 +84,6 @@ class GovernmentBillTrackingResponse(BaseModel):
     milestone_dates: list[MilestoneDateSchema] = []
 
 
-
 class TimelineQuantiles(BaseModel):
     p10_days: int = Field(..., description="10th percentile (optimistic) days from as_of")
     p50_days: int = Field(..., description="50th percentile (median) days from as_of")
@@ -122,10 +120,16 @@ class BillForecastResponse(BaseModel):
     )
     p_ra_before_session_end: float = Field(..., ge=0.0, le=1.0)
     commencement_probability: float | None = Field(
-        None, description="Not modelled yet (no commencement model); always null"
+        None,
+        description="Stage 3: probability that the Act's law applies on the day of Royal Assent "
+        "(no commencement order needed); 1 or 0 once known; null before Royal Assent",
     )
     time_to_royal_assent: TimelineQuantiles | None = None
-    time_to_commencement: TimelineQuantiles | None = None
+    time_to_commencement: TimelineQuantiles | None = Field(
+        None,
+        description="Stage 3: days from as_of until the law applies (first commencement order, "
+        "or the day its sections started); negative once applied; null before Royal Assent",
+    )
     primary_stop_risks: dict[StopReason, float] = Field(
         default_factory=dict,
         description="Probability distribution over potential stop states",

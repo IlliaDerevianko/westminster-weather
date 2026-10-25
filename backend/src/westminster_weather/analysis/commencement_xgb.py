@@ -29,15 +29,18 @@ from __future__ import annotations
 
 import json
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from xgboost import XGBClassifier, XGBRegressor
 
-from westminster_weather.analysis.remaining_time_v2 import REPORT_DIR as V2_DIR
-
 warnings.filterwarnings("ignore")
-REPORT_DIR = V2_DIR.parent / "commencement_xgb"
+# backend/reports/; the v2 folder holds Illia's tuned XGBoost settings (read, not imported, so
+# serving this model does not load the v2 tuning stack)
+REPORTS = Path(__file__).resolve().parents[3] / "reports"
+V2_DIR = REPORTS / "remaining_time_models_v2"
+REPORT_DIR = REPORTS / "commencement_xgb"
 TRAIN_SESSIONS = frozenset(range(20, 36))
 TEST_SESSIONS = frozenset(range(36, 40))
 CHECKPOINTS = {"Royal Assent": 0, "+30 days": 30, "+90 days": 90, "+180 days": 180, "+1 year": 365}

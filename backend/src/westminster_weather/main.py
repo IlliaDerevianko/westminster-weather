@@ -85,7 +85,6 @@ def _serialize_tracked_nodes(
             sitting_count=t.sitting_count,
         )
         for t in tracked_nodes
-
     ]
 
 
@@ -118,7 +117,6 @@ def _serialize_bill_at_date(
         stages=_serialize_tracked_nodes(tracked_nodes),
         milestone_dates=milestones,
     )
-
 
 
 @app.get("/health", tags=["system"])
@@ -171,7 +169,6 @@ async def list_bills(
     outcome: Annotated[str | None, Query(description="Filter by outcome")] = None,
     house: Annotated[str | None, Query(description="Filter by originating house")] = None,
 ) -> list[BillSummarySchema]:
-
     """List all UK Government Bills stored in Neon Lakebase Postgres."""
     rows = await list_all_bills_from_db(search=search, outcome=outcome, house=house)
     return [BillSummarySchema(**r) for r in rows]
@@ -193,10 +190,38 @@ def get_bill_forecast(
     and the risk of failing at each remaining stage (10,000 simulated paths)."""
     from westminster_weather.model.forecast import ForecastUnavailable, forecast_bill
 
+    as_of = as_of or date.today()
     try:
-        return forecast_bill(bill_id, as_of or date.today())
+        response = forecast_bill(bill_id, as_of)
     except ForecastUnavailable as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return _with_stage3(response, bill_id, as_of)
+
+
+def _with_stage3(response: BillForecastResponse, bill_id: int, as_of: date) -> BillForecastResponse:
+    """Fill the stage 3 fields (Royal Assent -> law applies) from the stage 3 XGBoost."""
+    from datetime import timedelta
+
+    from westminster_weather.journey import stage3_xgb
+    from westminster_weather.schemas.bills import TimelineQuantiles
+
+    s3 = stage3_xgb.forecast(bill_id, as_of)
+    if s3 is None:
+        return response
+    d = s3["days"]
+    return response.model_copy(
+        update={
+            "commencement_probability": round(s3["p_applies_on_royal_assent"], 4),
+            "time_to_commencement": TimelineQuantiles(
+                p10_days=d[0.1],
+                p50_days=d[0.5],
+                p90_days=d[0.9],
+                estimated_median_date=as_of + timedelta(days=d[0.5]),
+                p10_date=as_of + timedelta(days=d[0.1]),
+                p90_date=as_of + timedelta(days=d[0.9]),
+            ),
+        }
+    )
 
 
 @app.get(
@@ -208,11 +233,7 @@ async def get_tracked_bill(
     bill_id: str,
     as_of_date: Annotated[
         date | None,
-        Query(
-            description=(
-                "Historical date (YYYY-MM-DD) at which to evaluate the bill's state."
-            )
-        ),
+        Query(description=("Historical date (YYYY-MM-DD) at which to evaluate the bill's state.")),
     ] = None,
 ) -> GovernmentBillTrackingResponse:
     """Return any UK Government Bill's stage tracking state at `as_of_date` from Neon Postgres."""
@@ -247,4 +268,3 @@ async def get_tracked_bill(
         )
 
     raise HTTPException(status_code=404, detail=f"Bill '{bill_id}' not found")
-
