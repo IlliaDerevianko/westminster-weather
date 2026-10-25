@@ -428,10 +428,8 @@ function BillTrackerContent() {
                 Select Historical Snapshot Date (`as_of_date`)
               </label>
               <p className="text-xs text-slate-500">
-                Time-travel across all 3 phases of{" "}
-                <strong>{bill?.short_title ?? "this bill"}</strong> (
-                {bill?.earliest_signal_date ?? "—"} →{" "}
-                {bill?.outcome_date ?? bill?.as_of_date ?? "—"}).
+                Time-travel across all phases of{" "}
+                <strong>{bill?.short_title ?? "this bill"}</strong>.
               </p>
             </div>
 
