@@ -28,9 +28,9 @@ function Curve({
   targetDate: string;
 }) {
   const W = 1000;
-  const H = 380;
+  const H = 300;
   const pad = { l: 56, r: 16, t: 16, b: 52 };
-  const axisFont = 16;
+  const axisFont = 15;
   // Show one year from the forecast date, with a tick at the start of each month
   const start = new Date(allPoints[0].date);
   const end = new Date(start);
