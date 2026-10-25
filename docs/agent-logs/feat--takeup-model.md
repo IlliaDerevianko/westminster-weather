@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 04:40 — feat(analysis): 75/25 time split for the XGBoost tails experiment
+
+- **What:** `remaining_time_tails.py --75` trains on sessions 20-35 (bills introduced 2006-2021, 374 bills, 72%) and tests on 36-39 (2021-2026, 142 bills, 28%), the closest session boundary to 75/25; department one-hots follow the split's training bills; results and stakeholder chart in `backend/reports/remaining_time_tails_75_25/`. The default 62/38 run now also records its split in `metrics.json`, and the chart subtitle/footnote read it.
+- **Why:** Roman asked for a 75/25 train/test split and the general stakeholder chart for it.
+- **Checks:** `ruff check`: clean. 75/25, first reading, new model (long title + bill weights) vs v2 XGBoost: all bills 10.2 vs 10.3 weeks; quick bills 2.5 vs 6.6; typical 7.2 vs 10.4; 30-50 weeks 13.4 vs 8.4; over a year 32.5 vs 29.9. 80% range covers 77% of test bills (9% of the long ones). Hyperparameters are still the ones tuned on sessions 20-30.
+
 ## 2026-10-25 04:35 — docs(analysis): stakeholder chart covers all bills by stage
 
 - **What:** right panel of `backend/reports/remaining_time_tails/0_summary_for_stakeholders.png` now shows the typical miss for all bills by stage, previous vs new model (was long bills only); headline "Sharper Royal Assent forecasts, most of all for quick bills".

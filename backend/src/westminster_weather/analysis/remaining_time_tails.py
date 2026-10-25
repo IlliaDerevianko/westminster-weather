@@ -16,7 +16,8 @@ Variants:
 An 80% range (p10-p90 quantile XGBoost, same features and bill weights) is scored too.
 
 Run from ``backend/``: uv run python -m westminster_weather.analysis.remaining_time_tails
-(``--chart``: stakeholder chart from the saved predictions, no retraining)
+(``--chart``: stakeholder chart from the saved predictions, no retraining;
+``--75``: the 75/25 split, see ``SPLITS``)
 """
 
 from __future__ import annotations
@@ -49,6 +50,19 @@ from westminster_weather.takeup.bill_text import bill_long_titles
 
 warnings.filterwarnings("ignore")
 REPORT_DIR = V2_DIR.parent / "remaining_time_tails"
+# Time splits by session (train, test). "62/38" is the v2 split; "75/25" moves sessions 34-35
+# (2019-21) into training: 72% / 28% of bills, the closest session boundary to 75/25 (training
+# through session 36 would give 79/21). Hyperparameters stay those tuned on sessions 20-30.
+SPLITS = {
+    "62/38": (TRAIN_SESSIONS, TEST_SESSIONS),
+    "75/25": (frozenset(range(20, 36)), frozenset(range(36, 40))),
+}
+
+
+def report_dir_for(split: str) -> Path:
+    return REPORT_DIR if split == "62/38" else REPORT_DIR.parent / "remaining_time_tails_75_25"
+
+
 FIRST_READING = "1st House: 1st reading"
 BANDS = [-1, 70, 210, 350, 10_000]  # days: < 10, 10-30, 30-50, > 50 weeks
 BAND_LABELS = ["< 10 wk", "10-30 wk", "30-50 wk", "> 50 wk"]
@@ -88,19 +102,28 @@ def long_title_features(bill_ids: list[int]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def run() -> dict:
+def _intro_years(df: pd.DataFrame) -> str:
+    intro = pd.to_datetime(df.loc[df["anchor"] == FIRST_READING, "as_of"])
+    return f"{intro.min():%Y}–{intro.max():%Y}"
+
+
+def run(split: str = "62/38") -> dict:
+    train_sessions, test_sessions = SPLITS[split]
+    report_dir = report_dir_for(split)
     src = load_source_data()
-    df = build_dataset(src, TRAIN_SESSIONS, extended=True)
+    df = build_dataset(src, set(train_sessions), extended=True)
     lt = long_title_features(sorted(df["bill_id"].astype(int).unique()))
     df = df.merge(lt, on="bill_id", how="left")
     lt_cols = [c for c in lt.columns if c != "bill_id"]
 
     v2 = json.loads((V2_DIR / "metrics.json").read_text())
-    base_cols = v2["design"]["features"]
+    # v2 features; the top-department one-hots follow this split's training bills
+    depts = [c for c in df.columns if c.startswith("dept_")]
+    base_cols = [c for c in v2["design"]["features"] if not c.startswith("dept_")] + depts
     params = v2["tuned"]["XGBoost"]["params"]
 
-    train = df[df["session_id"].isin(TRAIN_SESSIONS)]
-    test = df[df["session_id"].isin(TEST_SESSIONS)]
+    train = df[df["session_id"].isin(train_sessions)]
+    test = df[df["session_id"].isin(test_sessions)]
     train_p, test_p = prepare(train, test)
 
     variants = {
@@ -147,13 +170,24 @@ def run() -> dict:
         )
         pred = m.predict(matrix(test_p, band_design.features))
         out[f"p{int(q * 100)}"] = to_days(pred, test_p, band_design)
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    out.to_csv(REPORT_DIR / "test_predictions.csv", index=False)
+    report_dir.mkdir(parents=True, exist_ok=True)
+    out.to_csv(report_dir / "test_predictions.csv", index=False)
 
     first = out[out["anchor"] == FIRST_READING].copy()
     first["band"] = pd.cut(first["target_days"], BANDS, labels=BAND_LABELS)
     inside = (first["p10"] <= first["target_days"]) & (first["target_days"] <= first["p90"])
+    n_tr, n_te = train["bill_id"].nunique(), test["bill_id"].nunique()
     result: dict = {
+        "split": {
+            "name": split,
+            "train_sessions": sorted(train_sessions),
+            "test_sessions": sorted(test_sessions),
+            "train_bills": n_tr,
+            "test_bills": n_te,
+            "train_share": round(n_tr / (n_tr + n_te), 3),
+            "train_years": _intro_years(train),
+            "test_years": _intro_years(test),
+        },
         "all_points_mae_days": {},
         "first_reading": {},
         "first_reading_inside_80_band": {
@@ -183,12 +217,13 @@ def run() -> dict:
             "corr_pred_real": round(float(first[name].corr(first["target_days"])), 2),
             "by_band": by_band,
         }
-    (REPORT_DIR / "metrics.json").write_text(json.dumps(result, indent=2))
+    (report_dir / "metrics.json").write_text(json.dumps(result, indent=2))
     return result
 
 
-def main() -> None:
-    r = run()
+def main(split: str = "62/38") -> None:
+    r = run(split)
+    print("Split:", r["split"])
     print("Mean error over all forecast points (days):")
     for name, v in r["all_points_mae_days"].items():
         print(f"  {name:30s} {v:6.1f}")
@@ -205,7 +240,7 @@ def main() -> None:
                 f"signed {b['median_signed_err_wk']:+6.1f}"
             )
     print("\nReal date inside the 80% range at first reading:", r["first_reading_inside_80_band"])
-    print(f"\nwrote {REPORT_DIR}")
+    print(f"\nwrote {report_dir_for(split)}")
 
 
 NEW = "+ long title, bill weights"
@@ -232,6 +267,7 @@ def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
     )
 
     t = pd.read_csv(report_dir / "test_predictions.csv")
+    sp = json.loads((report_dir / "metrics.json").read_text())["split"]
     total = t[t["anchor"] == FIRST_READING].set_index("bill_id")["target_days"]
     t["total_days"] = t["bill_id"].map(total)
     t["band"] = pd.cut(t["total_days"], BANDS, labels=BAND_LABELS)
@@ -270,15 +306,14 @@ def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
             fontsize=10,
             fontweight="bold",
         )
-    a.annotate(
-        f"Quick bills: {old[0]:.0f} → {new[0]:.0f} weeks",
-        (0 + w / 2, new[0]),
-        xytext=(0.35, max(old) * 0.62),
-        textcoords="data",
+    a.text(
+        0,
+        max(old[0], new[0]) + max(old) * 0.1,
+        f"{old[0]:.0f} → {new[0]:.0f} weeks",
+        ha="center",
         color=INK,
         fontsize=10.5,
         fontweight="bold",
-        arrowprops={"arrowstyle": "-", "color": INK_SOFT, "lw": 0.8},
     )
     a.set_xticks(x, list(kinds.values()), fontsize=10, color=INK_SOFT)
     a.set_ylabel("Typical miss on day one (weeks)", color=INK_SOFT)
@@ -377,7 +412,8 @@ def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
         0.04,
         0.905,
         "Typical miss in predicted time to Royal Assent (median, weeks). "
-        f"Tested on {n} Government Bills that passed in 2019–2026.",
+        f"Tested on {n} Government Bills introduced in {sp['test_years']}"
+        f" ({1 - sp['train_share']:.0%} of bills; {sp['train_share']:.0%} used for training).",
         fontsize=11,
         color=INK_SOFT,
     )
@@ -386,7 +422,7 @@ def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
         0.02,
         "Previous model = Illia's tuned XGBoost. New model = the same, plus what the bill's "
         "long title says it does (e.g. a routine money\nor emergency bill, how many "
-        "purposes), with each bill counted once. Both trained on 2006–2019 bills only.",
+        f"purposes), with each bill counted once. Both trained on {sp['train_years']} bills only.",
         fontsize=9,
         color=INK_SOFT,
     )
@@ -398,4 +434,9 @@ def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
 
 
 if __name__ == "__main__":
-    print(stakeholder_chart()) if "--chart" in sys.argv else main()
+    split = "75/25" if "--75" in sys.argv else "62/38"
+    if "--chart" in sys.argv:
+        print(stakeholder_chart(report_dir_for(split)))
+    else:
+        main(split)
+        print(stakeholder_chart(report_dir_for(split)))
