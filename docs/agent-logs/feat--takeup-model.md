@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 04:35 — feat(journey): stage 2 chart, Royal Assent predicted at first reading vs real
+
+- **What:** `journey/stage2_ra.py`: for every Government Bill in the passage-model rolling backtest that got Royal Assent (194), the first forecast (made when the bill came out) vs the real Royal Assent. Charts `backend/reports/journey/stage2_ra_by_bill.png` (per bill: predicted p50, 80% band, real) and `stage2_ra_pred_vs_real.png` (scatter + error histogram); per-bill table `stage2_ra_pred_vs_real.csv`.
+- **Why:** Roman asked for predicted vs real Royal Assent with the error and predicted time once the bill has come out (stage 3 is being built separately).
+- **Checks:** `ruff check`: clean. Median |error| 12.7 weeks, mean 15.2, median signed +0.5 (no overall bias); 18% within 4 weeks; real date inside the 80% band for 55% (band too narrow). Predictions stay in 15-40 weeks: quick bills (< 10 weeks) are predicted too late and long ones (> 60 weeks) too early.
+
 ## 2026-10-25 04:15 — feat(takeup): firm-start option for stage 1 (firm commitment -> first reading)
 
 - **What:** `TakeupData(firm_start=True)`: an idea's clock starts at its first firm commitment (firmness >= 2) visible at `as_of`; earlier mentions are ignored and ideas not yet firmly committed are not visible. `journey/stage_durations.py --firm` reruns predicted vs real with it (`backend/reports/journey/stage_durations_predicted_firm.csv`). Two tests (start date, no future rows).
