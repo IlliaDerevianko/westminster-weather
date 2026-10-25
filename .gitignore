@@ -33,6 +33,7 @@ backend/models/
 # Node / Frontend (future)
 node_modules/
 .next/
+.next-dev/
 next-env.d.ts
 out/
 dist/

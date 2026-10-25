@@ -46,6 +46,11 @@ npm install
 npm run dev
 ```
 
+Development assets are written to `frontend/.next-dev`; production builds use
+`frontend/.next`. This keeps `npm run build` from replacing the CSS and JavaScript
+used by a running development server. After changing this configuration, restart
+`npm run dev` and refresh the browser.
+
 Open <http://localhost:3000>. The frontend proxies `/api/v1/*` requests to the backend at `127.0.0.1:8000`, so the backend must be running.
 
 ### Running tests and linting
