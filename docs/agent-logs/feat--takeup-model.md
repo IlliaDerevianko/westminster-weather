@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 04:33 — docs(analysis): stakeholder chart for the XGBoost tails
+
+- **What:** `remaining_time_tails.py --chart` draws `backend/reports/remaining_time_tails/0_summary_for_stakeholders.png` in the style of `analysis/stakeholder_chart.py` (same colours and layout): day-one miss by kind of bill (previous vs new model), and the miss on long bills by stage against all other bills.
+- **Why:** Roman asked for a stakeholder graph like the existing ones.
+- **Checks:** `ruff check`: clean; rendered and checked for label overlaps.
+
 ## 2026-10-25 04:30 — feat(analysis): long-title features and bill weights for the XGBoost tails
 
 - **What:** `analysis/remaining_time_tails.py` retrains Illia's tuned v2 XGBoost (same bills, forecast points, train sessions 20-30 / test 34-39) with long-title features known at introduction (size: words, purposes, Acts named; flags: routine money, temporary, emergency, establish, regulate, criminal, NI executive), bill weights and recent-session weights, plus a p10-p90 quantile range. Results in `backend/reports/remaining_time_tails/`.

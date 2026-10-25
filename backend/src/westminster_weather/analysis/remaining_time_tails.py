@@ -16,13 +16,16 @@ Variants:
 An 80% range (p10-p90 quantile XGBoost, same features and bill weights) is scored too.
 
 Run from ``backend/``: uv run python -m westminster_weather.analysis.remaining_time_tails
+(``--chart``: stakeholder chart from the saved predictions, no retraining)
 """
 
 from __future__ import annotations
 
 import json
 import re
+import sys
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -205,5 +208,204 @@ def main() -> None:
     print(f"\nwrote {REPORT_DIR}")
 
 
+NEW = "+ long title, bill weights"
+OLD = "v2 XGBoost"
+
+
+def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
+    """Two panels in the style of ``stakeholder_chart``: day-one miss by kind of bill (previous
+    vs new model), and how the miss on long bills shrinks as they move through Parliament."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    from westminster_weather.analysis.remaining_time_dataset import STAGE_ANCHORS
+    from westminster_weather.analysis.stakeholder_chart import (
+        BASELINE_COLOUR,
+        GRID,
+        INK,
+        INK_SOFT,
+        MODEL_COLOUR,
+        PLAIN_LABELS,
+        SURFACE,
+        V1_COLOUR,
+    )
+
+    t = pd.read_csv(report_dir / "test_predictions.csv")
+    total = t[t["anchor"] == FIRST_READING].set_index("bill_id")["target_days"]
+    t["total_days"] = t["bill_id"].map(total)
+    t["band"] = pd.cut(t["total_days"], BANDS, labels=BAND_LABELS)
+    first = t[t["anchor"] == FIRST_READING]
+
+    def miss(df: pd.DataFrame, col: str) -> float:
+        return float(((df[col] - df["target_days"]).abs() / 7).median())
+
+    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11})
+    fig, (a, b) = plt.subplots(
+        1, 2, figsize=(14, 6.4), facecolor=SURFACE, gridspec_kw={"width_ratios": [1, 1.35]}
+    )
+
+    # A: day-one miss by kind of bill
+    kinds = {
+        "< 10 wk": "Quick bills\n(under 10 weeks)",
+        "10-30 wk": "Typical\n(10-30 weeks)",
+        "30-50 wk": "Longer\n(30-50 weeks)",
+        "> 50 wk": "Long bills\n(over a year)",
+    }
+    x = np.arange(len(kinds))
+    groups = [first[first["band"] == k] for k in kinds]
+    old = [miss(g, OLD) for g in groups]
+    new = [miss(g, NEW) for g in groups]
+    w = 0.36
+    a.bar(x - w / 2 - 0.01, old, w, color=V1_COLOUR, label="Previous model")
+    a.bar(x + w / 2 + 0.01, new, w, color=MODEL_COLOUR, label="New model")
+    for i, (o, n) in enumerate(zip(old, new, strict=True)):
+        a.text(i - w / 2 - 0.01, o + 0.6, f"{o:.0f}", ha="center", color=INK_SOFT, fontsize=10)
+        a.text(
+            i + w / 2 + 0.01,
+            n + 0.6,
+            f"{n:.0f}",
+            ha="center",
+            color=INK,
+            fontsize=10,
+            fontweight="bold",
+        )
+    a.annotate(
+        f"Quick bills: {old[0]:.0f} → {new[0]:.0f} weeks",
+        (0 + w / 2, new[0]),
+        xytext=(0.35, max(old) * 0.62),
+        textcoords="data",
+        color=INK,
+        fontsize=10.5,
+        fontweight="bold",
+        arrowprops={"arrowstyle": "-", "color": INK_SOFT, "lw": 0.8},
+    )
+    a.set_xticks(x, list(kinds.values()), fontsize=10, color=INK_SOFT)
+    a.set_ylabel("Typical miss on day one (weeks)", color=INK_SOFT)
+    a.set_title("On day one, by kind of bill", loc="left", color=INK, fontsize=12.5)
+    a.legend(frameon=False, loc="upper left", labelcolor=INK_SOFT)
+    a.set_ylim(0, max(old + new) * 1.15)
+
+    # B: long bills are caught as they move
+    anchors = [s for s in STAGE_ANCHORS if s in set(t["anchor"])]
+    long_ = t[t["band"] == "> 50 wk"]
+    rest = t[t["band"] != "> 50 wk"]
+    lm = [miss(long_[long_["anchor"] == s], NEW) for s in anchors]
+    rm = [miss(rest[rest["anchor"] == s], NEW) for s in anchors]
+    xs = range(len(anchors))
+    b.plot(xs, rm, color=BASELINE_COLOUR, lw=2, marker="o", ms=6, markeredgecolor=SURFACE)
+    b.plot(
+        xs,
+        lm,
+        color=MODEL_COLOUR,
+        lw=3,
+        marker="o",
+        ms=8,
+        markeredgecolor=SURFACE,
+        markeredgewidth=2,
+    )
+    b.annotate(
+        f"Long bills\n±{lm[0]:.0f} weeks on day one",
+        (0, lm[0]),
+        xytext=(10, 4),
+        textcoords="offset points",
+        color=INK,
+        fontsize=10.5,
+        fontweight="bold",
+    )
+    b.annotate(
+        f"±{lm[-1]:.0f} weeks\nat the end",
+        (len(anchors) - 1, lm[-1]),
+        xytext=(-12, 22),
+        textcoords="offset points",
+        color=INK,
+        fontsize=10,
+        ha="right",
+    )
+    b.annotate(
+        "All other bills",
+        (2, rm[2]),
+        xytext=(0, -26),
+        textcoords="offset points",
+        color=INK_SOFT,
+        fontsize=10.5,
+    )
+    b.set_xticks(
+        list(xs),
+        [{FIRST_READING: "1st\nreading"}.get(s, PLAIN_LABELS[s]) for s in anchors],
+        fontsize=9,
+        color=INK_SOFT,
+    )
+    b.set_ylabel("Typical miss (weeks)", color=INK_SOFT)
+    b.set_title(
+        "Long bills are caught as they move through Parliament",
+        loc="left",
+        color=INK,
+        fontsize=12.5,
+    )
+    b.set_ylim(0, max(lm) * 1.2)
+    for start, end, label in ((0, 4, "First House"), (5, 9, "Second House")):
+        b.annotate(
+            "",
+            xy=(start - 0.3, -0.17),
+            xytext=(end + 0.3, -0.17),
+            xycoords=("data", "axes fraction"),
+            textcoords=("data", "axes fraction"),
+            arrowprops={"arrowstyle": "-", "color": GRID, "lw": 1.5},
+        )
+        b.text(
+            (start + end) / 2,
+            -0.185,
+            label,
+            transform=b.get_xaxis_transform(),
+            ha="center",
+            va="top",
+            color=INK_SOFT,
+            fontsize=10,
+        )
+
+    for ax in (a, b):
+        ax.set_facecolor(SURFACE)
+        ax.yaxis.grid(True, color=GRID, lw=1)
+        ax.set_axisbelow(True)
+        for side in ("top", "right", "left"):
+            ax.spines[side].set_visible(False)
+        ax.spines["bottom"].set_color(GRID)
+        ax.tick_params(axis="both", length=0, colors=INK_SOFT)
+
+    n = len(first)
+    fig.text(
+        0.04,
+        0.95,
+        "Quick bills are now forecast twice as well; long bills still need time",
+        fontsize=16,
+        fontweight="bold",
+        color=INK,
+    )
+    fig.text(
+        0.04,
+        0.905,
+        "Typical miss in predicted time to Royal Assent (median, weeks). "
+        f"Tested on {n} Government Bills that passed in 2019–2026.",
+        fontsize=11,
+        color=INK_SOFT,
+    )
+    fig.text(
+        0.04,
+        0.02,
+        "Previous model = Illia's tuned XGBoost. New model = the same, plus what the bill's "
+        "long title says it does (e.g. a routine money\nor emergency bill, how many "
+        "purposes), with each bill counted once. Both trained on 2006–2019 bills only.",
+        fontsize=9,
+        color=INK_SOFT,
+    )
+    fig.subplots_adjust(left=0.06, right=0.98, top=0.8, bottom=0.25, wspace=0.22)
+    path = report_dir / "0_summary_for_stakeholders.png"
+    fig.savefig(path, dpi=200, facecolor=SURFACE)
+    plt.close(fig)
+    return path
+
+
 if __name__ == "__main__":
-    main()
+    print(stakeholder_chart()) if "--chart" in sys.argv else main()
