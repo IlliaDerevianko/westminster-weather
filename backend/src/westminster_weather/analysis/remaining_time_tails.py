@@ -181,6 +181,8 @@ def run(split: str = "62/38") -> dict:
     out = test_p[["bill_id", "short_title", "anchor", "as_of", "target_days"]].copy()
     for name, p in preds.items():
         out[name] = p
+    # rule of thumb: typical days left at this stage for training bills (v2's B1)
+    out[RULE] = np.expm1(test_p["b1_log"].to_numpy(float))
     # 80% range: p10 and p90 quantile models (log days), same features and bill weights
     band_design = variants["+ long title, bill weights"]
     for q in (0.1, 0.9):
@@ -276,6 +278,7 @@ def main(split: str = "62/38") -> None:
     print(f"\nwrote {report_dir_for(split)}")
 
 
+RULE = "Rule of thumb"
 NEW = "+ long title, bill weights"
 OLD = "v2 XGBoost"
 
@@ -466,10 +469,158 @@ def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
     return path
 
 
+def stage_chart(report_dir: Path = REPORT_DIR) -> Path:
+    """The general stakeholder chart in the style of ``stakeholder_chart.plot_v2``: average
+    error in days by the stage the forecast is made at, new vs previous model vs rule of
+    thumb, all bills."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    from westminster_weather.analysis.remaining_time_dataset import STAGE_ANCHORS
+    from westminster_weather.analysis.stakeholder_chart import (
+        BASELINE_COLOUR,
+        GRID,
+        INK,
+        INK_SOFT,
+        MODEL_COLOUR,
+        PLAIN_LABELS,
+        SURFACE,
+        V1_COLOUR,
+    )
+
+    t = pd.read_csv(report_dir / "test_predictions.csv")
+    sp = json.loads((report_dir / "metrics.json").read_text())["split"]
+    t = t[t["anchor"].isin(STAGE_ANCHORS)]
+    anchors = [a for a in STAGE_ANCHORS if a in set(t["anchor"])]
+
+    def mae(col: str) -> pd.Series:
+        e = (t[col] - t["target_days"]).abs()
+        return e.groupby(t["anchor"]).mean().reindex(anchors)
+
+    new, old, base = mae(NEW), mae(OLD), mae(RULE)
+    overall = {c: float((t[c] - t["target_days"]).abs().mean()) for c in (NEW, OLD, RULE)}
+    x = range(len(anchors))
+
+    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11})
+    fig, ax = plt.subplots(figsize=(12, 6.4), facecolor=SURFACE)
+    ax.set_facecolor(SURFACE)
+    ax.fill_between(x, new, base, color=MODEL_COLOUR, alpha=0.07, lw=0)
+    for series, colour, lw, ms in (
+        (base, BASELINE_COLOUR, 2, 6),
+        (old, V1_COLOUR, 2, 6),
+        (new, MODEL_COLOUR, 3, 8),
+    ):
+        ax.plot(
+            x,
+            series,
+            color=colour,
+            lw=lw,
+            marker="o",
+            ms=ms,
+            markeredgecolor=SURFACE,
+            markeredgewidth=1.5,
+            solid_capstyle="round",
+        )
+    handles = [
+        plt.Line2D([], [], color=c, lw=lw, marker="o", ms=ms, markeredgecolor=SURFACE)
+        for c, lw, ms in ((MODEL_COLOUR, 3, 8), (V1_COLOUR, 2, 6), (BASELINE_COLOUR, 2, 6))
+    ]
+    labels = [
+        f"New model  ·  average ±{overall[NEW]:.0f} days",
+        f"Previous model  ·  average ±{overall[OLD]:.0f} days",
+        f"Rule of thumb  ·  average ±{overall[RULE]:.0f} days",
+    ]
+    leg = ax.legend(
+        handles,
+        labels,
+        loc="upper right",
+        frameon=False,
+        fontsize=11,
+        handlelength=2.6,
+        labelcolor=INK_SOFT,
+    )
+    leg.get_texts()[0].set_color(INK)
+    leg.get_texts()[0].set_fontweight("bold")
+    ax.annotate(
+        f"±{new.iloc[0]:.0f} days at introduction\n(previous model ±{old.iloc[0]:.0f})",
+        (0, new.iloc[0]),
+        xytext=(0.25, new.iloc[0] * 0.5),
+        textcoords="data",
+        color=INK,
+        fontsize=10.5,
+        fontweight="bold",
+        va="top",
+        arrowprops={"arrowstyle": "-", "color": INK_SOFT, "lw": 0.8},
+    )
+    ax.set_xticks(list(x), [PLAIN_LABELS[a] for a in anchors], fontsize=10, color=INK_SOFT)
+    ax.set_xlim(-0.4, len(anchors) - 0.5)
+    ax.set_ylim(0, max(base.max(), old.max(), new.max()) * 1.12)
+    ax.set_ylabel("Average forecast error (days)", color=INK_SOFT)
+    ax.yaxis.grid(True, color=GRID, lw=1)
+    ax.set_axisbelow(True)
+    for side in ("top", "right", "left"):
+        ax.spines[side].set_visible(False)
+    ax.spines["bottom"].set_color(GRID)
+    ax.tick_params(axis="both", length=0, colors=INK_SOFT)
+    for start, end, label in ((0, 4, "First House"), (5, 9, "Second House")):
+        ax.annotate(
+            "",
+            xy=(start - 0.3, -0.155),
+            xytext=(end + 0.3, -0.155),
+            xycoords=("data", "axes fraction"),
+            textcoords=("data", "axes fraction"),
+            arrowprops={"arrowstyle": "-", "color": GRID, "lw": 1.5},
+        )
+        ax.text(
+            (start + end) / 2,
+            -0.17,
+            label,
+            transform=ax.get_xaxis_transform(),
+            ha="center",
+            va="top",
+            color=INK_SOFT,
+            fontsize=10,
+        )
+
+    fig.text(
+        0.06,
+        0.95,
+        "Royal Assent forecasts get sharper as a bill moves through Parliament",
+        fontsize=16,
+        fontweight="bold",
+        color=INK,
+    )
+    fig.text(
+        0.06,
+        0.905,
+        "Average error in predicted days to Royal Assent, by the stage at which the "
+        f"forecast is made. Tested on {sp['test_bills']} bills introduced in "
+        f"{sp['test_years']}.",
+        fontsize=11,
+        color=INK_SOFT,
+    )
+    fig.text(
+        0.06,
+        0.02,
+        "Rule of thumb = typical time left for past bills at the same stage. "
+        "Previous model = Illia's tuned XGBoost.\nNew model = the same, plus what the "
+        "bill's long title says it does, with each bill counted once. "
+        f"All trained on {sp['train_years']} bills only ({sp['train_share']:.0%} of bills).",
+        fontsize=9,
+        color=INK_SOFT,
+    )
+    fig.subplots_adjust(left=0.07, right=0.97, top=0.85, bottom=0.25)
+    path = report_dir / "1_by_stage_for_stakeholders.png"
+    fig.savefig(path, dpi=200, facecolor=SURFACE)
+    plt.close(fig)
+    return path
+
+
 if __name__ == "__main__":
     split = "75/25" if "--75" in sys.argv else "62/38"
-    if "--chart" in sys.argv:
-        print(stakeholder_chart(report_dir_for(split)))
-    else:
+    if "--chart" not in sys.argv:
         main(split)
-        print(stakeholder_chart(report_dir_for(split)))
+    print(stakeholder_chart(report_dir_for(split)))
+    print(stage_chart(report_dir_for(split)))

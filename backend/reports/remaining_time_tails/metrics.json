@@ -32,7 +32,8 @@
     "v2 XGBoost": 59.9,
     "+ long title": 59.9,
     "+ long title, bill weights": 60.7,
-    "+ long title, recent bills weigh more": 60.8
+    "+ long title, recent bills weigh more": 60.8,
+    "+ long title, Act length (hindsight)": 57.5
   },
   "first_reading": {
     "v2 XGBoost": {
@@ -172,6 +173,41 @@
           "real_median_wk": 59.8,
           "median_abs_err_wk": 28.9,
           "median_signed_err_wk": -28.9
+        }
+      }
+    },
+    "+ long title, Act length (hindsight)": {
+      "median_abs_err_wk": 9.9,
+      "mean_abs_err_wk": 13.3,
+      "corr_pred_real": 0.63,
+      "by_band": {
+        "< 10 wk": {
+          "n": 59,
+          "pred_median_wk": 10.5,
+          "real_median_wk": 2.1,
+          "median_abs_err_wk": 6.3,
+          "median_signed_err_wk": 6.3
+        },
+        "10-30 wk": {
+          "n": 52,
+          "pred_median_wk": 22.4,
+          "real_median_wk": 20.2,
+          "median_abs_err_wk": 7.7,
+          "median_signed_err_wk": 0.8
+        },
+        "30-50 wk": {
+          "n": 49,
+          "pred_median_wk": 35.7,
+          "real_median_wk": 42.3,
+          "median_abs_err_wk": 8.5,
+          "median_signed_err_wk": -7.0
+        },
+        "> 50 wk": {
+          "n": 36,
+          "pred_median_wk": 37.6,
+          "real_median_wk": 59.8,
+          "median_abs_err_wk": 23.9,
+          "median_signed_err_wk": -23.9
         }
       }
     }

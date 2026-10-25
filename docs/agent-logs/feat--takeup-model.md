@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 04:52 — docs(analysis): general by-stage stakeholder chart for the XGBoost tails
+
+- **What:** `remaining_time_tails.py` saves the rule-of-thumb forecast (v2's B1, from training bills) with the test predictions and draws `1_by_stage_for_stakeholders.png` in the layout of `stakeholder_chart.plot_v2` (average error in days by stage: new model, previous model, rule of thumb, all bills), for both splits. Listed in the 75/25 stakeholder README.
+- **Why:** Roman asked to repeat the general stakeholder graph.
+- **Checks:** `ruff check`: clean; rendered and checked. 75/25: average ±53 days new, ±54 previous, ±73 rule of thumb; at introduction ±98 vs ±100.
+
 ## 2026-10-25 04:50 — docs(analysis): stakeholder summary for the 75/25 XGBoost results
 
 - **What:** `backend/reports/remaining_time_tails_75_25/README.md`: plain-language summary for stakeholders (chart, how it was tested, results by kind of bill and by stage, what changed, limits, what would help next, files).
