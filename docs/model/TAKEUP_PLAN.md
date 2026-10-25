@@ -1,5 +1,7 @@
 # Westminster Weather: Phase 1 → 2 Take-up Model Plan
 
+> **Status (2026-10-25):** the take-up feature (promises pages, `/api/v1/takeup/*`, CLI, ingestion/NLP pipeline, evaluation and replays) has been removed. Only `takeup/model.py` (mixture cure model), `conformal.py`, `signals.py`, `tables.py` and `db.py` remain, because the stage 3 commencement model (`journey/commencement.py`) reuses them. The rest of this plan is kept as a record.
+
 **Owner:** Roman · **Branch:** `feat/takeup-model` · **Deadline:** Sunday 25 October 2026, 16:30 (code freeze 14:30) · **Status:** checkpoint 1 approved; checkpoint 2 (contract) awaiting approval
 
 The model answers: *the government has committed to legislate on a topic; will a bill on it get its first reading (either House), and when?*
