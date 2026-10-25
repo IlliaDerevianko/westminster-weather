@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 05:27 — feat(journey): journey test and stage durations use the stage 3 XGBoost
+
+- **What:** `journey/journey_test.py` (S3 checkpoints) and `journey/stage_durations.py` (stage 3 at Royal Assent) now predict with `journey.stage3_xgb` (median days until the law applies) instead of `journey.commencement.forecast_act`. Regenerated `backend/reports/journey/journey_test.csv`, `journey_error_by_stage.png` and `stage_durations_predicted.csv` (the earlier `ra` and `*_improved` columns carried over).
+- **Why:** Roman asked for the end-to-end journey to use the new stage 3 model.
+- **Checks:** `ruff check`: clean. Journey (30 cases), S3 at Royal Assent: median miss 8.1 -> 1.8 weeks, mean 12.0 -> 10.3; S3 +3 months (8 cases): median 7.6 -> 7.4, mean 20.0 -> 20.7. Stage durations (47 cases), stage 3: median miss 7.9 -> 1.9 weeks, mean 11.5 -> 10.7. Stages 1 and 2 unchanged.
+
 ## 2026-10-25 05:24 — feat(api): stage 3 XGBoost in the bill forecast endpoint
 
 - **What:** `journey/stage3_xgb.py` serves the two-step stage 3 XGBoost (same features and target as `analysis/commencement_xgb.py`): a same-day classifier plus p10/p50/p90 quantile regressors, fitted per month on checkpoints before the month's first day whose outcome was already known, using only events dated on or before `as_of`. `GET /api/v1/bills/{id}/forecast` now fills `commencement_probability` (P(law applies on Royal Assent day); 1/0 once known) and `time_to_commencement` (days from `as_of` until the law applies; negative once applied) for Acts; both stay null before Royal Assent. Recent Acts with no order whose text leaves commencement to regulations count as still awaiting their first order (Tobacco and Vapes Act 2026). `analysis/commencement_xgb.py` reads Illia's settings by path instead of importing the v2 tuning module. Database only.

@@ -6,8 +6,8 @@ using only information known that day:
   predicted first reading = promise + t_50 weeks.
 - Stage 2 (first reading -> Royal Assent): Aleks's passage model, first stored rolling
   forecast for the bill (`backtest_forecasts`), Royal Assent p50.
-- Stage 3 (Royal Assent -> law applied): `journey.commencement.forecast_act` at Royal Assent:
-  first commencement order p50 if orders are likely, else Royal Assent itself.
+- Stage 3 (Royal Assent -> law applied): stage 3 XGBoost (`journey.stage3_xgb`) at Royal
+  Assent, median days until the law applies.
 `--firm`: stage 1 starts at the idea's first firm commitment (firmness >= 2), not its first
 mention; ideas never firmly committed are left out.
 Read-only. Run: uv run python -m westminster_weather.journey.stage_durations [--firm]
@@ -18,7 +18,7 @@ import warnings
 
 import pandas as pd
 
-from westminster_weather.journey import commencement as cm
+from westminster_weather.journey import stage3_xgb
 from westminster_weather.journey.journey_test import OUT_DIR, load
 from westminster_weather.takeup import evaluate as ev
 from westminster_weather.takeup.bill_text import first_readings
@@ -87,16 +87,8 @@ def run(firm: bool = False) -> pd.DataFrame:
         row.update(stage2_pred_weeks=pred2, stage2_real_weeks=(ra - first).days / 7)
 
         # stage 3, predicted at Royal Assent
-        pred3 = None
-        try:
-            a = cm.forecast_act(bill, ra.date())
-            if a["needs_orders"]["p"] >= 0.5:
-                d50 = (a["first_order"].get("calibrated_dates") or {}).get("t_50")
-                pred3 = (pd.Timestamp(d50) - ra).days / 7 if d50 else None
-            else:
-                pred3 = 0.0
-        except (KeyError, ValueError):
-            pass
+        f3 = stage3_xgb.forecast(bill, ra.date())
+        pred3 = f3["days"][0.5] / 7 if f3 is not None else None
         row.update(stage3_pred_weeks=pred3, stage3_real_weeks=(applied - ra).days / 7)
         rows.append(row)
 

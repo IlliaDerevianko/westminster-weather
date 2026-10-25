@@ -15,8 +15,8 @@ Predicted law-applied date at each checkpoint:
 - Stage 2 (first reading, a middle stage, last stage before Royal Assent): Aleks's passage
   model (rolling backtest stored in `backtest_forecasts`) gives the Royal Assent date (p50),
   plus the median Royal Assent -> law applied of Acts finished before that day.
-- Stage 3 (Royal Assent, +13 weeks): stage-3 commencement model (`forecast_act`): first-order
-  date (p50, calibrated) if it says orders are needed, else the Royal Assent date.
+- Stage 3 (Royal Assent, +13 weeks): stage 3 XGBoost (`journey.stage3_xgb`): median date the
+  law applies.
 
 Read-only. Run: uv run python -m westminster_weather.journey.journey_test [n_cases]
 """
@@ -30,7 +30,7 @@ import pandas as pd
 from sqlalchemy import text
 
 from westminster_weather.db import get_sync_pooled_engine
-from westminster_weather.journey import commencement as cm
+from westminster_weather.journey import stage3_xgb
 from westminster_weather.takeup import evaluate as ev
 from westminster_weather.takeup.bill_text import first_readings
 from westminster_weather.takeup.signals import TakeupData
@@ -164,19 +164,10 @@ def run(n_cases: int = 30) -> pd.DataFrame:
         ):
             if as_of > applied or (label != "S3: Royal Assent" and as_of >= applied):
                 continue
-            try:
-                a = cm.forecast_act(bill, as_of.date())
-            except (KeyError, ValueError):
+            f = stage3_xgb.forecast(bill, as_of.date())
+            if f is None:
                 continue
-            needs = a["needs_orders"]
-            if needs.get("observed"):
-                continue  # first order already seen: nothing left to predict
-            if needs["p"] >= 0.5:
-                d50 = (a["first_order"].get("calibrated_dates") or {}).get("t_50")
-                pred = pd.Timestamp(d50) if d50 else ra + pd.Timedelta(weeks=26)
-            else:
-                pred = ra
-            add(label, as_of, pred)
+            add(label, as_of, as_of + pd.Timedelta(days=f["days"][0.5]))
 
         print(
             f"  {c['idea_id']} -> {titles.get(bill)} (applied {applied.date()}): "
