@@ -1,5 +1,11 @@
 # Agent log: `feat/remaining-time-model-v2`
 
+## 2026-10-25 — docs(model): guide to the days-to-Royal-Assent tree models
+
+- **What:** New `docs/model/REMAINING_TIME_MODELS.md`: current results, files and commands, problem definition, evaluation rules (no test-set choices, time-ordered CV, no look-ahead, out-of-fold encodings, like-for-like comparisons, bill-level bootstrap), every feature group with its CV effect, every experiment tried with results (including the ones that failed), tuned hyperparameters, tuning infrastructure and runtime lessons, a step-by-step experiment recipe, and a ranked list of next steps.
+- **Why:** User asked to document the whole process for future tuning and optimisation.
+- **Checks:** none (docs only). Numbers taken from the v1 and v2 `metrics.json`, CSVs and run log.
+
 ## 2026-10-25 — docs(reports): v2 results, stakeholder comparison chart and faster tuning
 
 - **What:** Ran the v2 pipeline and committed `backend/reports/remaining_time_models_v2/` (charts, error tables, test predictions, design experiments, metrics and README). Tuning now runs 8 Optuna trials in parallel (one thread per model) with median pruning after 3 of 5 folds, and logs live; trial counts and search spaces are unchanged. Added `plot_v2` to `stakeholder_chart.py`: new model vs previous v1 XGBoost vs rule of thumb, with a legend showing each line's average error.
