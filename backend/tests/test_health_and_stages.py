@@ -186,6 +186,29 @@ async def test_post_royal_assent_stages_and_model_interface_from_neon_db() -> No
     assert "prospective" in by_stage["law_fully_in_force"]["summary"]
 
 
+@pytest.mark.parametrize("bill_id", [33, 40, 45, 57, 3751])
+async def test_zero_si_post_royal_assent_stages_are_skipped_or_none_yet(bill_id: int) -> None:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get(f"/api/v1/bills/{bill_id}")
+    assert response.status_code == 200
+    by_stage = {s["stage"]: s for s in response.json()["stages"]}
+    fully_in_force = by_stage["law_fully_in_force"]["status"] == StageStatus.COMPLETED
+    # A stage with no SIs after Royal Assent is skipped once the Act is fully in force;
+    # otherwise it stays upcoming but says none exist yet, with a link to the Act
+    for st in ("commencement_orders", "regulations_drafted", "regulations_laid"):
+        stage = by_stage[st]
+        if stage["sitting_count"] > 0:
+            continue
+        if fully_in_force:
+            assert stage["status"] == StageStatus.SKIPPED
+        else:
+            assert stage["status"] == StageStatus.UPCOMING
+            assert stage["summary"].startswith("None ")
+            assert " yet — " in stage["summary"]
+            assert stage["web_url"].startswith("https://www.legislation.gov.uk/ukpga/")
+
+
 async def test_fast_tracked_bypassed_stages_marked_for_bill_4296() -> None:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

@@ -1053,7 +1053,35 @@ async def evaluate_parliament_bill_from_db(
                         )
                     )
                 else:
-                    tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
+                    # Still upcoming (provisions remain to be commenced), but say that none
+                    # exist yet so the front end can tell this apart from a bill before Royal
+                    # Assent.
+                    none_yet_msg = {
+                        BillStage.COMMENCEMENT_ORDERS: (
+                            "None made yet — No Commencement Order SIs under this Act on "
+                            "legislation.gov.uk, and the Act is not yet fully in force."
+                        ),
+                        BillStage.REGULATIONS_DRAFTED: (
+                            "None drafted yet — No Draft Statutory Instruments (UKDSI) under "
+                            "this Act on legislation.gov.uk, and the Act is not yet fully in force."
+                        ),
+                        BillStage.REGULATIONS_LAID: (
+                            "None laid yet — No Statutory Instruments (UKSI) under this Act on "
+                            "legislation.gov.uk, and the Act is not yet fully in force."
+                        ),
+                    }[post_st]
+                    tracked_nodes.append(
+                        TrackedStageNode(
+                            node=node,
+                            status=StageStatus.UPCOMING,
+                            summary=none_yet_msg,
+                            source_reference=leg_base_url,
+                            source_api_url=leg_xml_url,
+                            web_url=leg_base_url,
+                            visible_events=[],
+                            sitting_count=0,
+                        )
+                    )
             elif not vis_stage_events:
                 tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
             else:
