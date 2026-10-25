@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 01:43 — fix(takeup): stricter promise -> bill links; rerun checks
+
+- **What:** `nlp.link_groups` now never links routine money bills (Supply and Appropriation, Consolidated Fund), links Finance Bills only within ~1 year, refuses procedural topics ("Madam Deputy Speaker"), and requires a strong match (≥ 0.45, or a named bill with ≥ 0.35) for links more than 2 years after the promise; 4 regression tests. Re-ran NLP on takeup-dev, the stage 1 evaluation (report and charts regenerated), the one-year-later check and the journey test; added the stage-duration charts.
+- **Why:** Roman checked the real data: bills spend at most ~2 years in Parliament, yet 28 promise -> bill links had 4–5-year gaps, many to unrelated bills (e.g. "Madam Deputy Speaker" -> Financial Services Act 2012).
+- **Checks:** `pytest tests/takeup/test_takeup_nlp.py`: 27 passed. Links 192 -> 164; gaps > 4 years 28 -> 5; median gap 28 weeks. Journey test, stage 1 error at the promise 89.5 -> 52.6 weeks, at +1 year 59.7 -> 37.9 (sample of 30 cases changed with the links, so stage 2/3 numbers are not like-for-like). Stage 1 hazard 80% window: 2019 split 77% coverage at 102 weeks wide (was 74% at 206). Repeated promises still ~6x more likely to get a bill (17.6% vs 3.0%).
+
 ## 2026-10-25 01:11 — feat(journey): end-to-end journey test (promise → law applied) with error chart
 
 - **What:** `journey/journey_test.py`: for 30 sampled past cases (promise → Government Bill → Act, Royal Assent by mid-2025), predicts "when will this law apply?" at 7 checkpoints across stages 1–3 using only information known that day (stage 1 hazard model trained on earlier promises + historical medians; Aleks's rolling stage-2 backtest + median Royal Assent → applied; stage-3 `forecast_act`). Writes `backend/reports/journey/journey_test.csv` and `journey_error_by_stage.png`.

@@ -534,3 +534,47 @@ def test_review_csv_guard_and_score(tmp_path: Path, world):
     assert scores["review_mentions"]["positives_checked"] == n_kept
     assert scores["review_mentions"]["precision"] == pytest.approx((n_kept - 1) / n_kept)
     assert scores["review_links"] == {"labelled": 0}
+
+
+def _link_one(topic, bill_title, gap_days, long_title="", text=None):
+    """Link a single group to a single candidate bill (plus a decoy) and return the row."""
+    t = pd.Timestamp("2015-01-05")
+    groups = pd.DataFrame(
+        [{"group_id": "g1", "trigger_date": t, "topic": topic, "text": text or topic, "names": ""}]
+    )
+    bills = pd.DataFrame(
+        [
+            {"bill_id": 1, "title": bill_title, "long_title": long_title,
+             "first_reading": t + pd.Timedelta(days=gap_days)},
+            {"bill_id": 2, "title": "Zoo Licensing Bill", "long_title": "A Bill about zoos",
+             "first_reading": t + pd.Timedelta(days=30)},
+        ]
+    )  # fmt: skip
+    return nlp.link_groups(groups, bills).iloc[0]
+
+
+def test_routine_money_bills_are_never_linked():
+    row = _link_one("supply and appropriation of money", "Supply and Appropriation Act 2016", 300)
+    assert pd.isna(row["bill_id"]) or int(row["bill_id"]) != 1
+
+
+def test_finance_bill_only_within_a_year():
+    near = _link_one("finance bill tax relief changes", "Finance Act 2015", 120)
+    far = _link_one("finance bill tax relief changes", "Finance Act 2017", 800)
+    assert int(near["bill_id"]) == 1
+    assert pd.isna(far["bill_id"]) or int(far["bill_id"]) != 1
+
+
+def test_procedural_topic_is_not_linked():
+    row = _link_one("Madam Deputy Speaker", "Deputy Speaker Arrangements Bill", 200)
+    assert pd.isna(row["bill_id"])
+
+
+def test_long_gap_needs_a_strong_match():
+    weak = _link_one(
+        "modernise consumer rules", "Consumer and Markets Reform Bill", 4 * 365,
+        long_title="A Bill to make provision about competition, markets and digital platforms",
+    )  # fmt: skip
+    assert pd.isna(weak["bill_id"])
+    strong = _link_one("recall of MPs petitions", "Recall of MPs Act 2019", 4 * 365)
+    assert int(strong["bill_id"]) == 1

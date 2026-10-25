@@ -74,6 +74,21 @@ GROUP_SIM, LINK_AUTO, LINK_CHECK = 0.30, 0.30, 0.20
 MAX_GAP_DAYS = 730  # split a topic group where mentions are more than 2 years apart
 LINK_BEFORE_DAYS = 7  # a bill first read up to 7 days before the trigger can still match
 LINK_MAX_YEARS = 5
+# Link-quality rules (checked against the real data: stage 2 lasts at most ~2 years, but many
+# weak links had promise -> bill gaps of 4-5 years to unrelated later bills).
+LONG_GAP_YEARS = 2  # beyond this a link needs a strong match or the bill named in the text
+LINK_LONG_GAP = 0.45  # similarity needed for a link more than LONG_GAP_YEARS after the trigger
+LINK_NAMED_FAR = 0.35  # a bill named in the text but read years later still needs this match
+FINANCE_MAX_DAYS = 400  # "in the Finance Bill" means the next one: link only within ~a year
+ROUTINE_BILL_RE = re.compile(
+    r"^(?:supply and appropriation|consolidated fund|appropriation)\b", re.I
+)  # money bills passed every year: never the delivery of a specific promise
+FINANCE_BILL_RE = re.compile(r"^finance\b", re.I)
+PROCEDURAL_WORDS = {
+    "madam", "deputy", "speaker", "honourable", "hon", "friend", "member", "members", "house",
+    "minister", "ministers", "statement", "update", "debate", "question", "questions", "lords",
+    "commons", "noble", "lord", "lady", "gentleman", "colleague", "colleagues",
+}  # fmt: skip
 SOURCE_RANK = {"wms": 0, "hansard_written": 1, "hansard_spoken": 2}  # as in signals.py
 FIRMNESS = {"vague": 0, "medium": 1, "firm": 2}
 
@@ -217,6 +232,11 @@ def _content_words(text: str) -> list[str]:
 def is_specific(topic: str) -> bool:
     """A topic is specific if it has at least two words that say what it is about."""
     return len(_content_words(topic)) >= 2
+
+
+def is_linkable_topic(topic: str) -> bool:
+    """Specific once procedural words are removed ("Madam Deputy Speaker" is not a topic)."""
+    return len([w for w in _content_words(topic) if w not in PROCEDURAL_WORDS]) >= 2
 
 
 VERB_START_RE = re.compile(
@@ -785,14 +805,19 @@ def link_groups(
         (gvec @ emb.encode(_bill_short(bills).tolist()).T).toarray(),
     )
     fr = bills["first_reading"].to_numpy(dtype="datetime64[ns]")
+    short = _bill_short(bills)
+    routine = short.str.match(ROUTINE_BILL_RE).to_numpy()
+    finance = short.str.match(FINANCE_BILL_RE).to_numpy()
     names = bill_name_patterns(bills)
     mid = (emb.link_auto + emb.link_check) / 2
+    long_gap = np.timedelta64(int(LONG_GAP_YEARS * 365.25), "D")
     rows = []
     for i, g in enumerate(groups.itertuples(index=False)):
         t = pd.Timestamp(g.trigger_date)
         lo = (t - pd.Timedelta(days=before_days)).to_datetime64()
         hi = (t + pd.DateOffset(years=max_years)).to_datetime64()
-        ok = (fr >= lo) & (fr <= hi)
+        fin_hi = (t + pd.Timedelta(days=FINANCE_MAX_DAYS)).to_datetime64()
+        ok = (fr >= lo) & (fr <= hi) & ~routine & (~finance | (fr <= fin_hi))
         if not ok.any():
             rows.append((g.group_id, None, np.nan, None, None))
             continue
@@ -800,9 +825,20 @@ def link_groups(
         named = _named_bill(getattr(g, "names", ""), names, ok)
         j = named if named is not None else int(np.argmax(s))
         best, cand = float(s[j]), int(bills["bill_id"].iloc[j])
+        far = fr[j] - t.to_datetime64() > long_gap
+        linkable = is_linkable_topic(str(getattr(g, "topic", "") or ""))
         decision, how = None, None
-        if named is not None:  # the group's own words name this bill
+        if named is not None and far and float(sim[i][j]) < LINK_NAMED_FAR:
+            # a bill named years later with unrelated wording (e.g. a debate on another bill)
+            decision, how = None, "rule"
+        elif named is not None:  # the group's own words name this bill
             decision, how = cand, "auto"
+        elif not linkable:  # e.g. "Madam Deputy Speaker": nothing to match on
+            decision, how = None, "rule"
+        elif far:  # long gap: only a strong match, never a borderline one
+            decision, how = (
+                (cand, "auto") if best >= max(LINK_LONG_GAP, emb.link_auto) else (None, "rule")
+            )
         elif best >= emb.link_auto:
             decision, how = cand, "auto"
         elif best >= emb.link_check:
