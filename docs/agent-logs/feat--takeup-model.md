@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 04:59 — docs(analysis): stakeholder chart, forecast miss vs days still to go by stage
+
+- **What:** `remaining_time_tails.py` draws `3_miss_vs_time_left.png` (75/25 test bills): at each stage, typical days still to go (bars) and the new model's typical miss (line), both medians in days on one axis; listed in the stakeholder README.
+- **Why:** Roman asked for the general stakeholder graph showing the miss decreasing towards Royal Assent.
+- **Checks:** `ruff check`: clean; rendered and checked for overlaps. ±72 days at introduction (176 to go), ±29 at second-House 1st reading (92), ±9 at second-House 3rd reading (14).
+
 ## 2026-10-25 04:54 — docs(analysis): predicted vs real chart on test bills only
 
 - **What:** `remaining_time_tails.py` draws `2_predicted_vs_real_test.png`: the 142 test bills (75/25 split), sorted by real time, one line for real weeks to Royal Assent and one for the new model's day-one prediction; listed in the stakeholder README.

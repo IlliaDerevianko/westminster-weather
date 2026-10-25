@@ -713,6 +713,128 @@ def pred_vs_real_chart(report_dir: Path = REPORT_DIR) -> Path:
     return path
 
 
+def miss_vs_left_chart(report_dir: Path = REPORT_DIR) -> Path:
+    """Test bills, by the stage the forecast is made at: typical days still to go and the new
+    model's typical miss (medians, days), so the shrinking miss reads against the time left."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    from westminster_weather.analysis.remaining_time_dataset import STAGE_ANCHORS
+    from westminster_weather.analysis.stakeholder_chart import (
+        GRID,
+        INK,
+        INK_SOFT,
+        MODEL_COLOUR,
+        PLAIN_LABELS,
+        SURFACE,
+    )
+
+    t = pd.read_csv(report_dir / "test_predictions.csv")
+    sp = json.loads((report_dir / "metrics.json").read_text())["split"]
+    t = t[t["anchor"].isin(STAGE_ANCHORS)].assign(e=lambda d: (d[NEW] - d["target_days"]).abs())
+    anchors = [a for a in STAGE_ANCHORS if a in set(t["anchor"])]
+    g = t.groupby("anchor").agg(left=("target_days", "median"), miss=("e", "median"))
+    g = g.reindex(anchors)
+    x = np.arange(len(anchors))
+
+    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 11})
+    fig, ax = plt.subplots(figsize=(12, 6.4), facecolor=SURFACE)
+    ax.set_facecolor(SURFACE)
+    ax.bar(x, g["left"], 0.62, color="#e6e5e1", label="Days still to go (typical bill)")
+    ax.plot(
+        x,
+        g["miss"],
+        color=MODEL_COLOUR,
+        lw=3,
+        marker="o",
+        ms=8,
+        markeredgecolor=SURFACE,
+        markeredgewidth=2,
+        label="How far off the forecast is (typical miss)",
+    )
+    for i, (left, miss) in enumerate(zip(g["left"], g["miss"], strict=True)):
+        ax.text(
+            i,
+            miss + 5,
+            f"±{miss:.0f}",
+            ha="center",
+            va="bottom",
+            color=MODEL_COLOUR,
+            fontsize=10,
+            fontweight="bold",
+        )
+        ax.text(
+            i, max(left, miss + 18) + 3, f"{left:.0f}", ha="center", color=INK_SOFT, fontsize=9.5
+        )
+    ax.set_xticks(list(x), [PLAIN_LABELS[a] for a in anchors], fontsize=10, color=INK_SOFT)
+    ax.set_xlim(-0.6, len(anchors) - 0.4)
+    ax.set_ylim(0, g["left"].max() * 1.15)
+    ax.set_ylabel("Days", color=INK_SOFT)
+    leg = ax.legend(loc="upper right", frameon=False, fontsize=11, labelcolor=INK_SOFT)
+    leg.get_texts()[0].set_color(INK)
+    leg.get_texts()[0].set_fontweight("bold")
+    ax.yaxis.grid(True, color=GRID, lw=1)
+    ax.set_axisbelow(True)
+    for side in ("top", "right", "left"):
+        ax.spines[side].set_visible(False)
+    ax.spines["bottom"].set_color(GRID)
+    ax.tick_params(axis="both", length=0, colors=INK_SOFT)
+    for start, end, label in ((0, 4, "First House"), (5, 9, "Second House")):
+        ax.annotate(
+            "",
+            xy=(start - 0.3, -0.155),
+            xytext=(end + 0.3, -0.155),
+            xycoords=("data", "axes fraction"),
+            textcoords=("data", "axes fraction"),
+            arrowprops={"arrowstyle": "-", "color": GRID, "lw": 1.5},
+        )
+        ax.text(
+            (start + end) / 2,
+            -0.17,
+            label,
+            transform=ax.get_xaxis_transform(),
+            ha="center",
+            va="top",
+            color=INK_SOFT,
+            fontsize=10,
+        )
+
+    first, final = g["miss"].iloc[0], g["miss"].iloc[-2]
+    fig.text(
+        0.06,
+        0.95,
+        f"The forecast closes in on Royal Assent: ±{first:.0f} days at introduction, "
+        f"±{final:.0f} at the end",
+        fontsize=16,
+        fontweight="bold",
+        color=INK,
+    )
+    fig.text(
+        0.06,
+        0.905,
+        "Typical days still to go, and how far off the forecast made at that stage is. "
+        f"Test bills only: {sp['test_bills']} introduced in {sp['test_years']}.",
+        fontsize=11,
+        color=INK_SOFT,
+    )
+    fig.text(
+        0.06,
+        0.02,
+        "Forecast = new model (Illia's tuned XGBoost plus what the bill's long title says "
+        "it does), using only what was known at each stage.\n"
+        f"Trained on {sp['train_years']} bills only ({sp['train_share']:.0%} of bills).",
+        fontsize=9,
+        color=INK_SOFT,
+    )
+    fig.subplots_adjust(left=0.07, right=0.97, top=0.85, bottom=0.25)
+    path = report_dir / "3_miss_vs_time_left.png"
+    fig.savefig(path, dpi=200, facecolor=SURFACE)
+    plt.close(fig)
+    return path
+
+
 if __name__ == "__main__":
     split = "75/25" if "--75" in sys.argv else "62/38"
     if "--chart" not in sys.argv:
@@ -720,3 +842,4 @@ if __name__ == "__main__":
     print(stakeholder_chart(report_dir_for(split)))
     print(stage_chart(report_dir_for(split)))
     print(pred_vs_real_chart(report_dir_for(split)))
+    print(miss_vs_left_chart(report_dir_for(split)))
