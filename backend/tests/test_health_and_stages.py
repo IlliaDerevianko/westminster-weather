@@ -180,7 +180,10 @@ async def test_post_royal_assent_stages_and_model_interface_from_neon_db() -> No
     assert by_stage["regulations_drafted"]["sitting_count"] >= 4
     assert by_stage["regulations_laid"]["status"] == StageStatus.COMPLETED
     assert by_stage["regulations_laid"]["sitting_count"] >= 7
-    assert by_stage["law_fully_in_force"]["status"] == StageStatus.COMPLETED
+    # Online Safety Act: some provisions are still prospective on legislation.gov.uk
+    # (`act_in_force_status`), so the law is not fully in force yet
+    assert by_stage["law_fully_in_force"]["status"] == StageStatus.CURRENT
+    assert "prospective" in by_stage["law_fully_in_force"]["summary"]
 
 
 async def test_fast_tracked_bypassed_stages_marked_for_bill_4296() -> None:

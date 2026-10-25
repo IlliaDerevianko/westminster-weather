@@ -3,7 +3,7 @@
 Serves the two-step model evaluated in ``analysis.commencement_xgb`` (same features and
 target): a classifier for "applies on Royal Assent day", a median regressor for the days left
 otherwise, and p10 / p90 quantile regressors for the window. Reads the database only
-(``act_commencements``, ``bill_texts``, ``post_royal_assent_events`` and reference tables).
+(``act_commencements``, ``act_texts``, ``post_royal_assent_events`` and reference tables).
 
 No future data: models are fitted per month on checkpoints before the month's first day whose
 outcome was known by then, and each forecast uses only events dated on or before ``as_of``.
@@ -45,7 +45,7 @@ _DATA: tuple[pd.DataFrame, pd.DataFrame] | None = None
 def _data() -> tuple[pd.DataFrame, pd.DataFrame] | None:
     """(Acts with features, post-Royal-Assent events), loaded once per process. None, and
     retried on the next call, if a source table is missing or the database is unreachable
-    (e.g. ``bill_texts``, which no ingest in this repo creates): stage 3 then has no forecast
+    (e.g. ``act_texts`` before `clients.legislation_texts` has run): stage 3 then has no forecast
     instead of failing the whole bill forecast."""
     global _DATA
     if _DATA is None:

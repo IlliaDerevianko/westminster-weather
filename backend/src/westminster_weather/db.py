@@ -195,9 +195,7 @@ def fetch_session_overrides_df() -> pd.DataFrame:
     try:
         with Session(engine) as session:
             rows = (
-                session.execute(
-                    select(SessionOverrideRow).order_by(SessionOverrideRow.session_id)
-                )
+                session.execute(select(SessionOverrideRow).order_by(SessionOverrideRow.session_id))
                 .scalars()
                 .all()
             )
@@ -238,7 +236,6 @@ def _upsert_rows(
     conn: Connection, table: Table, rows: list[dict[str, Any]], batch_size: int = 500
 ) -> None:
     if not rows:
-
         return
     pk_cols = [c.name for c in table.primary_key]
     non_pk_cols = [c.name for c in table.columns if c.name not in pk_cols]
@@ -532,6 +529,29 @@ def save_post_royal_assent_tables_to_db(
                 counts["post_royal_assent_events"] = len(event_records)
             else:
                 counts["post_royal_assent_events"] = 0
+        return counts
+    finally:
+        engine.dispose()
+
+
+def save_act_texts_to_db(texts_df: pd.DataFrame, in_force_df: pd.DataFrame) -> dict[str, int]:
+    """Upsert `act_texts` and `act_in_force_status` (one row per Act) into Neon Postgres."""
+    from westminster_weather.models import ActInForceStatusRow, ActTextRow
+
+    engine = get_sync_direct_engine()
+    counts: dict[str, int] = {}
+    try:
+        with engine.begin() as conn:
+            Base.metadata.create_all(
+                conn, tables=[ActTextRow.__table__, ActInForceStatusRow.__table__]
+            )
+            for table, df in (
+                (ActTextRow.__table__, texts_df),
+                (ActInForceStatusRow.__table__, in_force_df),
+            ):
+                records = [_clean_record(r) for r in df.to_dict("records")]
+                _upsert_rows(conn, table, records, batch_size=50)
+                counts[table.name] = len(records)
         return counts
     finally:
         engine.dispose()
