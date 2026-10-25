@@ -1251,6 +1251,17 @@ async def evaluate_parliament_bill_from_db(
 
     total_stages = len(tracked_nodes)
 
+    # Full text: the Act on legislation.gov.uk once it has Royal Assent (as of the date),
+    # otherwise the bill's published versions on bills.parliament.uk
+    if has_royal_assent_as_of and act_comm is not None:
+        full_text_url = (
+            f"https://www.legislation.gov.uk/ukpga/{act_comm.ukpga_year}/{act_comm.ukpga_number}"
+        )
+        full_text_label = "Read the full Act on legislation.gov.uk"
+    else:
+        full_text_url = f"https://bills.parliament.uk/bills/{bill_row.bill_id}/publications"
+        full_text_label = "Read the full bill text on bills.parliament.uk"
+
     return {
         "id": str(bill_row.bill_id),
         "parliament_bill_id": bill_row.bill_id,
@@ -1281,4 +1292,6 @@ async def evaluate_parliament_bill_from_db(
         "total_stages": total_stages,
         "tracked_nodes": tracked_nodes,
         "milestone_dates": milestones,
+        "full_text_url": full_text_url,
+        "full_text_label": full_text_label,
     }
