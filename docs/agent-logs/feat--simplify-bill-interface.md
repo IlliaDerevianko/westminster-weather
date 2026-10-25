@@ -1,3 +1,10 @@
+## 2026-10-25 — fix(frontend): isolate development assets from production builds
+
+- **What:** Configured Next.js development to use .next-dev while production continues to use .next; updated generated-type includes, ignore rules and restart instructions.
+- **Why:** Production build checks can overwrite assets expected by a running development server, leaving localhost unstyled. Existing generated output contained production CSS but no development layout CSS.
+- **Checks:** Production build and type checks passed; both built pages reference existing stylesheets containing the redesigned selectors and font. Config phase checks confirm distinct dev/build directories and matching build/start directories. Backend ruff passed.
+- **Notes:** Diagnosed pytest exit 139 as Anaconda Python readline import segmentation fault. A temporary environment with the existing standard Python 3.12 and installed OpenMP runtime ran the full suite: 166 passed, 60 failed, 31 setup errors. All 91 unsuccessful cases contain database DNS resolution errors. Existing backend environment was preserved. Runtime CSS confirmation awaits restarting the user's frontend; this sandbox cannot bind or access localhost.
+
 ## 2026-10-25 — feat(ui): reduce repeated bill context
 
 - **What:** Moved the Parliament bill number into About this bill, placed phase descriptions in a collapsed About this phase disclosure, and removed the Current phase label from phase navigation. Kept current-position indicators in the overview and stage timeline.
