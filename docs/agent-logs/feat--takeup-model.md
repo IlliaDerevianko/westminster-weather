@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 05:38 — docs(analysis): stage 3 stakeholder chart
+
+- **What:** `commencement_xgb.py --chart` also draws `backend/reports/commencement_xgb/1_stage3_for_stakeholders.png`: the 131 test Acts forecast on Royal Assent day; left, typical miss by how long the law really took (rule of thumb / current stage 3 model / new XGBoost, log scale); right, share forecast within 20 days.
+- **Why:** Roman asked for a stakeholder graph for stage 3.
+- **Checks:** `ruff check`: clean; rendered and checked. Typical miss: same-day Acts 6 / 0 / 0 days, within 3 months 43 / 21 / 26, 3-12 months 133 / 75 / 79, over a year 563 / 499 / 503. Within 20 days: rule of thumb 60%, current model 51%, new model 57%.
+
 ## 2026-10-25 05:34 — docs(analysis): stage 2 to 3 stakeholder chart on all test data only
 
 - **What:** `0_stage2_to_stage3_for_stakeholders.png` now shows stage 3 at Royal Assent only (all 131 test Acts), dropping the +30 / +90 day checkpoints that cover only the slow Acts still waiting; the footnote gives the split at Royal Assent (68 Acts waiting for a commencement order, typical miss ±44 days; 63 applying the same day).
