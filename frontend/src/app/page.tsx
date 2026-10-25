@@ -737,16 +737,6 @@ function BillTrackerContent() {
                                         ? ` → ${stage.completed_date}`
                                         : ""}
                                     </span>
-                                    {stage.source_api_url && (
-                                      <a
-                                        href={stage.source_api_url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-[10px] text-blue-600 hover:underline"
-                                      >
-                                        API ↗
-                                      </a>
-                                    )}
                                   </div>
                                 )}
 

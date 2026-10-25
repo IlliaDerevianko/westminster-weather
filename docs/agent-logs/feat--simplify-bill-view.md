@@ -1,5 +1,12 @@
 # Agent log: `feat/simplify-bill-view`
 
+## 2026-10-25 — feat(ui): remove API links from stage cards
+
+- **What:** Removed the "API ↗" link (to the Bills API `source_api_url`) shown next to each stage's dates on the bill view.
+- **Why:** User asked to remove the API links.
+- **Checks:** `npx tsc --noEmit`: clean; `/?bill_id=3137` returns 200.
+- **Notes:** `source_api_url` is still returned by the backend; only the UI link is gone. No other external links remain on the bill view.
+
 ## 2026-10-25 — feat(ui): remove phase overview boxes from bill view header
 
 - **What:** Removed the row of three phase boxes (Before Parliament / Inside Parliament / After Royal Assent with "x/y done" counts) from the top of the single bill page.
