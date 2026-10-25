@@ -1,5 +1,12 @@
 # Agent log: `feat/remaining-time-tree-models`
 
+## 2026-10-25 — docs(reports): add tree model evaluation charts and findings
+
+- **What:** Committed the generated outputs in `backend/reports/remaining_time_models/`: 6 PNG charts, error tables by stage and by days since introduction, all test predictions, feature importance, `metrics.json` and a `README.md` with set-up, results and caveats. Also widened the ablation chart's x-axis so labels are not clipped.
+- **Why:** User asked for a thorough evaluation showing how prediction error changes as the forecast starts later in the pipeline.
+- **Checks:** none (generated outputs and docs). README numbers were checked against `metrics.json` and `mae_by_stage.csv`; a few hand-typed values were corrected.
+- **Notes:** Test MAE, stage points: hist gradient boosting 54, LightGBM 55, XGBoost 55 (best on CV), random forest 56, B1 75, B0 106; XGBoost beats B1 by 16–24 days (95% CI). Error falls from 111 days at introduction to 17 at ping-pong. CV-to-test gap (37 → 55) is mostly era shift: B1 also worsens (56 → 75).
+
 ## 2026-10-25 — feat(analysis): tune and evaluate tree models for days left to Royal Assent
 
 - **What:** New `backend/src/westminster_weather/analysis/remaining_time_models.py`. Time split per MODEL_SPEC §7 (train sessions 20–30, test 34–39). Tunes 6 tree-style models (decision tree, random forest, extra trees, hist gradient boosting, LightGBM, XGBoost) plus a ridge model with randomized search on 3 expanding-window folds inside the training sessions, on a log(1 + days) target. Compares against baselines B0 and B1, and evaluates by stage forecast point and by days since introduction, with bill-level bootstrap intervals, permutation importance and feature-group ablation.
