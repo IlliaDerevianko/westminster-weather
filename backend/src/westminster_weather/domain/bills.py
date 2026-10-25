@@ -1197,47 +1197,37 @@ async def evaluate_parliament_bill_from_db(
             else:
                 tracked_nodes.append(TrackedStageNode(node=node, status=StageStatus.UPCOMING))
 
-    # Build dynamic database-driven milestone dates across all phases
-    milestones: list[dict[str, Any]] = []
-    seen_dates: set[date] = set()
+    # Build dynamic database-driven milestone dates across all phases.
+    # Milestones on the same date are merged into one entry (one button per date).
+    milestone_parts: dict[date, list[tuple[str, str]]] = {}
+
+    def add_milestone(dt: date | None, label: str, note: str) -> None:
+        if dt is not None:
+            milestone_parts.setdefault(dt, []).append((label, note))
+
     if pre_domain is not None:
         for node in GOVERNMENT_BILL_PIPELINE:
             rec = pre_domain.stage_records.get(node.stage)
-            if rec is not None and rec.entered_date not in seen_dates:
-                seen_dates.add(rec.entered_date)
-                milestones.append(
-                    {
-                        "label": f"{rec.entered_date.isoformat()} (1. {node.label})",
-                        "date": rec.entered_date,
-                        "note": rec.headline,
-                    }
-                )
+            if rec is not None:
+                add_milestone(rec.entered_date, f"1. {node.label}", rec.headline)
+    else:
+        signal_node = GOVERNMENT_BILL_PIPELINE[0]
+        add_milestone(
+            earliest_date,
+            f"1. {signal_node.label}",
+            "First signal: no earlier pre-parliamentary record, so the first signal "
+            "is the bill's introduction to Parliament.",
+        )
     for st in ordered_parl_states:
         if st in full_entry_dates:
-            dt = full_entry_dates[st]
             phase, label, _, _ = PARLIAMENTARY_STAGE_INFO[st]
             phase_num = "3" if phase == LifecyclePhase.AFTER_ROYAL_ASSENT else "2"
-            if dt not in seen_dates:
-                seen_dates.add(dt)
-                milestones.append(
-                    {
-                        "label": f"{dt.isoformat()} ({phase_num}. {label})",
-                        "date": dt,
-                        "note": label,
-                    }
-                )
-    if (
-        bill_row.outcome_date is not None
-        and bill_row.outcome_date not in seen_dates
-    ):
-        seen_dates.add(bill_row.outcome_date)
-        milestones.append(
-            {
-                "label": f"{bill_row.outcome_date.isoformat()} (Outcome: {bill_row.outcome})",
-                "date": bill_row.outcome_date,
-                "note": f"Final outcome: {bill_row.outcome}",
-            }
-        )
+            add_milestone(full_entry_dates[st], f"{phase_num}. {label}", label)
+    add_milestone(
+        bill_row.outcome_date,
+        f"Outcome: {bill_row.outcome}",
+        f"Final outcome: {bill_row.outcome}",
+    )
     if act_comm is not None:
         for post_dt, post_lbl in (
             (act_comm.first_commencement_order_date, "3. 1st Commencement Order"),
@@ -1246,16 +1236,18 @@ async def evaluate_parliament_bill_from_db(
             (act_comm.law_fully_in_force_date, "3. Law in Force"),
             (act_comm.latest_amendment_or_repeal_date, "3. Amended / Repealed"),
         ):
-            if post_dt is not None and post_dt not in seen_dates:
-                seen_dates.add(post_dt)
-                milestones.append(
-                    {
-                        "label": f"{post_dt.isoformat()} ({post_lbl})",
-                        "date": post_dt,
-                        "note": f"{act_comm.act_title}: {post_lbl}",
-                    }
-                )
-    milestones.sort(key=lambda m: m["date"])
+            add_milestone(post_dt, post_lbl, f"{act_comm.act_title}: {post_lbl}")
+
+    milestones: list[dict[str, Any]] = []
+    for dt in sorted(milestone_parts):
+        parts = list(dict.fromkeys(milestone_parts[dt]))
+        milestones.append(
+            {
+                "label": f"{dt.isoformat()} ({' · '.join(lbl for lbl, _ in parts)})",
+                "date": dt,
+                "note": "; ".join(note for _, note in parts),
+            }
+        )
 
     if has_royal_assent_as_of:
         current_phase = LifecyclePhase.AFTER_ROYAL_ASSENT
