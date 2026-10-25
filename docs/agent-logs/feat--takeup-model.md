@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 04:35 — docs(analysis): stakeholder chart covers all bills by stage
+
+- **What:** right panel of `backend/reports/remaining_time_tails/0_summary_for_stakeholders.png` now shows the typical miss for all bills by stage, previous vs new model (was long bills only); headline "Sharper Royal Assent forecasts, most of all for quick bills".
+- **Why:** Roman asked for the chart to be general, not only about long bills.
+- **Checks:** `ruff check`: clean; rendered and checked. All bills: ±10 weeks on day one (previous ±11), ±1 week at the end; the two models match from report stage on.
+
 ## 2026-10-25 04:33 — docs(analysis): stakeholder chart for the XGBoost tails
 
 - **What:** `remaining_time_tails.py --chart` draws `backend/reports/remaining_time_tails/0_summary_for_stakeholders.png` in the style of `analysis/stakeholder_chart.py` (same colours and layout): day-one miss by kind of bill (previous vs new model), and the miss on long bills by stage against all other bills.

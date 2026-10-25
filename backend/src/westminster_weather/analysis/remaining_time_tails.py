@@ -214,7 +214,7 @@ OLD = "v2 XGBoost"
 
 def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
     """Two panels in the style of ``stakeholder_chart``: day-one miss by kind of bill (previous
-    vs new model), and how the miss on long bills shrinks as they move through Parliament."""
+    vs new model), and the miss on all bills by the stage the forecast is made at."""
     import matplotlib
 
     matplotlib.use("Agg")
@@ -222,7 +222,6 @@ def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
 
     from westminster_weather.analysis.remaining_time_dataset import STAGE_ANCHORS
     from westminster_weather.analysis.stakeholder_chart import (
-        BASELINE_COLOUR,
         GRID,
         INK,
         INK_SOFT,
@@ -287,17 +286,16 @@ def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
     a.legend(frameon=False, loc="upper left", labelcolor=INK_SOFT)
     a.set_ylim(0, max(old + new) * 1.15)
 
-    # B: long bills are caught as they move
+    # B: every bill, previous vs new model, by the stage the forecast is made at
     anchors = [s for s in STAGE_ANCHORS if s in set(t["anchor"])]
-    long_ = t[t["band"] == "> 50 wk"]
-    rest = t[t["band"] != "> 50 wk"]
-    lm = [miss(long_[long_["anchor"] == s], NEW) for s in anchors]
-    rm = [miss(rest[rest["anchor"] == s], NEW) for s in anchors]
+    om = [miss(t[t["anchor"] == s], OLD) for s in anchors]
+    nm = [miss(t[t["anchor"] == s], NEW) for s in anchors]
     xs = range(len(anchors))
-    b.plot(xs, rm, color=BASELINE_COLOUR, lw=2, marker="o", ms=6, markeredgecolor=SURFACE)
+    b.fill_between(xs, nm, om, color=MODEL_COLOUR, alpha=0.07, lw=0)
+    b.plot(xs, om, color=V1_COLOUR, lw=2, marker="o", ms=6, markeredgecolor=SURFACE)
     b.plot(
         xs,
-        lm,
+        nm,
         color=MODEL_COLOUR,
         lw=3,
         marker="o",
@@ -306,30 +304,22 @@ def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
         markeredgewidth=2,
     )
     b.annotate(
-        f"Long bills\n±{lm[0]:.0f} weeks on day one",
-        (0, lm[0]),
-        xytext=(10, 4),
+        f"±{nm[0]:.0f} weeks on day one\n(previous ±{om[0]:.0f})",
+        (0, nm[0]),
+        xytext=(14, 6),
         textcoords="offset points",
         color=INK,
         fontsize=10.5,
         fontweight="bold",
     )
     b.annotate(
-        f"±{lm[-1]:.0f} weeks\nat the end",
-        (len(anchors) - 1, lm[-1]),
-        xytext=(-12, 22),
+        f"±{nm[-1]:.0f} week{'s' if round(nm[-1]) != 1 else ''}\nat the end",
+        (len(anchors) - 1, nm[-1]),
+        xytext=(-6, 22),
         textcoords="offset points",
         color=INK,
         fontsize=10,
         ha="right",
-    )
-    b.annotate(
-        "All other bills",
-        (2, rm[2]),
-        xytext=(0, -26),
-        textcoords="offset points",
-        color=INK_SOFT,
-        fontsize=10.5,
     )
     b.set_xticks(
         list(xs),
@@ -337,14 +327,14 @@ def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
         fontsize=9,
         color=INK_SOFT,
     )
-    b.set_ylabel("Typical miss (weeks)", color=INK_SOFT)
+    b.set_ylabel("Typical miss, all bills (weeks)", color=INK_SOFT)
     b.set_title(
-        "Long bills are caught as they move through Parliament",
+        "Every forecast sharpens as the bill moves through Parliament",
         loc="left",
         color=INK,
         fontsize=12.5,
     )
-    b.set_ylim(0, max(lm) * 1.2)
+    b.set_ylim(0, max(om + nm) * 1.3)
     for start, end, label in ((0, 4, "First House"), (5, 9, "Second House")):
         b.annotate(
             "",
@@ -378,7 +368,7 @@ def stakeholder_chart(report_dir: Path = REPORT_DIR) -> Path:
     fig.text(
         0.04,
         0.95,
-        "Quick bills are now forecast twice as well; long bills still need time",
+        "Sharper Royal Assent forecasts, most of all for quick bills",
         fontsize=16,
         fontweight="bold",
         color=INK,
