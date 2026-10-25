@@ -178,7 +178,6 @@ function BillTrackerContent() {
   const [bill, setBill] = useState<GovernmentBillTracking | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [layoutMode, setLayoutMode] = useState<"columns" | "stacked">("columns");
 
   // Load directory of bills from Neon Postgres
   useEffect(() => {
@@ -307,30 +306,6 @@ function BillTrackerContent() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <div className="inline-flex rounded-lg border border-slate-700 bg-slate-800 p-0.5 text-xs">
-            <button
-              type="button"
-              onClick={() => setLayoutMode("columns")}
-              className={`rounded-md px-2.5 py-1 font-semibold transition-colors ${
-                layoutMode === "columns"
-                  ? "bg-amber-500 text-slate-950"
-                  : "text-slate-300 hover:text-white"
-              }`}
-            >
-              3-Column Pipeline
-            </button>
-            <button
-              type="button"
-              onClick={() => setLayoutMode("stacked")}
-              className={`rounded-md px-2.5 py-1 font-semibold transition-colors ${
-                layoutMode === "stacked"
-                  ? "bg-amber-500 text-slate-950"
-                  : "text-slate-300 hover:text-white"
-              }`}
-            >
-              Detailed Stack
-            </button>
-          </div>
           <Link
             href="/bills"
             className="rounded-lg bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-colors"
@@ -345,9 +320,6 @@ function BillTrackerContent() {
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider">
-              <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-white">
-                Full 3-Phase UK Government Bill Lifecycle
-              </span>
               {bill && (
                 <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">
                   Originating House: {bill.originating_house}
@@ -595,11 +567,7 @@ function BillTrackerContent() {
       {/* 3-Phase Pipeline Grid (1. Before Parliament | 2. Inside Parliament | 3. After Royal Assent) */}
       {bill && (
         <div
-          className={
-            layoutMode === "columns"
-              ? "grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
-              : "space-y-6"
-          }
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
         >
           {PHASE_CONFIG.map((phaseCfg) => {
             const phaseStages = stagesByPhase[phaseCfg.key] ?? [];
