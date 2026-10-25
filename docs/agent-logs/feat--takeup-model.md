@@ -1,5 +1,11 @@
 # Agent log: `feat/takeup-model`
 
+## 2026-10-25 04:48 — feat(analysis): what-if test, does knowing a bill's length help the XGBoost
+
+- **What:** `remaining_time_tails.py` adds a hindsight variant with the final Act's length (`bill_texts`, `act_as_enacted`: log characters, schedules), read-only from the database. Not usable live: the Act exists only after Royal Assent and bills grow while debated. A day-one length source was looked for in the database and is missing: `bills.size_clauses` / `size_pages` are empty for all 588 bills, `bill_texts` holds only Acts (522) or latest versions (24), `api_evidence_events` only the demo bill. A Bills API publications fetcher was tried and removed (Roman: use the database only; the bill PDFs also refuse scripted downloads).
+- **Why:** Roman asked whether the model can learn the length of the bill.
+- **Checks:** `ruff check`: clean. 75/25, first reading: median miss 9.5 -> 7.4 weeks (long title -> + Act length), correlation 0.61 -> 0.69; over a year 30.0 -> 22.0; 30-50 weeks 9.4 -> 7.1; quick bills 6.1 -> 5.1. Upper bound only (hindsight).
+
 ## 2026-10-25 04:40 — feat(analysis): 75/25 time split for the XGBoost tails experiment
 
 - **What:** `remaining_time_tails.py --75` trains on sessions 20-35 (bills introduced 2006-2021, 374 bills, 72%) and tests on 36-39 (2021-2026, 142 bills, 28%), the closest session boundary to 75/25; department one-hots follow the split's training bills; results and stakeholder chart in `backend/reports/remaining_time_tails_75_25/`. The default 62/38 run now also records its split in `metrics.json`, and the chart subtitle/footnote read it.

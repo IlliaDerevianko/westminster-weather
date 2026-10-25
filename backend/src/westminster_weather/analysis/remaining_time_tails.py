@@ -102,6 +102,34 @@ def long_title_features(bill_ids: list[int]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def act_length_features() -> pd.DataFrame:
+    """Length of each bill's final Act, from ``bill_texts`` (database, read-only). Hindsight:
+    an Act exists only after Royal Assent, and bills grow while they are debated, so this is a
+    what-if for "if we knew the bill's length", not a feature a live forecast can use."""
+    from sqlalchemy import text
+
+    from westminster_weather.db import get_sync_pooled_engine
+
+    e = get_sync_pooled_engine()
+    try:
+        t = pd.read_sql(
+            text(
+                "select bill_id, n_characters, text from bill_texts "
+                "where text_type = 'act_as_enacted'"
+            ),
+            e,
+        )
+    finally:
+        e.dispose()
+    return pd.DataFrame(
+        {
+            "bill_id": t["bill_id"].astype(int),
+            "size_act_chars_log": np.log1p(t["n_characters"].astype(float)),
+            "size_act_schedules": t["text"].str.count(r"\bSCHEDULE \d+\b").astype(float),
+        }
+    )
+
+
 def _intro_years(df: pd.DataFrame) -> str:
     intro = pd.to_datetime(df.loc[df["anchor"] == FIRST_READING, "as_of"])
     return f"{intro.min():%Y}–{intro.max():%Y}"
@@ -115,6 +143,9 @@ def run(split: str = "62/38") -> dict:
     lt = long_title_features(sorted(df["bill_id"].astype(int).unique()))
     df = df.merge(lt, on="bill_id", how="left")
     lt_cols = [c for c in lt.columns if c != "bill_id"]
+    size = act_length_features()
+    df = df.merge(size, on="bill_id", how="left")
+    size_cols = [c for c in size.columns if c != "bill_id"]
 
     v2 = json.loads((V2_DIR / "metrics.json").read_text())
     # v2 features; the top-department one-hots follow this split's training bills
@@ -131,6 +162,8 @@ def run(split: str = "62/38") -> dict:
         "+ long title": Design(base_cols + lt_cols),
         "+ long title, bill weights": Design(base_cols + lt_cols, weights="bill"),
         "+ long title, recent bills weigh more": Design(base_cols + lt_cols, weights="bill_recent"),
+        # hindsight: the final Act's length is not known on day one (what-if only)
+        "+ long title, Act length (hindsight)": Design(base_cols + lt_cols + size_cols),
     }
     preds = {}
     for name, d in variants.items():
