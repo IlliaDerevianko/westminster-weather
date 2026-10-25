@@ -296,6 +296,8 @@ async def get_tracked_bill(
             total_stages=evaluated["total_stages"],
             stages=_serialize_tracked_nodes(evaluated["tracked_nodes"]),
             milestone_dates=[MilestoneDateSchema(**m) for m in evaluated["milestone_dates"]],
+            full_text_url=evaluated["full_text_url"],
+            full_text_label=evaluated["full_text_label"],
         )
 
     raise HTTPException(status_code=404, detail=f"Bill '{bill_id}' not found")

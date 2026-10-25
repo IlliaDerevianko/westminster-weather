@@ -82,6 +82,11 @@ class GovernmentBillTrackingResponse(BaseModel):
     total_stages: int
     stages: list[TrackedStageNodeSchema]
     milestone_dates: list[MilestoneDateSchema] = []
+    full_text_url: str | None = Field(
+        None, description="Act on legislation.gov.uk after Royal Assent, else bill texts on "
+        "bills.parliament.uk"
+    )
+    full_text_label: str | None = None
 
 
 class TimelineQuantiles(BaseModel):

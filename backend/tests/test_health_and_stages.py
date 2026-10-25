@@ -236,3 +236,27 @@ async def test_fast_tracked_bypassed_stages_marked_for_bill_4296() -> None:
 
 
 
+
+
+@pytest.mark.parametrize(
+    ("bill_id", "as_of", "expected_url"),
+    [
+        # An Act: the full Act on legislation.gov.uk
+        (3751, None, "https://www.legislation.gov.uk/ukpga/2025/5"),
+        # The same Act viewed before its Royal Assent: the bill texts
+        (3751, "2024-10-01", "https://bills.parliament.uk/bills/3751/publications"),
+        # A bill still in Parliament: the bill texts
+        (4305, None, "https://bills.parliament.uk/bills/4305/publications"),
+    ],
+)
+async def test_full_text_url_for_acts_and_bills(
+    bill_id: int, as_of: str | None, expected_url: str
+) -> None:
+    transport = ASGITransport(app=app)
+    params = {"as_of_date": as_of} if as_of else {}
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get(f"/api/v1/bills/{bill_id}", params=params)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["full_text_url"] == expected_url
+    assert data["full_text_label"].startswith("Read the full ")

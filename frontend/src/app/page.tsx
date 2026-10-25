@@ -68,6 +68,8 @@ interface GovernmentBillTracking {
   total_stages: number;
   stages: TrackedStageNode[];
   milestone_dates: MilestoneDate[];
+  full_text_url?: string | null;
+  full_text_label?: string | null;
 }
 
 interface BillSummary {
@@ -387,6 +389,19 @@ function BillTrackerContent() {
                     </span>
                   )}
                 </div>
+                <a
+                  href={
+                    bill.full_text_url ??
+                    `https://bills.parliament.uk/bills/${bill.parliament_bill_id}/publications`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-700 px-6 py-3 text-base font-bold text-white shadow-md hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-colors"
+                >
+                  <span aria-hidden="true">📄</span>
+                  {bill.full_text_label ?? "Read the full bill text on bills.parliament.uk"}
+                  <span aria-hidden="true">↗</span>
+                </a>
               </>
             )}
           </div>
